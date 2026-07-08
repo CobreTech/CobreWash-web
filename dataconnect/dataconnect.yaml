@@ -1,0 +1,13 @@
+specVersion: "v1"
+serviceId: "lavanderia-el-cobre"
+location: "southamerica-west1"
+schemas:
+  - source: "./schema"
+    datasource:
+      postgresql:
+        database: "el-cobre"
+        cloudSql:
+          instanceId: "lavanderia-el-cobre"
+          # schemaValidation: "STRICT"     # STRICT mode makes Postgres schema match Data Connect exactly.
+          # schemaValidation: "COMPATIBLE" # COMPATIBLE mode makes Postgres schema compatible with Data Connect.
+connectorDirs: ["./example"]

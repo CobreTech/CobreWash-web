@@ -1,0 +1,273 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316; /* Copper Orange */
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+  
+  --color-copper-50: #fdf8f5;
+  --color-copper-100: #fbeee6;
+  --color-copper-200: #f6d8c6;
+  --color-copper-300: #eea883;
+  --color-copper-400: #e37643;
+  --color-copper-500: #db541a; /* Pure Copper */
+  --color-copper-600: #cc4114;
+  --color-copper-700: #a93011;
+  --color-copper-800: #882713;
+  --color-copper-900: #6e2112;
+  
+  --color-neutral-50: #fcfcfc;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #fdfcfb; /* Soft warm white */
+  --foreground: #1c1917; /* Soft stone charcoal */
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem; /* For fixed headers */
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Custom scrollbar for modern browsers (Chrome, Safari, newer Edge, Opera) applied robustly to root elements */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: #fdfcfb; /* Matches main page background */
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: #fed7aa; /* Soft brand-200 */
+  border-radius: 9999px;
+  border: 2.5px solid #fdfcfb;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: #ea580c; /* Highlight brand-600 on hover */
+}
+
+/* Custom scrollbar for Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #fed7aa #fdfcfb;
+}
+
+/* Premium utility classes and micro-interactions */
+.glass-nav {
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.03), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 10px 30px -10px rgba(219, 84, 26, 0.05);
+}
+
+.glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 
+    0 8px 32px 0 rgba(219, 84, 26, 0.04), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-modal {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 24px 50px -12px rgba(219, 84, 26, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ── Liquid-glass panels (intranet cards) ── */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow:
+    0 10px 34px -14px rgba(219, 84, 26, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  transition:
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s ease;
+}
+
+.glass-panel:hover {
+  box-shadow:
+    0 22px 44px -16px rgba(219, 84, 26, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.dark .glass-panel {
+  background: rgba(28, 25, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 10px 34px -14px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.dark .glass-panel:hover {
+  box-shadow:
+    0 22px 44px -16px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(249, 115, 22, 0.12);
+}
+
+/* Glass shell for the intranet sidebar / bars */
+.glass-shell {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+}
+
+.dark .glass-shell {
+  background: rgba(20, 17, 15, 0.55);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ea580c 0%, #db541a 50%, #a93011 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-brand {
+  background: linear-gradient(135deg, #f97316 0%, #db541a 100%);
+}
+
+.bg-gradient-light {
+  background: linear-gradient(180deg, #fff7ed 0%, #fdfcfb 100%);
+}
+
+.shadow-premium {
+  box-shadow: 0 10px 30px -10px rgba(219, 84, 26, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.shadow-premium-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shadow-premium-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(219, 84, 26, 0.15), 0 1px 3px rgba(219, 84, 26, 0.05);
+}
+
+/* Adjustments for laptop viewports with short vertical heights */
+@media (min-width: 1024px) and (max-height: 820px) {
+  #inicio {
+    padding-top: 4.5rem !important;
+    padding-bottom: 1.5rem !important;
+    height: 100vh !important;
+    min-height: 0 !important;
+    max-height: 100vh !important;
+  }
+
+  /* Scale down heading */
+  #inicio h1 {
+    font-size: 2.35rem !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Compact spacing variables */
+  #inicio .space-y-8 > * + * {
+    margin-top: 1.25rem !important;
+  }
+
+  #inicio .space-y-4 > * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  /* Compact description */
+  #inicio p {
+    font-size: 0.925rem !important;
+    line-height: 1.45 !important;
+  }
+
+  /* Tighten trust highlights bar */
+  #inicio .border-t {
+    padding-top: 0.75rem !important;
+    margin-top: 0.75rem !important;
+  }
+
+  #inicio .border-t h4 {
+    font-size: 0.8rem !important;
+  }
+
+  #inicio .border-t p {
+    font-size: 0.675rem !important;
+  }
+
+  /* Tighter badge paddings and fonts */
+  #inicio .hero-badge-left,
+  #inicio .hero-badge-right {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  #inicio .hero-badge-left p,
+  #inicio .hero-badge-right p {
+    font-size: 0.7rem !important;
+  }
+
+  #inicio .hero-badge-left svg,
+  #inicio .hero-badge-right svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* Shift badge positions slightly */
+  #inicio .absolute.-top-4 {
+    top: -1.25rem !important;
+    left: -2rem !important;
+  }
+
+  #inicio .absolute.-bottom-4 {
+    bottom: -1.25rem !important;
+    right: -2rem !important;
+  }
+
+  /* Scale down the image wrapper size */
+  #inicio .lg\:col-span-5 > div {
+    max-height: 38vh !important;
+    max-width: 280px !important;
+  }
+
+  /* Shrink waves height to avoid congestion */
+  #inicio .hero-waves {
+    height: 95px !important;
+  }
+}

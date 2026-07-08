@@ -1,0 +1,80 @@
+# Auto-registro para roles internos (admin, recepcionista, operario): crea
+# el Usuario, vinculado al uid recién creado en Firebase Auth.
+mutation Registrarse(
+  $rolId: UUID!
+  $rut: String!
+  $nombre: String!
+  $apellido: String!
+  $telefono: String
+  $email: String!
+) @auth(level: USER) {
+  usuario_insert(data: {
+    id_expr: "auth.uid"
+    rol: { id: $rolId }
+    rut: $rut
+    nombre: $nombre
+    apellido: $apellido
+    telefono: $telefono
+    email: $email
+  })
+}
+
+# Auto-registro para clientes: crea el Usuario y su ficha de Cliente enlazada
+# en una sola transacción (Cliente.usuario solo se llena si el cliente creó cuenta).
+mutation RegistrarseComoCliente(
+  $rolId: UUID!
+  $rut: String!
+  $nombre: String!
+  $apellido: String!
+  $telefono: String
+  $email: String!
+  $direccion: String
+) @auth(level: USER) @transaction {
+  usuario_insert(data: {
+    id_expr: "auth.uid"
+    rol: { id: $rolId }
+    rut: $rut
+    nombre: $nombre
+    apellido: $apellido
+    telefono: $telefono
+    email: $email
+  })
+  cliente_insert(data: {
+    usuario: { id_expr: "auth.uid" }
+    nombre: $nombre
+    tipoCliente: PARTICULAR
+    telefono: $telefono
+    email: $email
+    direccion: $direccion
+  })
+}
+
+# Edita una cuenta existente (rol, datos y estado activo/inactivo). Solo
+# administradores; el formulario siempre envía el estado completo del usuario.
+mutation ActualizarUsuario(
+  $id: String!
+  $rolId: UUID!
+  $nombre: String!
+  $apellido: String
+  $telefono: String
+  $activo: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar usuarios")
+      }
+    }
+  }
+  usuario_update(
+    id: $id
+    data: {
+      rol: { id: $rolId }
+      nombre: $nombre
+      apellido: $apellido
+      telefono: $telefono
+      activo: $activo
+      actualizadoEn_expr: "request.time"
+    }
+  )
+}

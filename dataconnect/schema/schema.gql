@@ -1,0 +1,226 @@
+################################################################################
+#  SISTEMA INTEGRADO DE GESTIÓN OPERACIONAL - Lavandería El Cobre (CobreTech)
+#  Esquema de Firebase SQL Connect (Data Connect)  ·  GraphQL -> PostgreSQL
+#  Ubicación esperada del archivo: dataconnect/schema/schema.gql
+#
+#  Reglas aplicadas (doc oficial de SQL Connect):
+#   - Nombres de tipo en PascalCase; nombres de campo en camelCase (sin "_").
+#   - PK implícita id: UUID! @default(expr: "uuidV4()") salvo Usuario (auth.uid)
+#     y las tablas de cruce con clave compuesta (@table(key: [...])).
+#   - Las relaciones se declaran en UN solo lado; Firebase crea la FK y el campo
+#     inverso automáticamente.
+#   - Montos y stock usan @col(dataType: "numeric(...)") para decimales exactos.
+################################################################################
+
+# ============================ ENUMERACIONES ===================================
+
+enum ComandaEstado { PENDIENTE EN_PROCESO FINALIZADA ENTREGADA ANULADA }
+enum EtapaEstado   { PENDIENTE EN_PROCESO COMPLETADA }
+enum TipoCliente   { HOTEL PARTICULAR }
+enum UnidadCobro   { PRENDA KILO }
+enum TipoMovimiento { ENTRADA SALIDA }
+
+# ====================== MÓDULO 1: IDENTIDAD Y ACCESO ==========================
+
+# Catálogo de perfiles (admin, recepcionista, operario, cliente).
+type Rol @table(name: "rol") {
+  nombre: String! @unique @col(dataType: "varchar(30)")
+  descripcion: String @col(dataType: "varchar(200)")
+}
+
+# Cuentas con inicio de sesión (personal interno + clientes registrados).
+# id se enlaza al UID de Firebase Authentication (NFR07: no se guardan claves).
+type Usuario @table(name: "usuario") {
+  id: String! @default(expr: "auth.uid")
+  rol: Rol!
+  rut: String @col(dataType: "varchar(12)")
+  nombre: String! @col(dataType: "varchar(80)")
+  apellido: String @col(dataType: "varchar(80)")
+  email: String! @unique @col(dataType: "varchar(120)")
+  telefono: String @col(dataType: "varchar(20)")
+  activo: Boolean! @default(value: true)
+  creadoEn: Timestamp! @default(expr: "request.time")
+  actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Cliente dueño de comandas (hotel o particular).
+# usuario es opcional: solo se llena si el cliente creó una cuenta (RF42).
+type Cliente @table(name: "cliente") {
+  id: UUID! @default(expr: "uuidV4()")
+  usuario: Usuario
+  nombre: String! @col(dataType: "varchar(120)")
+  tipoCliente: TipoCliente! @default(value: PARTICULAR)
+  telefono: String @col(dataType: "varchar(20)")
+  email: String @col(dataType: "varchar(120)")
+  direccion: String @col(dataType: "varchar(200)")
+  creadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# ======================= MÓDULO 2: CATÁLOGOS MAESTROS =========================
+
+type TipoServicio @table(name: "tipo_servicio") {
+  id: UUID! @default(expr: "uuidV4()")
+  nombre: String! @unique @col(dataType: "varchar(60)")
+  descripcion: String @col(dataType: "varchar(200)")
+  precioBase: Float! @col(dataType: "numeric(10,2)") @default(value: 0)
+  unidadCobro: UnidadCobro! @default(value: PRENDA)
+  activo: Boolean! @default(value: true)
+}
+
+type TipoPrenda @table(name: "tipo_prenda") {
+  id: UUID! @default(expr: "uuidV4()")
+  nombre: String! @unique @col(dataType: "varchar(60)")
+  descripcion: String @col(dataType: "varchar(200)")
+  activo: Boolean! @default(value: true)
+}
+
+# Las 5 etapas del flujo: recepción, lavado, secado, planchado, entrega.
+type EtapaProduccion @table(name: "etapa_produccion") {
+  id: UUID! @default(expr: "uuidV4()")
+  nombre: String! @unique @col(dataType: "varchar(40)")
+  orden: Int! @unique
+  descripcion: String @col(dataType: "varchar(200)")
+  tiempoEstimadoMin: Int
+}
+
+type Insumo @table(name: "insumo") {
+  id: UUID! @default(expr: "uuidV4()")
+  nombre: String! @unique @col(dataType: "varchar(80)")
+  unidadMedida: String! @col(dataType: "varchar(20)")
+  stockActual: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
+  stockMinimo: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
+  activo: Boolean! @default(value: true)
+  creadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# ===================== MÓDULO 3: COMANDAS (ÓRDENES) ===========================
+
+# numeroComanda es el identificador público para la consulta sin login (RF40).
+type Comanda @table(name: "comanda") {
+  id: UUID! @default(expr: "uuidV4()")
+  numeroComanda: String! @unique @col(dataType: "varchar(20)")
+  cliente: Cliente!
+  recepcionista: Usuario
+  estado: ComandaEstado! @default(value: PENDIENTE)
+  valorTotal: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
+  observaciones: String @col(dataType: "varchar(300)")
+  motivoAnulacion: String @col(dataType: "varchar(300)")
+  fechaRecepcion: Timestamp! @default(expr: "request.time")
+  fechaEntregaEstimada: Timestamp
+  fechaEntregaReal: Timestamp
+  creadoEn: Timestamp! @default(expr: "request.time")
+  actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Línea de detalle: cada prenda con su servicio, cantidad y subtotal (RF09/RF10).
+type ComandaDetalle @table(name: "comanda_detalle") {
+  id: UUID! @default(expr: "uuidV4()")
+  comanda: Comanda!
+  tipoPrenda: TipoPrenda!
+  tipoServicio: TipoServicio!
+  cantidad: Int! @default(value: 1)
+  pesoKg: Float @col(dataType: "numeric(8,2)")
+  precioUnitario: Float! @col(dataType: "numeric(10,2)") @default(value: 0)
+  subtotal: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
+}
+
+# Bitácora de cambios de estado de la comanda (trazabilidad, RF15).
+type ComandaHistorialEstado @table(name: "comanda_historial_estado") {
+  id: UUID! @default(expr: "uuidV4()")
+  comanda: Comanda!
+  usuario: Usuario
+  estadoAnterior: ComandaEstado
+  estadoNuevo: ComandaEstado!
+  motivo: String @col(dataType: "varchar(300)")
+  fecha: Timestamp! @default(expr: "request.time")
+}
+
+# ==================== MÓDULO 4: SEGUIMIENTO DE PRODUCCIÓN ======================
+
+# Avance de la comanda por cada etapa. La PK compuesta (comanda, etapa) evita
+# duplicados: una sola fila por etapa de cada comanda (RF17-RF24).
+# La 5ª etapa (Entrega) la marca el operario y cierra la comanda como ENTREGADA.
+type ComandaEtapa @table(name: "comanda_etapa", key: ["comanda", "etapa"]) {
+  comanda: Comanda!
+  etapa: EtapaProduccion!
+  operario: Usuario
+  estado: EtapaEstado! @default(value: PENDIENTE)
+  alertaRetraso: Boolean! @default(value: false)
+  fechaInicio: Timestamp
+  fechaCompletado: Timestamp
+  observaciones: String @col(dataType: "varchar(300)")
+}
+
+# ====================== MÓDULO 5: GESTIÓN DE INVENTARIO =======================
+
+# Entradas (compras/reposiciones) y salidas (consumo) que mantienen el stock.
+type MovimientoInventario @table(name: "movimiento_inventario") {
+  id: UUID! @default(expr: "uuidV4()")
+  insumo: Insumo!
+  usuario: Usuario
+  comanda: Comanda
+  tipoMovimiento: TipoMovimiento!
+  cantidad: Float! @col(dataType: "numeric(12,2)")
+  motivo: String @col(dataType: "varchar(200)")
+  fecha: Timestamp! @default(expr: "request.time")
+}
+
+# Alerta generada cuando el stock baja del mínimo (RF29).
+type AlertaInventario @table(name: "alerta_inventario") {
+  id: UUID! @default(expr: "uuidV4()")
+  insumo: Insumo!
+  nivelStock: Float! @col(dataType: "numeric(12,2)")
+  stockMinimo: Float! @col(dataType: "numeric(12,2)")
+  atendida: Boolean! @default(value: false)
+  fecha: Timestamp! @default(expr: "request.time")
+}
+
+# ===================== MÓDULO 6: COMUNICACIÓN INTERNA =========================
+
+# Avisos del admin a todos o a un rol específico (RF33-RF35, RF39).
+# rolDestinatario nulo = dirigido a todos.
+type Aviso @table(name: "aviso") {
+  id: UUID! @default(expr: "uuidV4()")
+  autor: Usuario!
+  rolDestinatario: Rol
+  titulo: String! @col(dataType: "varchar(120)")
+  contenido: String! @col(dataType: "varchar(1000)")
+  activo: Boolean! @default(value: true)
+  fechaPublicacion: Timestamp! @default(expr: "request.time")
+}
+
+# ============== MÓDULO 7: IA - PREDICCIÓN DE INSUMOS ==========================
+
+# Versiones del modelo predictivo; su precisión mejora con más datos (RF-IA04).
+type ModeloIa @table(name: "modelo_ia") {
+  id: UUID! @default(expr: "uuidV4()")
+  nombre: String! @col(dataType: "varchar(80)")
+  version: String! @col(dataType: "varchar(20)")
+  precisionEstimada: Float @col(dataType: "numeric(5,2)")
+  parametros: String @col(dataType: "varchar(1000)")
+  fechaEntrenamiento: Timestamp! @default(expr: "request.time")
+  activo: Boolean! @default(value: true)
+}
+
+# Patrón aprendido de consumo de un insumo por combinación servicio/prenda
+# (RF-IA01). PK compuesta para garantizar un patrón único por combinación.
+type PatronConsumo @table(name: "patron_consumo", key: ["tipoServicio", "tipoPrenda", "insumo"]) {
+  tipoServicio: TipoServicio!
+  tipoPrenda: TipoPrenda!
+  insumo: Insumo!
+  consumoPromedio: Float! @col(dataType: "numeric(12,4)") @default(value: 0)
+  modelo: ModeloIa
+  actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Predicción de consumo al crear una comanda; alimenta la alerta de stock
+# insuficiente (RF-IA02, RF-IA03).
+type PrediccionInsumo @table(name: "prediccion_insumo") {
+  id: UUID! @default(expr: "uuidV4()")
+  comanda: Comanda
+  insumo: Insumo!
+  modelo: ModeloIa!
+  cantidadPredicha: Float! @col(dataType: "numeric(12,4)")
+  stockSuficiente: Boolean! @default(value: true)
+  fechaPrediccion: Timestamp! @default(expr: "request.time")
+}

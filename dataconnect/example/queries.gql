@@ -1,0 +1,57 @@
+# Catálogo de roles para el selector de registro.
+query GetRoles @auth(level: PUBLIC, insecureReason: "Catálogo de roles sin datos sensibles, necesario antes de iniciar sesión") {
+  rols(orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    descripcion
+  }
+}
+
+# Perfil completo del usuario autenticado: se usa para decidir a dónde
+# redirigirlo tras iniciar sesión y para mostrar sus datos en /cuenta.
+query GetMiPerfil @auth(level: USER) {
+  usuario(id_expr: "auth.uid") {
+    id
+    rut
+    nombre
+    apellido
+    email
+    telefono
+    activo
+    creadoEn
+    rol {
+      id
+      nombre
+      descripcion
+    }
+    clientes_on_usuario {
+      id
+      tipoCliente
+      direccion
+    }
+  }
+}
+
+# Lista de todas las cuentas del sistema. Solo accesible para administradores
+# (verificado contra la tabla usuario/rol, no contra un claim del token).
+query GetUsuarios @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    rol {
+      nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden ver la lista de usuarios")
+    }
+  }
+  usuarios(orderBy: [{ creadoEn: DESC }]) {
+    id
+    rut
+    nombre
+    apellido
+    email
+    telefono
+    activo
+    creadoEn
+    rol {
+      id
+      nombre
+    }
+  }
+}
