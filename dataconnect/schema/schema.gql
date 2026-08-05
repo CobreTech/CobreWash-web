@@ -19,6 +19,9 @@ enum EtapaEstado   { PENDIENTE EN_PROCESO COMPLETADA }
 enum TipoCliente   { HOTEL PARTICULAR }
 enum UnidadCobro   { PRENDA KILO }
 enum TipoMovimiento { ENTRADA SALIDA }
+enum MomentoInspeccion { ANTES DESPUES }
+enum EstadoVehiculo { APTO CON_OBSERVACIONES NO_APTO }
+enum SalidaVehiculoEstado { PROGRAMADA EN_SERVICIO FINALIZADA CANCELADA }
 
 # ====================== MÓDULO 1: IDENTIDAD Y ACCESO ==========================
 
@@ -86,6 +89,7 @@ type EtapaProduccion @table(name: "etapa_produccion") {
 type Insumo @table(name: "insumo") {
   id: UUID! @default(expr: "uuidV4()")
   nombre: String! @unique @col(dataType: "varchar(80)")
+  codigoQr: UUID! @unique @default(expr: "uuidV4()")
   unidadMedida: String! @col(dataType: "varchar(20)")
   stockActual: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
   stockMinimo: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
@@ -99,6 +103,7 @@ type Insumo @table(name: "insumo") {
 type Comanda @table(name: "comanda") {
   id: UUID! @default(expr: "uuidV4()")
   numeroComanda: String! @unique @col(dataType: "varchar(20)")
+  codigoQr: UUID! @unique @default(expr: "uuidV4()")
   cliente: Cliente!
   recepcionista: Usuario
   estado: ComandaEstado! @default(value: PENDIENTE)
@@ -223,4 +228,54 @@ type PrediccionInsumo @table(name: "prediccion_insumo") {
   cantidadPredicha: Float! @col(dataType: "numeric(12,4)")
   stockSuficiente: Boolean! @default(value: true)
   fechaPrediccion: Timestamp! @default(expr: "request.time")
+}
+
+# ================== MÓDULO 8: FLOTA Y CONTROL DE REPARTO ======================
+
+# Vehículos propios de la lavandería. Se desactivan en lugar de eliminarlos
+# para preservar el historial operacional asociado.
+type Vehiculo @table(name: "vehiculo") {
+  id: UUID! @default(expr: "uuidV4()")
+  patente: String! @unique @col(dataType: "varchar(10)")
+  marca: String! @col(dataType: "varchar(50)")
+  modelo: String! @col(dataType: "varchar(50)")
+  anio: Int
+  descripcion: String @col(dataType: "varchar(200)")
+  activo: Boolean! @default(value: true)
+  creadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Cada recorrido o jornada de un vehículo asignado a un repartidor.
+type SalidaVehiculo @table(name: "salida_vehiculo") {
+  id: UUID! @default(expr: "uuidV4()")
+  vehiculo: Vehiculo!
+  repartidor: Usuario!
+  estado: SalidaVehiculoEstado! @default(value: PROGRAMADA)
+  fechaSalida: Timestamp
+  fechaRetorno: Timestamp
+  observaciones: String @col(dataType: "varchar(300)")
+  creadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Una salida admite como máximo una inspección ANTES y una DESPUES.
+type InspeccionVehiculo
+  @table(name: "inspeccion_vehiculo")
+  @unique(fields: ["salida", "momento"]) {
+  id: UUID! @default(expr: "uuidV4()")
+  salida: SalidaVehiculo!
+  momento: MomentoInspeccion!
+  estadoVehiculo: EstadoVehiculo!
+  kilometraje: Float! @col(dataType: "numeric(12,1)")
+  observaciones: String @col(dataType: "varchar(500)")
+  registradoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Los archivos se almacenan en Firebase Storage; SQL Connect conserva la ruta.
+type FotoInspeccionVehiculo @table(name: "foto_inspeccion_vehiculo") {
+  id: UUID! @default(expr: "uuidV4()")
+  inspeccion: InspeccionVehiculo!
+  rutaStorage: String! @unique @col(dataType: "varchar(500)")
+  descripcion: String @col(dataType: "varchar(200)")
+  orden: Int! @default(value: 1)
+  creadoEn: Timestamp! @default(expr: "request.time")
 }
