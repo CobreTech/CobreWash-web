@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2,
   User,
   Bell,
   Shield,
@@ -11,17 +10,13 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  MapPin,
   Phone,
-  Globe,
-  Clock,
   Mail,
   Palette,
   Sun,
   Moon,
   Monitor,
 } from "lucide-react";
-import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { useTheme, type Theme } from "@/components/providers/ThemeProvider";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
@@ -152,18 +147,6 @@ export default function ConfiguracionPage() {
   const [saved, setSaved] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const { theme, setTheme } = useTheme();
-
-  // Empresa fields
-  const [empresa, setEmpresa] = useState({
-    nombre: "Lavandería El Cobre",
-    rut: "76.543.210-8",
-    direccion: "Av. El Cobre 1234, Santiago",
-    telefono: "+56 2 2345 6789",
-    email: "contacto@lavelcobre.cl",
-    web: "www.lavanderiael cobre.cl",
-    horario: "Lun-Vie 08:00-19:00 · Sáb 09:00-14:00",
-    region: "Región Metropolitana",
-  });
 
   // Notificaciones
   const [notifs, setNotifs] = useState({

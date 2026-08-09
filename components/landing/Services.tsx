@@ -92,7 +92,7 @@ export default function Services() {
           viewport={{ once: true, margin: "-100px" }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {services.map((service, index) => {
+          {services.map((service) => {
             const IconComponent = service.icon;
             return (
               <motion.div
