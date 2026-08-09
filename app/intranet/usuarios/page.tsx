@@ -18,6 +18,7 @@ import {
   UserCheck,
   UserX,
   Loader2,
+  Building2,
 } from "lucide-react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { QueryFetchPolicy } from "firebase/data-connect";
@@ -31,6 +32,7 @@ import {
   actualizarUsuario,
   type GetUsuariosData,
   type GetRolesData,
+  TipoCliente,
 } from "@/src/dataconnect-generated";
 import { cleanRut, formatRut, isValidRut, validatePassword } from "@/lib/validators";
 import { mapAuthError } from "@/lib/firebase/errors";
@@ -41,6 +43,22 @@ import GlassSelect from "@/components/ui/GlassSelect";
 type Usuario = GetUsuariosData["usuarios"][number];
 type RolOpcion = GetRolesData["rols"][number];
 type TabFilter = "Todos" | "Activos" | "Inactivos";
+type FormState = {
+  rolId: string;
+  nombre: string;
+  apellido: string;
+  rut: string;
+  telefono: string;
+  email: string;
+  direccion: string;
+  tipoCliente: TipoCliente | "";
+  password: string;
+};
+
+const tipoClienteOptions = [
+  { value: TipoCliente.PARTICULAR, label: "Particular" },
+  { value: TipoCliente.HOTEL, label: "Hotel" },
+];
 
 const roleColors: Record<string, { bg: string; text: string }> = {
   admin: { bg: "bg-brand-500/15", text: "text-brand-600 dark:text-brand-400" },
@@ -53,7 +71,7 @@ const defaultRoleColor = { bg: "bg-stone-500/15", text: "text-stone-600 dark:tex
 
 const tabs: TabFilter[] = ["Todos", "Activos", "Inactivos"];
 
-const emptyForm = {
+const emptyForm: FormState = {
   rolId: "",
   nombre: "",
   apellido: "",
@@ -61,6 +79,7 @@ const emptyForm = {
   telefono: "",
   email: "",
   direccion: "",
+  tipoCliente: "",
   password: "",
 };
 
@@ -125,6 +144,7 @@ export default function UsuariosPage() {
       telefono: usuario.telefono ?? "",
       email: usuario.email,
       direccion: "",
+      tipoCliente: "",
       password: "",
     });
     setFormError("");
@@ -149,6 +169,10 @@ export default function UsuariosPage() {
       setFormError(passwordCheck.message);
       return;
     }
+    if (selectedRole?.nombre === "cliente" && !form.tipoCliente) {
+      setFormError("Selecciona el tipo de cliente.");
+      return;
+    }
 
     setSaving(true);
     const { auth: secAuth, dataConnect: secDC, cleanup } = createSecondaryFirebaseContext();
@@ -165,7 +189,11 @@ export default function UsuariosPage() {
       };
 
       if (selectedRole?.nombre === "cliente") {
-        await registrarseComoCliente(secDC, { ...vars, direccion: form.direccion.trim() || null });
+        await registrarseComoCliente(secDC, {
+          ...vars,
+          direccion: form.direccion.trim() || null,
+          tipoCliente: form.tipoCliente as TipoCliente,
+        });
       } else {
         await registrarse(secDC, vars);
       }
@@ -470,7 +498,14 @@ export default function UsuariosPage() {
                 <Field label="Tipo de Usuario">
                   <GlassSelect
                     value={form.rolId}
-                    onChange={(v) => setForm({ ...form, rolId: v })}
+                    onChange={(rolId) => {
+                      const esCliente = roles.find((rol) => rol.id === rolId)?.nombre === "cliente";
+                      setForm((current) => ({
+                        ...current,
+                        rolId,
+                        tipoCliente: esCliente ? current.tipoCliente : "",
+                      }));
+                    }}
                     icon={UserCog}
                     ariaLabel="Tipo de usuario"
                     placeholder="Selecciona un rol"
@@ -480,6 +515,19 @@ export default function UsuariosPage() {
                     }))}
                   />
                 </Field>
+
+                {selectedRole?.nombre === "cliente" && modal.mode === "crear" && (
+                  <Field label="Tipo de Cliente">
+                    <GlassSelect
+                      value={form.tipoCliente}
+                      onChange={(value) => setForm({ ...form, tipoCliente: value as TipoCliente })}
+                      icon={Building2}
+                      ariaLabel="Tipo de cliente"
+                      placeholder="Selecciona un tipo de cliente"
+                      options={tipoClienteOptions}
+                    />
+                  </Field>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Nombre">

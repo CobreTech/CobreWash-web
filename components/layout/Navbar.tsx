@@ -12,10 +12,22 @@ import {
 } from "firebase/auth";
 import { QueryFetchPolicy } from "firebase/data-connect";
 import { auth, dataConnect } from "@/lib/firebase/client";
-import { getRoles, registrarseComoCliente, getMiPerfil, type GetRolesData } from "@/src/dataconnect-generated";
+import {
+  getRoles,
+  registrarseComoCliente,
+  getMiPerfil,
+  TipoCliente,
+  type GetRolesData,
+} from "@/src/dataconnect-generated";
 import { cleanRut, formatRut, isValidRut, validatePassword } from "@/lib/validators";
 import { mapAuthError } from "@/lib/firebase/errors";
 import { LANDING_POR_ROL, type Rol } from "@/lib/roles";
+import GlassSelect from "@/components/ui/GlassSelect";
+
+const tipoClienteOptions = [
+  { value: TipoCliente.PARTICULAR, label: "Particular" },
+  { value: TipoCliente.HOTEL, label: "Hotel" },
+];
 
 export default function Navbar() {
   const router = useRouter();
@@ -64,6 +76,7 @@ export default function Navbar() {
   const [authRut, setAuthRut] = useState("");
   const [authTelefono, setAuthTelefono] = useState("");
   const [authDireccion, setAuthDireccion] = useState("");
+  const [authTipoCliente, setAuthTipoCliente] = useState<TipoCliente | "">("");
   const [roles, setRoles] = useState<GetRolesData["rols"]>([]);
   const clienteRolId = roles.find((r) => r.nombre === "cliente")?.id;
 
@@ -78,6 +91,7 @@ export default function Navbar() {
     setAuthRut("");
     setAuthTelefono("");
     setAuthDireccion("");
+    setAuthTipoCliente("");
     setAuthConfirmPass("");
     setAuthPassword("");
   };
@@ -173,6 +187,10 @@ export default function Navbar() {
         setAuthError("No se pudo cargar el catálogo de roles. Intenta nuevamente.");
         return;
       }
+      if (!authTipoCliente) {
+        setAuthError("Selecciona el tipo de cliente.");
+        return;
+      }
       if (!isValidRut(authRut)) {
         setAuthError("El RUT ingresado no es válido.");
         return;
@@ -200,6 +218,7 @@ export default function Navbar() {
           telefono: authTelefono.trim() || null,
           email: authEmail.trim(),
           direccion: authDireccion.trim() || null,
+          tipoCliente: authTipoCliente,
         });
 
         setAuthLoading(false);
@@ -573,6 +592,17 @@ export default function Navbar() {
                                 className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-850 placeholder-stone-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all text-sm font-medium"
                               />
                             </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-stone-600">Tipo de Cliente</label>
+                            <GlassSelect
+                              value={authTipoCliente}
+                              onChange={(value) => setAuthTipoCliente(value as TipoCliente)}
+                              ariaLabel="Tipo de cliente"
+                              placeholder="Selecciona un tipo de cliente"
+                              options={tipoClienteOptions}
+                            />
                           </div>
 
                           <div className="space-y-1.5">

@@ -29,6 +29,7 @@ mutation RegistrarseComoCliente(
   $telefono: String
   $email: String!
   $direccion: String
+  $tipoCliente: TipoCliente!
 ) @auth(level: USER) @transaction {
   usuario_insert(data: {
     id_expr: "auth.uid"
@@ -42,7 +43,7 @@ mutation RegistrarseComoCliente(
   cliente_insert(data: {
     usuario: { id_expr: "auth.uid" }
     nombre: $nombre
-    tipoCliente: PARTICULAR
+    tipoCliente: $tipoCliente
     telefono: $telefono
     email: $email
     direccion: $direccion

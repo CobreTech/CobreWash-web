@@ -24,6 +24,12 @@ const SalidaVehiculoEstado = {
 }
 exports.SalidaVehiculoEstado = SalidaVehiculoEstado;
 
+const TipoCliente = {
+  HOTEL: "HOTEL",
+  PARTICULAR: "PARTICULAR",
+}
+exports.TipoCliente = TipoCliente;
+
 const connectorConfig = {
   connector: 'example',
   service: 'lavanderia-el-cobre',

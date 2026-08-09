@@ -29,6 +29,11 @@ export enum SalidaVehiculoEstado {
   CANCELADA = "CANCELADA",
 };
 
+export enum TipoCliente {
+  HOTEL = "HOTEL",
+  PARTICULAR = "PARTICULAR",
+};
+
 
 
 export interface ActualizarUsuarioData {
@@ -348,6 +353,7 @@ export interface RegistrarseComoClienteVariables {
   telefono?: string | null;
   email: string;
   direccion?: string | null;
+  tipoCliente: TipoCliente;
 }
 
 export interface RegistrarseData {

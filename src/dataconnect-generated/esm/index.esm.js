@@ -21,6 +21,11 @@ export const SalidaVehiculoEstado = {
   CANCELADA: "CANCELADA",
 }
 
+export const TipoCliente = {
+  HOTEL: "HOTEL",
+  PARTICULAR: "PARTICULAR",
+}
+
 export const connectorConfig = {
   connector: 'example',
   service: 'lavanderia-el-cobre',

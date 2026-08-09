@@ -885,6 +885,7 @@ export interface RegistrarseComoClienteVariables {
   telefono?: string | null;
   email: string;
   direccion?: string | null;
+  tipoCliente: TipoCliente;
 }
 ```
 ### Return Type
@@ -942,10 +943,11 @@ export default function RegistrarseComoClienteComponent() {
     telefono: ..., // optional
     email: ..., 
     direccion: ..., // optional
+    tipoCliente: ..., 
   };
   mutation.mutate(registrarseComoClienteVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., });
+  mutation.mutate({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {

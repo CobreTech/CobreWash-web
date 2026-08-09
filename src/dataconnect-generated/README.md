@@ -1026,6 +1026,7 @@ export interface RegistrarseComoClienteVariables {
   telefono?: string | null;
   email: string;
   direccion?: string | null;
+  tipoCliente: TipoCliente;
 }
 ```
 ### Return Type
@@ -1053,13 +1054,14 @@ const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
   telefono: ..., // optional
   email: ..., 
   direccion: ..., // optional
+  tipoCliente: ..., 
 };
 
 // Call the `registrarseComoCliente()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await registrarseComoCliente(registrarseComoClienteVars);
 // Variables can be defined inline as well.
-const { data } = await registrarseComoCliente({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., });
+const { data } = await registrarseComoCliente({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1091,12 +1093,13 @@ const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
   telefono: ..., // optional
   email: ..., 
   direccion: ..., // optional
+  tipoCliente: ..., 
 };
 
 // Call the `registrarseComoClienteRef()` function to get a reference to the mutation.
 const ref = registrarseComoClienteRef(registrarseComoClienteVars);
 // Variables can be defined inline as well.
-const ref = registrarseComoClienteRef({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., });
+const ref = registrarseComoClienteRef({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
