@@ -110,6 +110,22 @@ export interface Comanda_Key {
   __typename?: 'Comanda_Key';
 }
 
+export interface CrearClienteAdministradoData {
+  usuario_insert: Usuario_Key;
+  cliente_insert: Cliente_Key;
+}
+
+export interface CrearClienteAdministradoVariables {
+  id: string;
+  rut: string;
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email: string;
+  direccion?: string | null;
+  tipoCliente: TipoCliente;
+}
+
 export interface CrearSalidaVehiculoData {
   salidaVehiculo_insert: SalidaVehiculo_Key;
 }
@@ -118,6 +134,20 @@ export interface CrearSalidaVehiculoVariables {
   vehiculoId: UUIDString;
   repartidorId: string;
   observaciones?: string | null;
+}
+
+export interface CrearUsuarioAdministradoData {
+  usuario_insert: Usuario_Key;
+}
+
+export interface CrearUsuarioAdministradoVariables {
+  id: string;
+  rolId: UUIDString;
+  rut: string;
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email: string;
 }
 
 export interface CrearVehiculoData {
@@ -346,7 +376,6 @@ export interface RegistrarseComoClienteData {
 }
 
 export interface RegistrarseComoClienteVariables {
-  rolId: UUIDString;
   rut: string;
   nombre: string;
   apellido: string;
@@ -411,6 +440,18 @@ export const registrarseRef: RegistrarseRef;
 export function registrarse(vars: RegistrarseVariables): MutationPromise<RegistrarseData, RegistrarseVariables>;
 export function registrarse(dc: DataConnect, vars: RegistrarseVariables): MutationPromise<RegistrarseData, RegistrarseVariables>;
 
+interface CrearUsuarioAdministradoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearUsuarioAdministradoVariables): MutationRef<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearUsuarioAdministradoVariables): MutationRef<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+  operationName: string;
+}
+export const crearUsuarioAdministradoRef: CrearUsuarioAdministradoRef;
+
+export function crearUsuarioAdministrado(vars: CrearUsuarioAdministradoVariables): MutationPromise<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+export function crearUsuarioAdministrado(dc: DataConnect, vars: CrearUsuarioAdministradoVariables): MutationPromise<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+
 interface RegistrarseComoClienteRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: RegistrarseComoClienteVariables): MutationRef<RegistrarseComoClienteData, RegistrarseComoClienteVariables>;
@@ -422,6 +463,18 @@ export const registrarseComoClienteRef: RegistrarseComoClienteRef;
 
 export function registrarseComoCliente(vars: RegistrarseComoClienteVariables): MutationPromise<RegistrarseComoClienteData, RegistrarseComoClienteVariables>;
 export function registrarseComoCliente(dc: DataConnect, vars: RegistrarseComoClienteVariables): MutationPromise<RegistrarseComoClienteData, RegistrarseComoClienteVariables>;
+
+interface CrearClienteAdministradoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearClienteAdministradoVariables): MutationRef<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearClienteAdministradoVariables): MutationRef<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+  operationName: string;
+}
+export const crearClienteAdministradoRef: CrearClienteAdministradoRef;
+
+export function crearClienteAdministrado(vars: CrearClienteAdministradoVariables): MutationPromise<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+export function crearClienteAdministrado(dc: DataConnect, vars: CrearClienteAdministradoVariables): MutationPromise<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
 
 interface ActualizarUsuarioRef {
   /* Allow users to create refs without passing in DataConnect */

@@ -19,7 +19,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetMisSalidasVehiculo*](#getmissalidasvehiculo)
 - [**Mutations**](#mutations)
   - [*Registrarse*](#registrarse)
+  - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
   - [*RegistrarseComoCliente*](#registrarsecomocliente)
+  - [*CrearClienteAdministrado*](#crearclienteadministrado)
   - [*ActualizarUsuario*](#actualizarusuario)
   - [*CrearVehiculo*](#crearvehiculo)
   - [*ActualizarVehiculo*](#actualizarvehiculo)
@@ -985,6 +987,133 @@ executeMutation(ref).then((response) => {
 });
 ```
 
+## CrearUsuarioAdministrado
+You can execute the `CrearUsuarioAdministrado` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+crearUsuarioAdministrado(vars: CrearUsuarioAdministradoVariables): MutationPromise<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+
+interface CrearUsuarioAdministradoRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearUsuarioAdministradoVariables): MutationRef<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+}
+export const crearUsuarioAdministradoRef: CrearUsuarioAdministradoRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+crearUsuarioAdministrado(dc: DataConnect, vars: CrearUsuarioAdministradoVariables): MutationPromise<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+
+interface CrearUsuarioAdministradoRef {
+  ...
+  (dc: DataConnect, vars: CrearUsuarioAdministradoVariables): MutationRef<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+}
+export const crearUsuarioAdministradoRef: CrearUsuarioAdministradoRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the crearUsuarioAdministradoRef:
+```typescript
+const name = crearUsuarioAdministradoRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CrearUsuarioAdministrado` mutation requires an argument of type `CrearUsuarioAdministradoVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CrearUsuarioAdministradoVariables {
+  id: string;
+  rolId: UUIDString;
+  rut: string;
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email: string;
+}
+```
+### Return Type
+Recall that executing the `CrearUsuarioAdministrado` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CrearUsuarioAdministradoData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CrearUsuarioAdministradoData {
+  usuario_insert: Usuario_Key;
+}
+```
+### Using `CrearUsuarioAdministrado`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, crearUsuarioAdministrado, CrearUsuarioAdministradoVariables } from '@dataconnect/generated';
+
+// The `CrearUsuarioAdministrado` mutation requires an argument of type `CrearUsuarioAdministradoVariables`:
+const crearUsuarioAdministradoVars: CrearUsuarioAdministradoVariables = {
+  id: ...,
+  rolId: ...,
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
+  telefono: ..., // optional
+  email: ...,
+};
+
+// Call the `crearUsuarioAdministrado()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await crearUsuarioAdministrado(crearUsuarioAdministradoVars);
+// Variables can be defined inline as well.
+const { data } = await crearUsuarioAdministrado({ id: ..., rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await crearUsuarioAdministrado(dataConnect, crearUsuarioAdministradoVars);
+
+console.log(data.usuario_insert);
+
+// Or, you can use the `Promise` API.
+crearUsuarioAdministrado(crearUsuarioAdministradoVars).then((response) => {
+  const data = response.data;
+  console.log(data.usuario_insert);
+});
+```
+
+### Using `CrearUsuarioAdministrado`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, crearUsuarioAdministradoRef, CrearUsuarioAdministradoVariables } from '@dataconnect/generated';
+
+// The `CrearUsuarioAdministrado` mutation requires an argument of type `CrearUsuarioAdministradoVariables`:
+const crearUsuarioAdministradoVars: CrearUsuarioAdministradoVariables = {
+  id: ...,
+  rolId: ...,
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
+  telefono: ..., // optional
+  email: ...,
+};
+
+// Call the `crearUsuarioAdministradoRef()` function to get a reference to the mutation.
+const ref = crearUsuarioAdministradoRef(crearUsuarioAdministradoVars);
+// Variables can be defined inline as well.
+const ref = crearUsuarioAdministradoRef({ id: ..., rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = crearUsuarioAdministradoRef(dataConnect, crearUsuarioAdministradoVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.usuario_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.usuario_insert);
+});
+```
+
 ## RegistrarseComoCliente
 You can execute the `RegistrarseComoCliente` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
@@ -1019,7 +1148,6 @@ The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseC
 
 ```typescript
 export interface RegistrarseComoClienteVariables {
-  rolId: UUIDString;
   rut: string;
   nombre: string;
   apellido: string;
@@ -1047,7 +1175,6 @@ import { connectorConfig, registrarseComoCliente, RegistrarseComoClienteVariable
 
 // The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseComoClienteVariables`:
 const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-  rolId: ..., 
   rut: ..., 
   nombre: ..., 
   apellido: ..., 
@@ -1061,7 +1188,7 @@ const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await registrarseComoCliente(registrarseComoClienteVars);
 // Variables can be defined inline as well.
-const { data } = await registrarseComoCliente({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
+const { data } = await registrarseComoCliente({ rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1086,7 +1213,6 @@ import { connectorConfig, registrarseComoClienteRef, RegistrarseComoClienteVaria
 
 // The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseComoClienteVariables`:
 const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-  rolId: ..., 
   rut: ..., 
   nombre: ..., 
   apellido: ..., 
@@ -1099,11 +1225,146 @@ const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
 // Call the `registrarseComoClienteRef()` function to get a reference to the mutation.
 const ref = registrarseComoClienteRef(registrarseComoClienteVars);
 // Variables can be defined inline as well.
-const ref = registrarseComoClienteRef({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
+const ref = registrarseComoClienteRef({ rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = registrarseComoClienteRef(dataConnect, registrarseComoClienteVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.usuario_insert);
+console.log(data.cliente_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.usuario_insert);
+  console.log(data.cliente_insert);
+});
+```
+
+## CrearClienteAdministrado
+You can execute the `CrearClienteAdministrado` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+crearClienteAdministrado(vars: CrearClienteAdministradoVariables): MutationPromise<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+
+interface CrearClienteAdministradoRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearClienteAdministradoVariables): MutationRef<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+}
+export const crearClienteAdministradoRef: CrearClienteAdministradoRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+crearClienteAdministrado(dc: DataConnect, vars: CrearClienteAdministradoVariables): MutationPromise<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+
+interface CrearClienteAdministradoRef {
+  ...
+  (dc: DataConnect, vars: CrearClienteAdministradoVariables): MutationRef<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+}
+export const crearClienteAdministradoRef: CrearClienteAdministradoRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the crearClienteAdministradoRef:
+```typescript
+const name = crearClienteAdministradoRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CrearClienteAdministrado` mutation requires an argument of type `CrearClienteAdministradoVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CrearClienteAdministradoVariables {
+  id: string;
+  rut: string;
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email: string;
+  direccion?: string | null;
+  tipoCliente: TipoCliente;
+}
+```
+### Return Type
+Recall that executing the `CrearClienteAdministrado` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CrearClienteAdministradoData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CrearClienteAdministradoData {
+  usuario_insert: Usuario_Key;
+  cliente_insert: Cliente_Key;
+}
+```
+### Using `CrearClienteAdministrado`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, crearClienteAdministrado, CrearClienteAdministradoVariables } from '@dataconnect/generated';
+
+// The `CrearClienteAdministrado` mutation requires an argument of type `CrearClienteAdministradoVariables`:
+const crearClienteAdministradoVars: CrearClienteAdministradoVariables = {
+  id: ...,
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
+  telefono: ..., // optional
+  email: ...,
+  direccion: ..., // optional
+  tipoCliente: ...,
+};
+
+// Call the `crearClienteAdministrado()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await crearClienteAdministrado(crearClienteAdministradoVars);
+// Variables can be defined inline as well.
+const { data } = await crearClienteAdministrado({ id: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await crearClienteAdministrado(dataConnect, crearClienteAdministradoVars);
+
+console.log(data.usuario_insert);
+console.log(data.cliente_insert);
+
+// Or, you can use the `Promise` API.
+crearClienteAdministrado(crearClienteAdministradoVars).then((response) => {
+  const data = response.data;
+  console.log(data.usuario_insert);
+  console.log(data.cliente_insert);
+});
+```
+
+### Using `CrearClienteAdministrado`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, crearClienteAdministradoRef, CrearClienteAdministradoVariables } from '@dataconnect/generated';
+
+// The `CrearClienteAdministrado` mutation requires an argument of type `CrearClienteAdministradoVariables`:
+const crearClienteAdministradoVars: CrearClienteAdministradoVariables = {
+  id: ...,
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
+  telefono: ..., // optional
+  email: ...,
+  direccion: ..., // optional
+  tipoCliente: ...,
+};
+
+// Call the `crearClienteAdministradoRef()` function to get a reference to the mutation.
+const ref = crearClienteAdministradoRef(crearClienteAdministradoVars);
+// Variables can be defined inline as well.
+const ref = crearClienteAdministradoRef({ id: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = crearClienteAdministradoRef(dataConnect, crearClienteAdministradoVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

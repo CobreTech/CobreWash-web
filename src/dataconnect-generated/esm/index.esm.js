@@ -43,6 +43,18 @@ export function registrarse(dcOrVars, vars) {
   return executeMutation(registrarseRef(dcInstance, inputVars));
 }
 
+export const crearUsuarioAdministradoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearUsuarioAdministrado', inputVars);
+}
+crearUsuarioAdministradoRef.operationName = 'CrearUsuarioAdministrado';
+
+export function crearUsuarioAdministrado(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearUsuarioAdministradoRef(dcInstance, inputVars));
+}
+
 export const registrarseComoClienteRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -53,6 +65,18 @@ registrarseComoClienteRef.operationName = 'RegistrarseComoCliente';
 export function registrarseComoCliente(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(registrarseComoClienteRef(dcInstance, inputVars));
+}
+
+export const crearClienteAdministradoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearClienteAdministrado', inputVars);
+}
+crearClienteAdministradoRef.operationName = 'CrearClienteAdministrado';
+
+export function crearClienteAdministrado(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearClienteAdministradoRef(dcInstance, inputVars));
 }
 
 export const actualizarUsuarioRef = (dcOrVars, vars) => {

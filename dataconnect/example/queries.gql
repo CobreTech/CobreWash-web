@@ -36,6 +36,7 @@ query GetMiPerfil @auth(level: USER) {
 # (verificado contra la tabla usuario/rol, no contra un claim del token).
 query GetUsuarios @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden ver la lista de usuarios")
     }
@@ -82,6 +83,7 @@ query GetComandaPorQr($codigoQr: UUID!)
 # o administración; escanear un código no evita la autorización.
 query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(
         expr: "this in ['admin', 'operario']"
@@ -103,6 +105,7 @@ query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
 # Catálogo de vehículos disponible para administración y repartidores.
 query GetVehiculos @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(
         expr: "this in ['admin', 'repartidor']"
@@ -125,6 +128,7 @@ query GetVehiculos @auth(level: USER) {
 # Cada repartidor ve únicamente las salidas que tiene asignadas.
 query GetMisSalidasVehiculo @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(
         expr: "this == 'repartidor'"

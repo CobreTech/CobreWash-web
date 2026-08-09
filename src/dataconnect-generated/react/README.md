@@ -26,7 +26,9 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetMisSalidasVehiculo*](#getmissalidasvehiculo)
 - [**Mutations**](#mutations)
   - [*Registrarse*](#registrarse)
+  - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
   - [*RegistrarseComoCliente*](#registrarsecomocliente)
+  - [*CrearClienteAdministrado*](#crearclienteadministrado)
   - [*ActualizarUsuario*](#actualizarusuario)
   - [*CrearVehiculo*](#crearvehiculo)
   - [*ActualizarVehiculo*](#actualizarvehiculo)
@@ -863,6 +865,112 @@ export default function RegistrarseComponent() {
 }
 ```
 
+## CrearUsuarioAdministrado
+You can execute the `CrearUsuarioAdministrado` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCrearUsuarioAdministrado(options?: useDataConnectMutationOptions<CrearUsuarioAdministradoData, FirebaseError, CrearUsuarioAdministradoVariables>): UseDataConnectMutationResult<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCrearUsuarioAdministrado(dc: DataConnect, options?: useDataConnectMutationOptions<CrearUsuarioAdministradoData, FirebaseError, CrearUsuarioAdministradoVariables>): UseDataConnectMutationResult<CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables>;
+```
+
+### Variables
+The `CrearUsuarioAdministrado` Mutation requires an argument of type `CrearUsuarioAdministradoVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CrearUsuarioAdministradoVariables {
+  id: string;
+  rolId: UUIDString;
+  rut: string;
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email: string;
+}
+```
+### Return Type
+Recall that calling the `CrearUsuarioAdministrado` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CrearUsuarioAdministrado` Mutation is of type `CrearUsuarioAdministradoData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CrearUsuarioAdministradoData {
+  usuario_insert: Usuario_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CrearUsuarioAdministrado`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CrearUsuarioAdministradoVariables } from '@dataconnect/generated';
+import { useCrearUsuarioAdministrado } from '@dataconnect/generated/react'
+
+export default function CrearUsuarioAdministradoComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCrearUsuarioAdministrado();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCrearUsuarioAdministrado(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearUsuarioAdministrado(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearUsuarioAdministrado(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCrearUsuarioAdministrado` Mutation requires an argument of type `CrearUsuarioAdministradoVariables`:
+  const crearUsuarioAdministradoVars: CrearUsuarioAdministradoVariables = {
+    id: ...,
+    rolId: ...,
+    rut: ...,
+    nombre: ...,
+    apellido: ...,
+    telefono: ..., // optional
+    email: ...,
+  };
+  mutation.mutate(crearUsuarioAdministradoVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(crearUsuarioAdministradoVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.usuario_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
 ## RegistrarseComoCliente
 You can execute the `RegistrarseComoCliente` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
 ```javascript
@@ -878,7 +986,6 @@ The `RegistrarseComoCliente` Mutation requires an argument of type `RegistrarseC
 
 ```javascript
 export interface RegistrarseComoClienteVariables {
-  rolId: UUIDString;
   rut: string;
   nombre: string;
   apellido: string;
@@ -936,7 +1043,6 @@ export default function RegistrarseComoClienteComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRegistrarseComoCliente` Mutation requires an argument of type `RegistrarseComoClienteVariables`:
   const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-    rolId: ..., 
     rut: ..., 
     nombre: ..., 
     apellido: ..., 
@@ -947,13 +1053,123 @@ export default function RegistrarseComoClienteComponent() {
   };
   mutation.mutate(registrarseComoClienteVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ rolId: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
+  mutation.mutate({ rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(registrarseComoClienteVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.usuario_insert);
+    console.log(mutation.data.cliente_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CrearClienteAdministrado
+You can execute the `CrearClienteAdministrado` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCrearClienteAdministrado(options?: useDataConnectMutationOptions<CrearClienteAdministradoData, FirebaseError, CrearClienteAdministradoVariables>): UseDataConnectMutationResult<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCrearClienteAdministrado(dc: DataConnect, options?: useDataConnectMutationOptions<CrearClienteAdministradoData, FirebaseError, CrearClienteAdministradoVariables>): UseDataConnectMutationResult<CrearClienteAdministradoData, CrearClienteAdministradoVariables>;
+```
+
+### Variables
+The `CrearClienteAdministrado` Mutation requires an argument of type `CrearClienteAdministradoVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CrearClienteAdministradoVariables {
+  id: string;
+  rut: string;
+  nombre: string;
+  apellido: string;
+  telefono?: string | null;
+  email: string;
+  direccion?: string | null;
+  tipoCliente: TipoCliente;
+}
+```
+### Return Type
+Recall that calling the `CrearClienteAdministrado` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CrearClienteAdministrado` Mutation is of type `CrearClienteAdministradoData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CrearClienteAdministradoData {
+  usuario_insert: Usuario_Key;
+  cliente_insert: Cliente_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CrearClienteAdministrado`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CrearClienteAdministradoVariables } from '@dataconnect/generated';
+import { useCrearClienteAdministrado } from '@dataconnect/generated/react'
+
+export default function CrearClienteAdministradoComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCrearClienteAdministrado();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCrearClienteAdministrado(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearClienteAdministrado(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearClienteAdministrado(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCrearClienteAdministrado` Mutation requires an argument of type `CrearClienteAdministradoVariables`:
+  const crearClienteAdministradoVars: CrearClienteAdministradoVariables = {
+    id: ...,
+    rut: ...,
+    nombre: ...,
+    apellido: ...,
+    telefono: ..., // optional
+    email: ...,
+    direccion: ..., // optional
+    tipoCliente: ...,
+  };
+  mutation.mutate(crearClienteAdministradoVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., rut: ..., nombre: ..., apellido: ..., telefono: ..., email: ..., direccion: ..., tipoCliente: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(crearClienteAdministradoVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

@@ -12,12 +12,16 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useRegistrarse, useRegistrarseComoCliente, useActualizarUsuario, useCrearVehiculo, useActualizarVehiculo, useCrearSalidaVehiculo, useRegistrarInspeccionAntes, useIniciarSalidaVehiculo, useRegistrarInspeccionDespues, useAgregarFotoInspeccionVehiculo } from '@dataconnect/generated/react';
+import { useRegistrarse, useCrearUsuarioAdministrado, useRegistrarseComoCliente, useCrearClienteAdministrado, useActualizarUsuario, useCrearVehiculo, useActualizarVehiculo, useCrearSalidaVehiculo, useRegistrarInspeccionAntes, useIniciarSalidaVehiculo } from '@dataconnect/generated/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useRegistrarse(registrarseVars);
 
+const { data, isPending, isSuccess, isError, error } = useCrearUsuarioAdministrado(crearUsuarioAdministradoVars);
+
 const { data, isPending, isSuccess, isError, error } = useRegistrarseComoCliente(registrarseComoClienteVars);
+
+const { data, isPending, isSuccess, isError, error } = useCrearClienteAdministrado(crearClienteAdministradoVars);
 
 const { data, isPending, isSuccess, isError, error } = useActualizarUsuario(actualizarUsuarioVars);
 
@@ -30,10 +34,6 @@ const { data, isPending, isSuccess, isError, error } = useCrearSalidaVehiculo(cr
 const { data, isPending, isSuccess, isError, error } = useRegistrarInspeccionAntes(registrarInspeccionAntesVars);
 
 const { data, isPending, isSuccess, isError, error } = useIniciarSalidaVehiculo(iniciarSalidaVehiculoVars);
-
-const { data, isPending, isSuccess, isError, error } = useRegistrarInspeccionDespues(registrarInspeccionDespuesVars);
-
-const { data, isPending, isSuccess, isError, error } = useAgregarFotoInspeccionVehiculo(agregarFotoInspeccionVehiculoVars);
 
 ```
 
@@ -72,14 +72,20 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { registrarse, registrarseComoCliente, actualizarUsuario, crearVehiculo, actualizarVehiculo, crearSalidaVehiculo, registrarInspeccionAntes, iniciarSalidaVehiculo, registrarInspeccionDespues, agregarFotoInspeccionVehiculo } from '@dataconnect/generated';
+import { registrarse, crearUsuarioAdministrado, registrarseComoCliente, crearClienteAdministrado, actualizarUsuario, crearVehiculo, actualizarVehiculo, crearSalidaVehiculo, registrarInspeccionAntes, iniciarSalidaVehiculo } from '@dataconnect/generated';
 
 
 // Operation Registrarse:  For variables, look at type RegistrarseVars in ../index.d.ts
 const { data } = await Registrarse(dataConnect, registrarseVars);
 
+// Operation CrearUsuarioAdministrado:  For variables, look at type CrearUsuarioAdministradoVars in ../index.d.ts
+const { data } = await CrearUsuarioAdministrado(dataConnect, crearUsuarioAdministradoVars);
+
 // Operation RegistrarseComoCliente:  For variables, look at type RegistrarseComoClienteVars in ../index.d.ts
 const { data } = await RegistrarseComoCliente(dataConnect, registrarseComoClienteVars);
+
+// Operation CrearClienteAdministrado:  For variables, look at type CrearClienteAdministradoVars in ../index.d.ts
+const { data } = await CrearClienteAdministrado(dataConnect, crearClienteAdministradoVars);
 
 // Operation ActualizarUsuario:  For variables, look at type ActualizarUsuarioVars in ../index.d.ts
 const { data } = await ActualizarUsuario(dataConnect, actualizarUsuarioVars);
@@ -98,12 +104,6 @@ const { data } = await RegistrarInspeccionAntes(dataConnect, registrarInspeccion
 
 // Operation IniciarSalidaVehiculo:  For variables, look at type IniciarSalidaVehiculoVars in ../index.d.ts
 const { data } = await IniciarSalidaVehiculo(dataConnect, iniciarSalidaVehiculoVars);
-
-// Operation RegistrarInspeccionDespues:  For variables, look at type RegistrarInspeccionDespuesVars in ../index.d.ts
-const { data } = await RegistrarInspeccionDespues(dataConnect, registrarInspeccionDespuesVars);
-
-// Operation AgregarFotoInspeccionVehiculo:  For variables, look at type AgregarFotoInspeccionVehiculoVars in ../index.d.ts
-const { data } = await AgregarFotoInspeccionVehiculo(dataConnect, agregarFotoInspeccionVehiculoVars);
 
 
 ```
