@@ -13,7 +13,6 @@ import {
   Star,
   ArrowUpRight,
   Flame,
-  MoreVertical,
 } from "lucide-react";
 import { animate } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -103,8 +102,6 @@ function DonutChart({
   const cy = size / 2;
   const total = segments.reduce((s, seg) => s + seg.value, 0);
 
-  let cumulativePercent = 0;
-
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
@@ -126,8 +123,10 @@ function DonutChart({
           {segments.map((seg, i) => {
             const percent = seg.value / total;
             const arc = circumference * percent;
-            const offset = cumulativePercent * circumference;
-            cumulativePercent += percent;
+            const previousValue = segments
+              .slice(0, i)
+              .reduce((sum, previousSegment) => sum + previousSegment.value, 0);
+            const offset = (previousValue / total) * circumference;
 
             return (
               <motion.circle
@@ -281,9 +280,13 @@ export default function DashboardPage() {
   // minuto para que el estado cambie al cruzar los límites de horario.
   const [ahora, setAhora] = useState<Date | null>(null);
   useEffect(() => {
-    setAhora(new Date());
-    const id = setInterval(() => setAhora(new Date()), 60_000);
-    return () => clearInterval(id);
+    const actualizarHora = () => setAhora(new Date());
+    const initialId = window.setTimeout(actualizarHora, 0);
+    const intervalId = window.setInterval(actualizarHora, 60_000);
+    return () => {
+      window.clearTimeout(initialId);
+      window.clearInterval(intervalId);
+    };
   }, []);
   const abierta = ahora ? lavanderiaAbierta(ahora) : false;
 

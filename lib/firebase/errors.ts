@@ -7,6 +7,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   "auth/invalid-credential": "Correo o contraseña incorrectos.",
   "auth/user-not-found": "Correo o contraseña incorrectos.",
   "auth/wrong-password": "Correo o contraseña incorrectos.",
+  "auth/user-disabled": "Esta cuenta se encuentra inactiva. Contacta a un administrador.",
   "auth/too-many-requests": "Demasiados intentos. Intenta nuevamente más tarde.",
 };
 

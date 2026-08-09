@@ -20,22 +20,27 @@ import {
   Loader2,
   Building2,
 } from "lucide-react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { QueryFetchPolicy } from "firebase/data-connect";
 import { dataConnect } from "@/lib/firebase/client";
-import { createSecondaryFirebaseContext } from "@/lib/firebase/secondary";
 import {
   getUsuarios,
   getRoles,
-  registrarse,
-  registrarseComoCliente,
-  actualizarUsuario,
   type GetUsuariosData,
   type GetRolesData,
   TipoCliente,
 } from "@/src/dataconnect-generated";
 import { cleanRut, formatRut, isValidRut, validatePassword } from "@/lib/validators";
 import { mapAuthError } from "@/lib/firebase/errors";
+import {
+  createManagedUser,
+  toggleManagedUserActive,
+  updateManagedUser,
+} from "@/lib/firebase/auth-flows";
+import {
+  validateManagedUserRegistration,
+  validateManagedUserUpdate,
+  type ManagedUserRegistrationInput,
+} from "@/lib/auth-validation";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import GlassSelect from "@/components/ui/GlassSelect";
@@ -43,17 +48,7 @@ import GlassSelect from "@/components/ui/GlassSelect";
 type Usuario = GetUsuariosData["usuarios"][number];
 type RolOpcion = GetRolesData["rols"][number];
 type TabFilter = "Todos" | "Activos" | "Inactivos";
-type FormState = {
-  rolId: string;
-  nombre: string;
-  apellido: string;
-  rut: string;
-  telefono: string;
-  email: string;
-  direccion: string;
-  tipoCliente: TipoCliente | "";
-  password: string;
-};
+type FormState = ManagedUserRegistrationInput;
 
 const tipoClienteOptions = [
   { value: TipoCliente.PARTICULAR, label: "Particular" },
@@ -111,9 +106,25 @@ export default function UsuariosPage() {
   };
 
   useEffect(() => {
-    Promise.all([cargarUsuarios(), getRoles(dataConnect).then(({ data }) => setRoles(data.rols))])
-      .catch(() => setUsuarios([]))
-      .finally(() => setLoading(false));
+    let active = true;
+    Promise.all([
+      getUsuarios(dataConnect, { fetchPolicy: QueryFetchPolicy.SERVER_ONLY }),
+      getRoles(dataConnect),
+    ])
+      .then(([usuariosResult, rolesResult]) => {
+        if (!active) return;
+        setUsuarios(usuariosResult.data.usuarios);
+        setRoles(rolesResult.data.rols);
+      })
+      .catch(() => {
+        if (active) setUsuarios([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const filtered = usuarios.filter((u) => {
@@ -157,72 +168,40 @@ export default function UsuariosPage() {
   };
 
   const handleCrear = async () => {
-    if (!form.rolId || !form.nombre.trim() || !form.apellido.trim() || !form.rut.trim() || !form.email.trim() || !form.password.trim()) {
-      setFormError("Todos los campos son obligatorios.");
-      return;
-    }
-    if (!isValidRut(form.rut)) {
-      setFormError("El RUT ingresado no es válido.");
-      return;
-    }
-    if (!passwordCheck.valid) {
-      setFormError(passwordCheck.message);
-      return;
-    }
-    if (selectedRole?.nombre === "cliente" && !form.tipoCliente) {
-      setFormError("Selecciona el tipo de cliente.");
+    const validationError = validateManagedUserRegistration(form, selectedRole?.nombre);
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
     setSaving(true);
-    const { auth: secAuth, dataConnect: secDC, cleanup } = createSecondaryFirebaseContext();
     try {
-      await createUserWithEmailAndPassword(secAuth, form.email.trim(), form.password);
-
-      const vars = {
-        rolId: form.rolId,
-        rut: formatRut(form.rut),
-        nombre: form.nombre.trim(),
-        apellido: form.apellido.trim(),
-        telefono: form.telefono.trim() || null,
-        email: form.email.trim(),
-      };
-
-      if (selectedRole?.nombre === "cliente") {
-        await registrarseComoCliente(secDC, {
-          ...vars,
-          direccion: form.direccion.trim() || null,
-          tipoCliente: form.tipoCliente as TipoCliente,
-        });
-      } else {
-        await registrarse(secDC, vars);
-      }
-
+      await createManagedUser(dataConnect, form, selectedRole?.nombre ?? "");
       await cargarUsuarios();
       setModal(null);
     } catch (err) {
       setFormError(mapAuthError(err));
     } finally {
-      await cleanup();
       setSaving(false);
     }
   };
 
   const handleEditar = async () => {
     if (modal?.mode !== "editar") return;
-    if (!form.rolId || !form.nombre.trim()) {
-      setFormError("El rol y el nombre son obligatorios.");
+    const validationError = validateManagedUserUpdate(form.rolId, form.nombre);
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
     setSaving(true);
     try {
-      await actualizarUsuario(dataConnect, {
+      await updateManagedUser(dataConnect, {
         id: modal.usuario.id,
         rolId: form.rolId,
-        nombre: form.nombre.trim(),
-        apellido: form.apellido.trim() || null,
-        telefono: form.telefono.trim() || null,
+        nombre: form.nombre,
+        apellido: form.apellido,
+        telefono: form.telefono,
         activo: modal.usuario.activo,
       });
       await cargarUsuarios();
@@ -235,7 +214,7 @@ export default function UsuariosPage() {
   };
 
   const toggleActivo = async (usuario: Usuario) => {
-    await actualizarUsuario(dataConnect, {
+    await toggleManagedUserActive(dataConnect, {
       id: usuario.id,
       rolId: usuario.rol.id,
       nombre: usuario.nombre,
@@ -484,7 +463,11 @@ export default function UsuariosPage() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  modal.mode === "crear" ? handleCrear() : handleEditar();
+                  if (modal.mode === "crear") {
+                    handleCrear();
+                  } else {
+                    handleEditar();
+                  }
                 }}
                 className="space-y-4"
                 noValidate
