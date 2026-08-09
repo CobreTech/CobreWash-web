@@ -183,7 +183,7 @@ export const getRolesRef = (dc) => {
 getRolesRef.operationName = 'GetRoles';
 
 export function getRoles(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getRolesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -196,7 +196,7 @@ export const getMiPerfilRef = (dc) => {
 getMiPerfilRef.operationName = 'GetMiPerfil';
 
 export function getMiPerfil(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getMiPerfilRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -209,7 +209,7 @@ export const getUsuariosRef = (dc) => {
 getUsuariosRef.operationName = 'GetUsuarios';
 
 export function getUsuarios(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getUsuariosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -222,7 +222,7 @@ export const getComandaPorQrRef = (dcOrVars, vars) => {
 getComandaPorQrRef.operationName = 'GetComandaPorQr';
 
 export function getComandaPorQr(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getComandaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -235,7 +235,7 @@ export const getInsumoPorQrRef = (dcOrVars, vars) => {
 getInsumoPorQrRef.operationName = 'GetInsumoPorQr';
 
 export function getInsumoPorQr(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getInsumoPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -248,7 +248,7 @@ export const getVehiculosRef = (dc) => {
 getVehiculosRef.operationName = 'GetVehiculos';
 
 export function getVehiculos(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -261,7 +261,7 @@ export const getMisSalidasVehiculoRef = (dc) => {
 getMisSalidasVehiculoRef.operationName = 'GetMisSalidasVehiculo';
 
 export function getMisSalidasVehiculo(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getMisSalidasVehiculoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }

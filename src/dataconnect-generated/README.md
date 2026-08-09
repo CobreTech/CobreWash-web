@@ -458,7 +458,7 @@ import { connectorConfig, getComandaPorQr, GetComandaPorQrVariables } from '@dat
 
 // The `GetComandaPorQr` query requires an argument of type `GetComandaPorQrVariables`:
 const getComandaPorQrVars: GetComandaPorQrVariables = {
-  codigoQr: ..., 
+  codigoQr: ...,
 };
 
 // Call the `getComandaPorQr()` function to execute the query.
@@ -488,7 +488,7 @@ import { connectorConfig, getComandaPorQrRef, GetComandaPorQrVariables } from '@
 
 // The `GetComandaPorQr` query requires an argument of type `GetComandaPorQrVariables`:
 const getComandaPorQrVars: GetComandaPorQrVariables = {
-  codigoQr: ..., 
+  codigoQr: ...,
 };
 
 // Call the `getComandaPorQrRef()` function to get a reference to the query.
@@ -575,7 +575,7 @@ import { connectorConfig, getInsumoPorQr, GetInsumoPorQrVariables } from '@datac
 
 // The `GetInsumoPorQr` query requires an argument of type `GetInsumoPorQrVariables`:
 const getInsumoPorQrVars: GetInsumoPorQrVariables = {
-  codigoQr: ..., 
+  codigoQr: ...,
 };
 
 // Call the `getInsumoPorQr()` function to execute the query.
@@ -605,7 +605,7 @@ import { connectorConfig, getInsumoPorQrRef, GetInsumoPorQrVariables } from '@da
 
 // The `GetInsumoPorQr` query requires an argument of type `GetInsumoPorQrVariables`:
 const getInsumoPorQrVars: GetInsumoPorQrVariables = {
-  codigoQr: ..., 
+  codigoQr: ...,
 };
 
 // Call the `getInsumoPorQrRef()` function to get a reference to the query.
@@ -922,12 +922,12 @@ import { connectorConfig, registrarse, RegistrarseVariables } from '@dataconnect
 
 // The `Registrarse` mutation requires an argument of type `RegistrarseVariables`:
 const registrarseVars: RegistrarseVariables = {
-  rolId: ..., 
-  rut: ..., 
-  nombre: ..., 
-  apellido: ..., 
+  rolId: ...,
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
   telefono: ..., // optional
-  email: ..., 
+  email: ...,
 };
 
 // Call the `registrarse()` function to execute the mutation.
@@ -957,12 +957,12 @@ import { connectorConfig, registrarseRef, RegistrarseVariables } from '@dataconn
 
 // The `Registrarse` mutation requires an argument of type `RegistrarseVariables`:
 const registrarseVars: RegistrarseVariables = {
-  rolId: ..., 
-  rut: ..., 
-  nombre: ..., 
-  apellido: ..., 
+  rolId: ...,
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
   telefono: ..., // optional
-  email: ..., 
+  email: ...,
 };
 
 // Call the `registrarseRef()` function to get a reference to the mutation.
@@ -1175,13 +1175,13 @@ import { connectorConfig, registrarseComoCliente, RegistrarseComoClienteVariable
 
 // The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseComoClienteVariables`:
 const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-  rut: ..., 
-  nombre: ..., 
-  apellido: ..., 
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
   telefono: ..., // optional
-  email: ..., 
+  email: ...,
   direccion: ..., // optional
-  tipoCliente: ..., 
+  tipoCliente: ...,
 };
 
 // Call the `registrarseComoCliente()` function to execute the mutation.
@@ -1213,13 +1213,13 @@ import { connectorConfig, registrarseComoClienteRef, RegistrarseComoClienteVaria
 
 // The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseComoClienteVariables`:
 const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-  rut: ..., 
-  nombre: ..., 
-  apellido: ..., 
+  rut: ...,
+  nombre: ...,
+  apellido: ...,
   telefono: ..., // optional
-  email: ..., 
+  email: ...,
   direccion: ..., // optional
-  tipoCliente: ..., 
+  tipoCliente: ...,
 };
 
 // Call the `registrarseComoClienteRef()` function to get a reference to the mutation.
@@ -1440,12 +1440,12 @@ import { connectorConfig, actualizarUsuario, ActualizarUsuarioVariables } from '
 
 // The `ActualizarUsuario` mutation requires an argument of type `ActualizarUsuarioVariables`:
 const actualizarUsuarioVars: ActualizarUsuarioVariables = {
-  id: ..., 
-  rolId: ..., 
-  nombre: ..., 
+  id: ...,
+  rolId: ...,
+  nombre: ...,
   apellido: ..., // optional
   telefono: ..., // optional
-  activo: ..., 
+  activo: ...,
 };
 
 // Call the `actualizarUsuario()` function to execute the mutation.
@@ -1475,12 +1475,12 @@ import { connectorConfig, actualizarUsuarioRef, ActualizarUsuarioVariables } fro
 
 // The `ActualizarUsuario` mutation requires an argument of type `ActualizarUsuarioVariables`:
 const actualizarUsuarioVars: ActualizarUsuarioVariables = {
-  id: ..., 
-  rolId: ..., 
-  nombre: ..., 
+  id: ...,
+  rolId: ...,
+  nombre: ...,
   apellido: ..., // optional
   telefono: ..., // optional
-  activo: ..., 
+  activo: ...,
 };
 
 // Call the `actualizarUsuarioRef()` function to get a reference to the mutation.
@@ -1563,9 +1563,9 @@ import { connectorConfig, crearVehiculo, CrearVehiculoVariables } from '@datacon
 
 // The `CrearVehiculo` mutation requires an argument of type `CrearVehiculoVariables`:
 const crearVehiculoVars: CrearVehiculoVariables = {
-  patente: ..., 
-  marca: ..., 
-  modelo: ..., 
+  patente: ...,
+  marca: ...,
+  modelo: ...,
   anio: ..., // optional
   descripcion: ..., // optional
 };
@@ -1597,9 +1597,9 @@ import { connectorConfig, crearVehiculoRef, CrearVehiculoVariables } from '@data
 
 // The `CrearVehiculo` mutation requires an argument of type `CrearVehiculoVariables`:
 const crearVehiculoVars: CrearVehiculoVariables = {
-  patente: ..., 
-  marca: ..., 
-  modelo: ..., 
+  patente: ...,
+  marca: ...,
+  modelo: ...,
   anio: ..., // optional
   descripcion: ..., // optional
 };
@@ -1686,13 +1686,13 @@ import { connectorConfig, actualizarVehiculo, ActualizarVehiculoVariables } from
 
 // The `ActualizarVehiculo` mutation requires an argument of type `ActualizarVehiculoVariables`:
 const actualizarVehiculoVars: ActualizarVehiculoVariables = {
-  id: ..., 
-  patente: ..., 
-  marca: ..., 
-  modelo: ..., 
+  id: ...,
+  patente: ...,
+  marca: ...,
+  modelo: ...,
   anio: ..., // optional
   descripcion: ..., // optional
-  activo: ..., 
+  activo: ...,
 };
 
 // Call the `actualizarVehiculo()` function to execute the mutation.
@@ -1722,13 +1722,13 @@ import { connectorConfig, actualizarVehiculoRef, ActualizarVehiculoVariables } f
 
 // The `ActualizarVehiculo` mutation requires an argument of type `ActualizarVehiculoVariables`:
 const actualizarVehiculoVars: ActualizarVehiculoVariables = {
-  id: ..., 
-  patente: ..., 
-  marca: ..., 
-  modelo: ..., 
+  id: ...,
+  patente: ...,
+  marca: ...,
+  modelo: ...,
   anio: ..., // optional
   descripcion: ..., // optional
-  activo: ..., 
+  activo: ...,
 };
 
 // Call the `actualizarVehiculoRef()` function to get a reference to the mutation.
@@ -1809,8 +1809,8 @@ import { connectorConfig, crearSalidaVehiculo, CrearSalidaVehiculoVariables } fr
 
 // The `CrearSalidaVehiculo` mutation requires an argument of type `CrearSalidaVehiculoVariables`:
 const crearSalidaVehiculoVars: CrearSalidaVehiculoVariables = {
-  vehiculoId: ..., 
-  repartidorId: ..., 
+  vehiculoId: ...,
+  repartidorId: ...,
   observaciones: ..., // optional
 };
 
@@ -1841,8 +1841,8 @@ import { connectorConfig, crearSalidaVehiculoRef, CrearSalidaVehiculoVariables }
 
 // The `CrearSalidaVehiculo` mutation requires an argument of type `CrearSalidaVehiculoVariables`:
 const crearSalidaVehiculoVars: CrearSalidaVehiculoVariables = {
-  vehiculoId: ..., 
-  repartidorId: ..., 
+  vehiculoId: ...,
+  repartidorId: ...,
   observaciones: ..., // optional
 };
 
@@ -1925,9 +1925,9 @@ import { connectorConfig, registrarInspeccionAntes, RegistrarInspeccionAntesVari
 
 // The `RegistrarInspeccionAntes` mutation requires an argument of type `RegistrarInspeccionAntesVariables`:
 const registrarInspeccionAntesVars: RegistrarInspeccionAntesVariables = {
-  salidaId: ..., 
-  estadoVehiculo: ..., 
-  kilometraje: ..., 
+  salidaId: ...,
+  estadoVehiculo: ...,
+  kilometraje: ...,
   observaciones: ..., // optional
 };
 
@@ -1958,9 +1958,9 @@ import { connectorConfig, registrarInspeccionAntesRef, RegistrarInspeccionAntesV
 
 // The `RegistrarInspeccionAntes` mutation requires an argument of type `RegistrarInspeccionAntesVariables`:
 const registrarInspeccionAntesVars: RegistrarInspeccionAntesVariables = {
-  salidaId: ..., 
-  estadoVehiculo: ..., 
-  kilometraje: ..., 
+  salidaId: ...,
+  estadoVehiculo: ...,
+  kilometraje: ...,
   observaciones: ..., // optional
 };
 
@@ -2040,7 +2040,7 @@ import { connectorConfig, iniciarSalidaVehiculo, IniciarSalidaVehiculoVariables 
 
 // The `IniciarSalidaVehiculo` mutation requires an argument of type `IniciarSalidaVehiculoVariables`:
 const iniciarSalidaVehiculoVars: IniciarSalidaVehiculoVariables = {
-  salidaId: ..., 
+  salidaId: ...,
 };
 
 // Call the `iniciarSalidaVehiculo()` function to execute the mutation.
@@ -2070,7 +2070,7 @@ import { connectorConfig, iniciarSalidaVehiculoRef, IniciarSalidaVehiculoVariabl
 
 // The `IniciarSalidaVehiculo` mutation requires an argument of type `IniciarSalidaVehiculoVariables`:
 const iniciarSalidaVehiculoVars: IniciarSalidaVehiculoVariables = {
-  salidaId: ..., 
+  salidaId: ...,
 };
 
 // Call the `iniciarSalidaVehiculoRef()` function to get a reference to the mutation.
@@ -2153,9 +2153,9 @@ import { connectorConfig, registrarInspeccionDespues, RegistrarInspeccionDespues
 
 // The `RegistrarInspeccionDespues` mutation requires an argument of type `RegistrarInspeccionDespuesVariables`:
 const registrarInspeccionDespuesVars: RegistrarInspeccionDespuesVariables = {
-  salidaId: ..., 
-  estadoVehiculo: ..., 
-  kilometraje: ..., 
+  salidaId: ...,
+  estadoVehiculo: ...,
+  kilometraje: ...,
   observaciones: ..., // optional
 };
 
@@ -2188,9 +2188,9 @@ import { connectorConfig, registrarInspeccionDespuesRef, RegistrarInspeccionDesp
 
 // The `RegistrarInspeccionDespues` mutation requires an argument of type `RegistrarInspeccionDespuesVariables`:
 const registrarInspeccionDespuesVars: RegistrarInspeccionDespuesVariables = {
-  salidaId: ..., 
-  estadoVehiculo: ..., 
-  kilometraje: ..., 
+  salidaId: ...,
+  estadoVehiculo: ...,
+  kilometraje: ...,
   observaciones: ..., // optional
 };
 
@@ -2275,10 +2275,10 @@ import { connectorConfig, agregarFotoInspeccionVehiculo, AgregarFotoInspeccionVe
 
 // The `AgregarFotoInspeccionVehiculo` mutation requires an argument of type `AgregarFotoInspeccionVehiculoVariables`:
 const agregarFotoInspeccionVehiculoVars: AgregarFotoInspeccionVehiculoVariables = {
-  inspeccionId: ..., 
-  rutaStorage: ..., 
+  inspeccionId: ...,
+  rutaStorage: ...,
   descripcion: ..., // optional
-  orden: ..., 
+  orden: ...,
 };
 
 // Call the `agregarFotoInspeccionVehiculo()` function to execute the mutation.
@@ -2308,10 +2308,10 @@ import { connectorConfig, agregarFotoInspeccionVehiculoRef, AgregarFotoInspeccio
 
 // The `AgregarFotoInspeccionVehiculo` mutation requires an argument of type `AgregarFotoInspeccionVehiculoVariables`:
 const agregarFotoInspeccionVehiculoVars: AgregarFotoInspeccionVehiculoVariables = {
-  inspeccionId: ..., 
-  rutaStorage: ..., 
+  inspeccionId: ...,
+  rutaStorage: ...,
   descripcion: ..., // optional
-  orden: ..., 
+  orden: ...,
 };
 
 // Call the `agregarFotoInspeccionVehiculoRef()` function to get a reference to the mutation.

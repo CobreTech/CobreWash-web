@@ -433,7 +433,7 @@ import { useGetComandaPorQr } from '@dataconnect/generated/react'
 export default function GetComandaPorQrComponent() {
   // The `useGetComandaPorQr` Query hook requires an argument of type `GetComandaPorQrVariables`:
   const getComandaPorQrVars: GetComandaPorQrVariables = {
-    codigoQr: ..., 
+    codigoQr: ...,
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -523,7 +523,7 @@ import { useGetInsumoPorQr } from '@dataconnect/generated/react'
 export default function GetInsumoPorQrComponent() {
   // The `useGetInsumoPorQr` Query hook requires an argument of type `GetInsumoPorQrVariables`:
   const getInsumoPorQrVars: GetInsumoPorQrVariables = {
-    codigoQr: ..., 
+    codigoQr: ...,
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -831,12 +831,12 @@ export default function RegistrarseComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRegistrarse` Mutation requires an argument of type `RegistrarseVariables`:
   const registrarseVars: RegistrarseVariables = {
-    rolId: ..., 
-    rut: ..., 
-    nombre: ..., 
-    apellido: ..., 
+    rolId: ...,
+    rut: ...,
+    nombre: ...,
+    apellido: ...,
     telefono: ..., // optional
-    email: ..., 
+    email: ...,
   };
   mutation.mutate(registrarseVars);
   // Variables can be defined inline as well.
@@ -1043,13 +1043,13 @@ export default function RegistrarseComoClienteComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRegistrarseComoCliente` Mutation requires an argument of type `RegistrarseComoClienteVariables`:
   const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-    rut: ..., 
-    nombre: ..., 
-    apellido: ..., 
+    rut: ...,
+    nombre: ...,
+    apellido: ...,
     telefono: ..., // optional
-    email: ..., 
+    email: ...,
     direccion: ..., // optional
-    tipoCliente: ..., 
+    tipoCliente: ...,
   };
   mutation.mutate(registrarseComoClienteVars);
   // Variables can be defined inline as well.
@@ -1259,12 +1259,12 @@ export default function ActualizarUsuarioComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useActualizarUsuario` Mutation requires an argument of type `ActualizarUsuarioVariables`:
   const actualizarUsuarioVars: ActualizarUsuarioVariables = {
-    id: ..., 
-    rolId: ..., 
-    nombre: ..., 
+    id: ...,
+    rolId: ...,
+    nombre: ...,
     apellido: ..., // optional
     telefono: ..., // optional
-    activo: ..., 
+    activo: ...,
   };
   mutation.mutate(actualizarUsuarioVars);
   // Variables can be defined inline as well.
@@ -1362,9 +1362,9 @@ export default function CrearVehiculoComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCrearVehiculo` Mutation requires an argument of type `CrearVehiculoVariables`:
   const crearVehiculoVars: CrearVehiculoVariables = {
-    patente: ..., 
-    marca: ..., 
-    modelo: ..., 
+    patente: ...,
+    marca: ...,
+    modelo: ...,
     anio: ..., // optional
     descripcion: ..., // optional
   };
@@ -1466,13 +1466,13 @@ export default function ActualizarVehiculoComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useActualizarVehiculo` Mutation requires an argument of type `ActualizarVehiculoVariables`:
   const actualizarVehiculoVars: ActualizarVehiculoVariables = {
-    id: ..., 
-    patente: ..., 
-    marca: ..., 
-    modelo: ..., 
+    id: ...,
+    patente: ...,
+    marca: ...,
+    modelo: ...,
     anio: ..., // optional
     descripcion: ..., // optional
-    activo: ..., 
+    activo: ...,
   };
   mutation.mutate(actualizarVehiculoVars);
   // Variables can be defined inline as well.
@@ -1568,8 +1568,8 @@ export default function CrearSalidaVehiculoComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCrearSalidaVehiculo` Mutation requires an argument of type `CrearSalidaVehiculoVariables`:
   const crearSalidaVehiculoVars: CrearSalidaVehiculoVariables = {
-    vehiculoId: ..., 
-    repartidorId: ..., 
+    vehiculoId: ...,
+    repartidorId: ...,
     observaciones: ..., // optional
   };
   mutation.mutate(crearSalidaVehiculoVars);
@@ -1667,9 +1667,9 @@ export default function RegistrarInspeccionAntesComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRegistrarInspeccionAntes` Mutation requires an argument of type `RegistrarInspeccionAntesVariables`:
   const registrarInspeccionAntesVars: RegistrarInspeccionAntesVariables = {
-    salidaId: ..., 
-    estadoVehiculo: ..., 
-    kilometraje: ..., 
+    salidaId: ...,
+    estadoVehiculo: ...,
+    kilometraje: ...,
     observaciones: ..., // optional
   };
   mutation.mutate(registrarInspeccionAntesVars);
@@ -1764,7 +1764,7 @@ export default function IniciarSalidaVehiculoComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useIniciarSalidaVehiculo` Mutation requires an argument of type `IniciarSalidaVehiculoVariables`:
   const iniciarSalidaVehiculoVars: IniciarSalidaVehiculoVariables = {
-    salidaId: ..., 
+    salidaId: ...,
   };
   mutation.mutate(iniciarSalidaVehiculoVars);
   // Variables can be defined inline as well.
@@ -1862,9 +1862,9 @@ export default function RegistrarInspeccionDespuesComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRegistrarInspeccionDespues` Mutation requires an argument of type `RegistrarInspeccionDespuesVariables`:
   const registrarInspeccionDespuesVars: RegistrarInspeccionDespuesVariables = {
-    salidaId: ..., 
-    estadoVehiculo: ..., 
-    kilometraje: ..., 
+    salidaId: ...,
+    estadoVehiculo: ...,
+    kilometraje: ...,
     observaciones: ..., // optional
   };
   mutation.mutate(registrarInspeccionDespuesVars);
@@ -1963,10 +1963,10 @@ export default function AgregarFotoInspeccionVehiculoComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useAgregarFotoInspeccionVehiculo` Mutation requires an argument of type `AgregarFotoInspeccionVehiculoVariables`:
   const agregarFotoInspeccionVehiculoVars: AgregarFotoInspeccionVehiculoVariables = {
-    inspeccionId: ..., 
-    rutaStorage: ..., 
+    inspeccionId: ...,
+    rutaStorage: ...,
     descripcion: ..., // optional
-    orden: ..., 
+    orden: ...,
   };
   mutation.mutate(agregarFotoInspeccionVehiculoVars);
   // Variables can be defined inline as well.
