@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, CheckCircle2, Phone, Mail, Clock, ShieldCheck, Building2 } from "lucide-react";
+import { Send, CheckCircle2, Clock, ShieldCheck, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassSelect from "@/components/ui/GlassSelect";
 

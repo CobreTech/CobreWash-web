@@ -36,6 +36,7 @@ query GetMiPerfil @auth(level: USER) {
 # (verificado contra la tabla usuario/rol, no contra un claim del token).
 query GetUsuarios @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden ver la lista de usuarios")
     }
@@ -52,6 +53,118 @@ query GetUsuarios @auth(level: USER) {
     rol {
       id
       nombre
+    }
+  }
+}
+
+# Consulta pública y acotada para leer el QR impreso en la comanda.
+# No expone datos personales del cliente ni del personal.
+query GetComandaPorQr($codigoQr: UUID!)
+  @auth(level: PUBLIC, insecureReason: "El QR de la comanda funciona como código público de seguimiento y solo expone su estado operacional") {
+  comanda(first: { where: { codigoQr: { eq: $codigoQr } } }) {
+    id
+    codigoQr
+    numeroComanda
+    estado
+    fechaRecepcion
+    fechaEntregaEstimada
+    fechaEntregaReal
+    actualizadoEn
+    comandaDetalles_on_comanda {
+      cantidad
+      pesoKg
+      tipoPrenda { nombre }
+      tipoServicio { nombre }
+    }
+  }
+}
+
+# Los códigos QR de inventario solo pueden ser consultados por producción
+# o administración; escanear un código no evita la autorización.
+query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(
+        expr: "this in ['admin', 'operario']"
+        message: "Solo administradores y operarios pueden escanear insumos"
+      )
+    }
+  }
+  insumo(first: { where: { codigoQr: { eq: $codigoQr }, activo: { eq: true } } }) {
+    id
+    codigoQr
+    nombre
+    unidadMedida
+    stockActual
+    stockMinimo
+    activo
+  }
+}
+
+# Catálogo de vehículos disponible para administración y repartidores.
+query GetVehiculos @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(
+        expr: "this in ['admin', 'repartidor']"
+        message: "Acceso reservado a administración y reparto"
+      )
+    }
+  }
+  vehiculos(orderBy: [{ patente: ASC }]) {
+    id
+    patente
+    marca
+    modelo
+    anio
+    descripcion
+    activo
+    creadoEn
+  }
+}
+
+# Cada repartidor ve únicamente las salidas que tiene asignadas.
+query GetMisSalidasVehiculo @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(
+        expr: "this == 'repartidor'"
+        message: "Acceso reservado a repartidores"
+      )
+    }
+  }
+  salidaVehiculos(
+    where: { repartidorId: { eq_expr: "auth.uid" } }
+    orderBy: [{ creadoEn: DESC }]
+  ) {
+    id
+    estado
+    fechaSalida
+    fechaRetorno
+    observaciones
+    creadoEn
+    vehiculo {
+      id
+      patente
+      marca
+      modelo
+    }
+    inspeccionVehiculos_on_salida(orderBy: [{ registradoEn: ASC }]) {
+      id
+      momento
+      estadoVehiculo
+      kilometraje
+      observaciones
+      registradoEn
+      fotoInspeccionVehiculos_on_inspeccion(orderBy: [{ orden: ASC }]) {
+        id
+        rutaStorage
+        descripcion
+        orden
+      }
     }
   }
 }

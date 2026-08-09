@@ -5,17 +5,26 @@ import Image from "next/image";
 import { Menu, X, LogIn, Package, CheckCircle2, Lock, Mail, User, IdCard, Phone, MapPin, AlertCircle, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-} from "firebase/auth";
-import { QueryFetchPolicy } from "firebase/data-connect";
 import { auth, dataConnect } from "@/lib/firebase/client";
-import { getRoles, registrarseComoCliente, getMiPerfil, type GetRolesData } from "@/src/dataconnect-generated";
+import { TipoCliente } from "@/src/dataconnect-generated";
 import { cleanRut, formatRut, isValidRut, validatePassword } from "@/lib/validators";
 import { mapAuthError } from "@/lib/firebase/errors";
-import { LANDING_POR_ROL, type Rol } from "@/lib/roles";
+import {
+  registerPublicClient,
+  requestPasswordReset,
+  signInAndResolveLanding,
+} from "@/lib/firebase/auth-flows";
+import {
+  validateLogin,
+  validatePasswordReset,
+  validatePublicClientRegistration,
+} from "@/lib/auth-validation";
+import GlassSelect from "@/components/ui/GlassSelect";
+
+const tipoClienteOptions = [
+  { value: TipoCliente.PARTICULAR, label: "Particular" },
+  { value: TipoCliente.HOTEL, label: "Hotel" },
+];
 
 export default function Navbar() {
   const router = useRouter();
@@ -64,8 +73,7 @@ export default function Navbar() {
   const [authRut, setAuthRut] = useState("");
   const [authTelefono, setAuthTelefono] = useState("");
   const [authDireccion, setAuthDireccion] = useState("");
-  const [roles, setRoles] = useState<GetRolesData["rols"]>([]);
-  const clienteRolId = roles.find((r) => r.nombre === "cliente")?.id;
+  const [authTipoCliente, setAuthTipoCliente] = useState<TipoCliente | "">("");
 
   const rutDigits = cleanRut(authRut);
   const rutTouched = rutDigits.length > 0;
@@ -78,26 +86,22 @@ export default function Navbar() {
     setAuthRut("");
     setAuthTelefono("");
     setAuthDireccion("");
+    setAuthTipoCliente("");
     setAuthConfirmPass("");
     setAuthPassword("");
   };
-
-  // Load role catalog once, solo para obtener el id del rol "cliente"
-  useEffect(() => {
-    getRoles(dataConnect)
-      .then(({ data }) => setRoles(data.rols))
-      .catch(() => setRoles([]));
-  }, []);
 
   // Abrir el modal de acceso automáticamente cuando se llega con ?login=1
   // (usado por el portal público de seguimiento: "Crear cuenta / Iniciar sesión").
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("login") === "1") {
+    if (params.get("login") !== "1") return;
+    const timeoutId = window.setTimeout(() => {
       setIsLoginOpen(true);
       setAuthView(params.get("registro") === "1" ? "register" : "login");
-    }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   // Lock body scroll when the modal is open
@@ -131,17 +135,14 @@ export default function Navbar() {
     setAuthError("");
 
     if (authView === "login") {
-      if (!authEmail.trim() || !authPassword.trim()) {
-        setAuthError("Por favor ingresa tu correo y contraseña.");
+      const validationError = validateLogin(authEmail, authPassword);
+      if (validationError) {
+        setAuthError(validationError);
         return;
       }
       setAuthLoading(true);
       try {
-        await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword);
-        // SERVER_ONLY: el perfil depende de auth.uid (no hay variables), así que
-        // el caché por defecto del SDK devolvería el perfil de la sesión anterior.
-        const { data } = await getMiPerfil(dataConnect, { fetchPolicy: QueryFetchPolicy.SERVER_ONLY });
-        const rolNombre = (data.usuario?.rol?.nombre as Rol) ?? "cliente";
+        const landing = await signInAndResolveLanding({ auth, dataConnect }, authEmail, authPassword);
 
         setAuthLoading(false);
         setAuthSuccess(true);
@@ -151,56 +152,33 @@ export default function Navbar() {
           setAuthEmail("");
           setAuthPassword("");
           // Cada rol es redirigido automáticamente a su propia vista.
-          router.push(LANDING_POR_ROL[rolNombre] ?? "/cuenta");
+          router.push(landing);
         }, 1200);
       } catch (err) {
         setAuthLoading(false);
         setAuthError(mapAuthError(err));
       }
     } else if (authView === "register") {
-      if (
-        !authName.trim() ||
-        !authApellido.trim() ||
-        !authRut.trim() ||
-        !authEmail.trim() ||
-        !authPassword.trim() ||
-        !authConfirmPass.trim()
-      ) {
-        setAuthError("Todos los campos son obligatorios.");
-        return;
-      }
-      if (!clienteRolId) {
-        setAuthError("No se pudo cargar el catálogo de roles. Intenta nuevamente.");
-        return;
-      }
-      if (!isValidRut(authRut)) {
-        setAuthError("El RUT ingresado no es válido.");
-        return;
-      }
-      if (!passwordCheck.valid) {
-        setAuthError(passwordCheck.message);
-        return;
-      }
-      if (authPassword !== authConfirmPass) {
-        setAuthError("Las contraseñas no coinciden.");
+      const registration = {
+        nombre: authName,
+        apellido: authApellido,
+        rut: authRut,
+        telefono: authTelefono,
+        email: authEmail,
+        direccion: authDireccion,
+        tipoCliente: authTipoCliente,
+        password: authPassword,
+        confirmPassword: authConfirmPass,
+      };
+      const validationError = validatePublicClientRegistration(registration);
+      if (validationError) {
+        setAuthError(validationError);
         return;
       }
 
       setAuthLoading(true);
-      let createdUserId: string | null = null;
       try {
-        const credential = await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword);
-        createdUserId = credential.user.uid;
-
-        await registrarseComoCliente(dataConnect, {
-          rolId: clienteRolId,
-          rut: formatRut(authRut),
-          nombre: authName.trim(),
-          apellido: authApellido.trim(),
-          telefono: authTelefono.trim() || null,
-          email: authEmail.trim(),
-          direccion: authDireccion.trim() || null,
-        });
+        await registerPublicClient({ auth, dataConnect }, registration);
 
         setAuthLoading(false);
         setAuthSuccess(true);
@@ -211,19 +189,17 @@ export default function Navbar() {
         }, 1550);
       } catch (err) {
         setAuthLoading(false);
-        if (createdUserId && auth.currentUser) {
-          await auth.currentUser.delete().catch(() => {});
-        }
         setAuthError(mapAuthError(err));
       }
     } else if (authView === "forgot") {
-      if (!authEmail.trim()) {
-        setAuthError("Por favor ingresa tu correo electrónico.");
+      const validationError = validatePasswordReset(authEmail);
+      if (validationError) {
+        setAuthError(validationError);
         return;
       }
       setAuthLoading(true);
       try {
-        await sendPasswordResetEmail(auth, authEmail.trim());
+        await requestPasswordReset(auth, authEmail);
         setAuthLoading(false);
         setAuthSuccess(true);
         setTimeout(() => {
@@ -573,6 +549,17 @@ export default function Navbar() {
                                 className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-850 placeholder-stone-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all text-sm font-medium"
                               />
                             </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-stone-600">Tipo de Cliente</label>
+                            <GlassSelect
+                              value={authTipoCliente}
+                              onChange={(value) => setAuthTipoCliente(value as TipoCliente)}
+                              ariaLabel="Tipo de cliente"
+                              placeholder="Selecciona un tipo de cliente"
+                              options={tipoClienteOptions}
+                            />
                           </div>
 
                           <div className="space-y-1.5">

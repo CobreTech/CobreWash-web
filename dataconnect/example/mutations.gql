@@ -1,5 +1,6 @@
-# Auto-registro para roles internos (admin, recepcionista, operario): crea
-# el Usuario, vinculado al uid recién creado en Firebase Auth.
+# Operación heredada conservada temporalmente para compatibilidad del conector.
+# Ya no es invocable desde clientes porque permitía que una cuenta recién creada
+# eligiera su propio rol. Las altas nuevas usan CrearUsuarioAdministrado.
 mutation Registrarse(
   $rolId: UUID!
   $rut: String!
@@ -7,9 +8,47 @@ mutation Registrarse(
   $apellido: String!
   $telefono: String
   $email: String!
-) @auth(level: USER) {
+) @auth(level: NO_ACCESS) {
   usuario_insert(data: {
     id_expr: "auth.uid"
+    rol: { id: $rolId }
+    rut: $rut
+    nombre: $nombre
+    apellido: $apellido
+    telefono: $telefono
+    email: $email
+  })
+}
+
+# Alta administrativa para roles internos. La operación la ejecuta la sesión
+# principal del administrador y recibe el uid creado en la app Auth secundaria.
+mutation CrearUsuarioAdministrado(
+  $id: String!
+  $rolId: UUID!
+  $rut: String!
+  $nombre: String!
+  $apellido: String!
+  $telefono: String
+  $email: String!
+) @auth(level: USER) @transaction {
+  query @redact {
+    administrador: usuario(id_expr: "auth.uid")
+      @check(expr: "this != null", message: "Administrador no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta administradora está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden crear usuarios")
+      }
+    }
+    rolDestino: rol(id: $rolId)
+      @check(expr: "this != null", message: "Rol no encontrado") {
+      nombre @check(
+        expr: "this != 'cliente'"
+        message: "Los clientes deben crearse con la operación administrativa de clientes"
+      )
+    }
+  }
+  usuario_insert(data: {
+    id: $id
     rol: { id: $rolId }
     rut: $rut
     nombre: $nombre
@@ -22,17 +61,24 @@ mutation Registrarse(
 # Auto-registro para clientes: crea el Usuario y su ficha de Cliente enlazada
 # en una sola transacción (Cliente.usuario solo se llena si el cliente creó cuenta).
 mutation RegistrarseComoCliente(
-  $rolId: UUID!
+  $rolId: UUID @retired(reason: "El rol cliente ahora se resuelve en el servidor")
   $rut: String!
   $nombre: String!
   $apellido: String!
   $telefono: String
   $email: String!
   $direccion: String
+  $tipoCliente: TipoCliente!
 ) @auth(level: USER) @transaction {
+  query @redact {
+    rolCliente: rol(first: { where: { nombre: { eq: "cliente" } } })
+      @check(expr: "this != null", message: "El rol cliente no está configurado") {
+      id
+    }
+  }
   usuario_insert(data: {
     id_expr: "auth.uid"
-    rol: { id: $rolId }
+    rolId_expr: "response.query.rolCliente.id"
     rut: $rut
     nombre: $nombre
     apellido: $apellido
@@ -42,7 +88,51 @@ mutation RegistrarseComoCliente(
   cliente_insert(data: {
     usuario: { id_expr: "auth.uid" }
     nombre: $nombre
-    tipoCliente: PARTICULAR
+    tipoCliente: $tipoCliente
+    telefono: $telefono
+    email: $email
+    direccion: $direccion
+  })
+}
+
+# Alta de cliente realizada desde la intranet. La autorización corresponde a
+# la sesión principal del administrador y el rol cliente se resuelve en servidor.
+mutation CrearClienteAdministrado(
+  $id: String!
+  $rut: String!
+  $nombre: String!
+  $apellido: String!
+  $telefono: String
+  $email: String!
+  $direccion: String
+  $tipoCliente: TipoCliente!
+) @auth(level: USER) @transaction {
+  query @redact {
+    administrador: usuario(id_expr: "auth.uid")
+      @check(expr: "this != null", message: "Administrador no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta administradora está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden crear clientes")
+      }
+    }
+    rolCliente: rol(first: { where: { nombre: { eq: "cliente" } } })
+      @check(expr: "this != null", message: "El rol cliente no está configurado") {
+      id
+    }
+  }
+  usuario_insert(data: {
+    id: $id
+    rolId_expr: "response.query.rolCliente.id"
+    rut: $rut
+    nombre: $nombre
+    apellido: $apellido
+    telefono: $telefono
+    email: $email
+  })
+  cliente_insert(data: {
+    usuario: { id: $id }
+    nombre: $nombre
+    tipoCliente: $tipoCliente
     telefono: $telefono
     email: $email
     direccion: $direccion
@@ -61,6 +151,7 @@ mutation ActualizarUsuario(
 ) @auth(level: USER) @transaction {
   query @redact {
     usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol {
         nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar usuarios")
       }
@@ -77,4 +168,228 @@ mutation ActualizarUsuario(
       actualizadoEn_expr: "request.time"
     }
   )
+}
+
+# Gestión de la flota: operaciones exclusivas de administración.
+mutation CrearVehiculo(
+  $patente: String!
+  $marca: String!
+  $modelo: String!
+  $anio: Int
+  $descripcion: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden crear vehículos")
+      }
+    }
+  }
+  vehiculo_insert(data: {
+    patente: $patente
+    marca: $marca
+    modelo: $modelo
+    anio: $anio
+    descripcion: $descripcion
+  })
+}
+
+mutation ActualizarVehiculo(
+  $id: UUID!
+  $patente: String!
+  $marca: String!
+  $modelo: String!
+  $anio: Int
+  $descripcion: String
+  $activo: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar vehículos")
+      }
+    }
+  }
+  vehiculo_update(
+    id: $id
+    data: {
+      patente: $patente
+      marca: $marca
+      modelo: $modelo
+      anio: $anio
+      descripcion: $descripcion
+      activo: $activo
+    }
+  ) @check(expr: "this != null", message: "Vehículo no encontrado")
+}
+
+mutation CrearSalidaVehiculo(
+  $vehiculoId: UUID!
+  $repartidorId: String!
+  $observaciones: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden asignar salidas")
+      }
+    }
+    repartidor: usuario(id: $repartidorId)
+      @check(expr: "this != null", message: "Repartidor no encontrado") {
+      activo @check(expr: "this == true", message: "El repartidor está inactivo")
+      rol {
+        nombre @check(expr: "this == 'repartidor'", message: "El usuario asignado no es repartidor")
+      }
+    }
+    vehiculo(id: $vehiculoId)
+      @check(expr: "this != null", message: "Vehículo no encontrado") {
+      activo @check(expr: "this == true", message: "El vehículo está inactivo")
+    }
+  }
+  salidaVehiculo_insert(data: {
+    vehiculo: { id: $vehiculoId }
+    repartidor: { id: $repartidorId }
+    observaciones: $observaciones
+  })
+}
+
+# Registra la revisión previa. Si el vehículo queda NO_APTO, la salida no puede
+# iniciarse mediante IniciarSalidaVehiculo.
+mutation RegistrarInspeccionAntes(
+  $salidaId: UUID!
+  $estadoVehiculo: EstadoVehiculo!
+  $kilometraje: Float!
+  $observaciones: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'repartidor'", message: "Solo repartidores pueden inspeccionar vehículos")
+      }
+    }
+    salidaVehiculo(
+      first: { where: {
+        id: { eq: $salidaId }
+        repartidorId: { eq_expr: "auth.uid" }
+        estado: { eq: PROGRAMADA }
+      } }
+    ) @check(expr: "this != null", message: "La salida no está asignada al repartidor o ya fue iniciada") {
+      id
+    }
+  }
+  inspeccionVehiculo_insert(data: {
+    salida: { id: $salidaId }
+    momento: ANTES
+    estadoVehiculo: $estadoVehiculo
+    kilometraje: $kilometraje
+    observaciones: $observaciones
+  })
+}
+
+mutation IniciarSalidaVehiculo($salidaId: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'repartidor'", message: "Solo repartidores pueden iniciar salidas")
+      }
+    }
+    inspeccionVehiculo(first: { where: {
+      salidaId: { eq: $salidaId }
+      momento: { eq: ANTES }
+      estadoVehiculo: { ne: NO_APTO }
+      salida: {
+        repartidorId: { eq_expr: "auth.uid" }
+        estado: { eq: PROGRAMADA }
+      }
+    } }) @check(expr: "this != null", message: "Falta una inspección previa apta") {
+      id
+    }
+  }
+  salidaVehiculo_update(
+    id: $salidaId
+    data: {
+      estado: EN_SERVICIO
+      fechaSalida_expr: "request.time"
+    }
+  ) @check(expr: "this != null", message: "Salida no encontrada")
+}
+
+# La inspección final cierra la salida y valida que el odómetro no retroceda.
+mutation RegistrarInspeccionDespues(
+  $salidaId: UUID!
+  $estadoVehiculo: EstadoVehiculo!
+  $kilometraje: Float!
+  $observaciones: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'repartidor'", message: "Solo repartidores pueden inspeccionar vehículos")
+      }
+    }
+    salidaVehiculo(first: { where: {
+      id: { eq: $salidaId }
+      repartidorId: { eq_expr: "auth.uid" }
+      estado: { eq: EN_SERVICIO }
+    } }) @check(expr: "this != null", message: "La salida no está en servicio o no pertenece al repartidor") {
+      id
+    }
+    inspeccionAntes: inspeccionVehiculo(first: { where: {
+      salidaId: { eq: $salidaId }
+      momento: { eq: ANTES }
+    } }) @check(expr: "this != null", message: "No existe la inspección previa") {
+      kilometraje @check(
+        expr: "this <= vars.kilometraje"
+        message: "El kilometraje final no puede ser menor que el inicial"
+      )
+    }
+  }
+  inspeccionVehiculo_insert(data: {
+    salida: { id: $salidaId }
+    momento: DESPUES
+    estadoVehiculo: $estadoVehiculo
+    kilometraje: $kilometraje
+    observaciones: $observaciones
+  })
+  salidaVehiculo_update(
+    id: $salidaId
+    data: {
+      estado: FINALIZADA
+      fechaRetorno_expr: "request.time"
+    }
+  )
+}
+
+mutation AgregarFotoInspeccionVehiculo(
+  $inspeccionId: UUID!
+  $rutaStorage: String!
+  $descripcion: String
+  $orden: Int!
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'repartidor'", message: "Solo repartidores pueden adjuntar fotografías")
+      }
+    }
+    inspeccionVehiculo(id: $inspeccionId)
+      @check(expr: "this != null", message: "Inspección no encontrada") {
+      salida {
+        repartidorId @check(expr: "this == auth.uid", message: "La inspección no pertenece al repartidor")
+      }
+    }
+  }
+  fotoInspeccionVehiculo_insert(data: {
+    inspeccion: { id: $inspeccionId }
+    rutaStorage: $rutaStorage
+    descripcion: $descripcion
+    orden: $orden
+  })
 }
