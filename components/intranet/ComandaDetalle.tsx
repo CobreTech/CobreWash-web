@@ -102,6 +102,8 @@ export default function ComandaDetalle({
                 </span>
               </div>
               <div className="grid grid-cols-1 gap-1 text-xs text-stone-500 dark:text-stone-400">
+                {comanda.empresa && <span><strong>Empresa:</strong> {comanda.empresa}</span>}
+                {comanda.proyecto && <span><strong>Proyecto:</strong> {comanda.proyecto}</span>}
                 <span className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" />{comanda.telefono}</span>
                 <span className="flex items-center gap-2 truncate"><Mail className="w-3.5 h-3.5 shrink-0" />{comanda.email}</span>
                 {comanda.direccion && (
@@ -122,6 +124,7 @@ export default function ComandaDetalle({
                       <th className="text-left font-bold px-3 py-2">Prenda</th>
                       <th className="text-left font-bold px-3 py-2">Servicio</th>
                       <th className="text-center font-bold px-3 py-2">Cant.</th>
+                      <th className="text-left font-bold px-3 py-2">Detalle</th>
                       <th className="text-right font-bold px-3 py-2">Subtotal</th>
                     </tr>
                   </thead>
@@ -131,6 +134,7 @@ export default function ComandaDetalle({
                         <td className="px-3 py-2 font-semibold text-stone-700 dark:text-stone-200">{d.tipoPrenda}</td>
                         <td className="px-3 py-2 text-stone-500 dark:text-stone-400">{d.servicio}</td>
                         <td className="px-3 py-2 text-center text-stone-500 dark:text-stone-400">{d.cantidad}</td>
+                        <td className="px-3 py-2 text-stone-500 dark:text-stone-400">{d.detalle || "—"}</td>
                         <td className="px-3 py-2 text-right font-semibold text-stone-700 dark:text-stone-200">
                           {clp(d.cantidad * d.precioUnitario)}
                         </td>
@@ -139,7 +143,7 @@ export default function ComandaDetalle({
                   </tbody>
                   <tfoot>
                     <tr className="border-t border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5">
-                      <td colSpan={2} className="px-3 py-2 text-stone-500 dark:text-stone-400">
+                      <td colSpan={3} className="px-3 py-2 text-stone-500 dark:text-stone-400">
                         {prendasTotales(comanda)} prendas
                       </td>
                       <td className="px-3 py-2 text-right font-bold text-stone-500 dark:text-stone-400">Total</td>
@@ -186,6 +190,12 @@ export default function ComandaDetalle({
                 <span className="font-bold">Anulada:</span> {comanda.motivoAnulacion}
               </div>
             )}
+
+            {comanda.observaciones && (
+              <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 text-xs text-stone-600 dark:border-white/10 dark:bg-white/5 dark:text-stone-300">
+                <span className="font-bold">Observaciones:</span> {comanda.observaciones}
+              </div>
+            )}
           </div>
 
           {/* Right: QR + meta */}
@@ -215,7 +225,7 @@ export default function ComandaDetalle({
             <Receipt className="w-4 h-4" />
             Generar comprobante
           </button>
-          {onEditar && comanda.estado !== "Anulado" && (
+          {onEditar && comanda.estado === "Pendiente" && (
             <button
               onClick={() => onEditar(comanda)}
               className="flex items-center gap-2 bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-200 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-200 dark:hover:bg-white/10 transition-all cursor-pointer"
@@ -285,6 +295,8 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
             <div className="text-xs space-y-0.5">
               <p className="text-stone-400">Cliente</p>
               <p className="font-bold">{comanda.cliente} · {comanda.tipoCliente}</p>
+              {comanda.empresa && <p className="text-stone-500">Empresa: {comanda.empresa}</p>}
+              {comanda.proyecto && <p className="text-stone-500">Proyecto: {comanda.proyecto}</p>}
               <p className="text-stone-500">{comanda.telefono}</p>
             </div>
 
@@ -295,7 +307,7 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
               </div>
               {comanda.detalle.map((d, i) => (
                 <div key={i} className="flex justify-between py-1 border-b border-dashed border-stone-100">
-                  <span className="text-stone-700">{d.cantidad}× {d.tipoPrenda} <span className="text-stone-400">· {d.servicio}</span></span>
+                  <span className="text-stone-700">{d.cantidad}× {d.tipoPrenda} <span className="text-stone-400">· {d.servicio}{d.detalle ? ` · ${d.detalle}` : ""}</span></span>
                   <span className="font-semibold shrink-0 ml-2">{clp(d.cantidad * d.precioUnitario)}</span>
                 </div>
               ))}
@@ -305,6 +317,12 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
               <span className="font-bold text-sm">TOTAL</span>
               <span className="font-extrabold text-lg text-brand-600">{clp(total)}</span>
             </div>
+
+            {comanda.observaciones && (
+              <div className="border-t border-dashed border-stone-300 pt-2 text-[10px] text-stone-500">
+                <strong>Observaciones:</strong> {comanda.observaciones}
+              </div>
+            )}
 
             <div className="flex flex-col items-center gap-1 pt-2 border-t border-dashed border-stone-300">
               <QrCode value={comanda.id} size={110} />

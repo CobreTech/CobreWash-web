@@ -295,6 +295,34 @@ exports.eliminarDetallesComanda = function eliminarDetallesComanda(dcOrVars, var
 }
 ;
 
+const crearTipoPrendaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearTipoPrenda', inputVars);
+}
+crearTipoPrendaRef.operationName = 'CrearTipoPrenda';
+exports.crearTipoPrendaRef = crearTipoPrendaRef;
+
+exports.crearTipoPrenda = function crearTipoPrenda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearTipoPrendaRef(dcInstance, inputVars));
+}
+;
+
+const crearTipoServicioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearTipoServicio', inputVars);
+}
+crearTipoServicioRef.operationName = 'CrearTipoServicio';
+exports.crearTipoServicioRef = crearTipoServicioRef;
+
+exports.crearTipoServicio = function crearTipoServicio(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearTipoServicioRef(dcInstance, inputVars));
+}
+;
+
 const getRolesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -400,17 +428,17 @@ exports.getMisSalidasVehiculo = function getMisSalidasVehiculo(dcOrOptions, opti
 }
 ;
 
-const getComandasRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+const getComandasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, false);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetComandas');
+  return queryRef(dcInstance, 'GetComandas', inputVars);
 }
 getComandasRef.operationName = 'GetComandas';
 exports.getComandasRef = getComandasRef;
 
-exports.getComandas = function getComandas(dcOrOptions, options) {
+exports.getComandas = function getComandas(dcOrVars, varsOrOptions, options) {
   
-  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getComandasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

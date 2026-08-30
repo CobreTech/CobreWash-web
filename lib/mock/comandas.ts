@@ -17,11 +17,14 @@ export interface PrendaLinea {
   servicio: string;
   cantidad: number;
   precioUnitario: number;
+  detalle?: string;
 }
 
 export interface Comanda {
   id: string; // numeroComanda público, ej. "COBRE-2848"
   cliente: string;
+  empresa?: string;
+  proyecto?: string;
   tipoCliente: "Particular" | "Hotel/Empresa";
   telefono: string;
   email: string;

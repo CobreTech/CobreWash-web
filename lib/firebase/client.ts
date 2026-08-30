@@ -14,14 +14,5 @@ export const firebaseConfig = {
 };
 
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
-let auth: any;
-let dataConnect: any;
-try {
-  auth = getAuth(app);
-  dataConnect = getDataConnect(app, connectorConfig);
-} catch (e) {
-  console.warn("Firebase client init skipped (build time or missing env).");
-}
-
-export { auth, dataConnect };
+export const auth = getAuth(app);
+export const dataConnect = getDataConnect(app, connectorConfig);

@@ -396,15 +396,51 @@ mutation AgregarFotoInspeccionVehiculo(
 
 # ==================== COMANDAS (SPRINT 03) ====================
 
+mutation CrearClienteComanda(
+  $nombre: String!
+  $tipoCliente: TipoCliente!
+  $telefono: String
+  $email: String
+  $direccion: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para crear clientes")
+      }
+    }
+  }
+  cliente_insert(data: {
+    nombre: $nombre
+    tipoCliente: $tipoCliente
+    telefono: $telefono
+    email: $email
+    direccion: $direccion
+  })
+}
+
 mutation CrearComanda(
   $numeroComanda: String!
   $clienteId: UUID!
+  $empresa: String
+  $proyecto: String
   $valorTotal: Float!
   $observaciones: String
 ) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para crear comandas")
+      }
+    }
+  }
   comanda_insert(data: {
     numeroComanda: $numeroComanda
     cliente: { id: $clienteId }
+    empresa: $empresa
+    proyecto: $proyecto
     recepcionistaId_expr: "auth.uid"
     estado: PENDIENTE
     valorTotal: $valorTotal
@@ -414,7 +450,7 @@ mutation CrearComanda(
     comandaId_expr: "response.comanda_insert.id"
     usuarioId_expr: "auth.uid"
     estadoNuevo: PENDIENTE
-    motivo: "Creaci�n de comanda"
+    motivo: "Creaci�n de comanda"
   })
 }
 
@@ -423,14 +459,28 @@ mutation AgregarComandaDetalle(
   $tipoPrendaId: UUID!
   $tipoServicioId: UUID!
   $cantidad: Int!
+  $detalle: String
   $precioUnitario: Float!
   $subtotal: Float!
 ) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para modificar comandas")
+      }
+    }
+    comanda(id: $comandaId)
+      @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this == 'PENDIENTE'", message: "Solo se pueden agregar prendas a una comanda pendiente")
+    }
+  }
   comandaDetalle_insert(data: {
     comanda: { id: $comandaId }
     tipoPrenda: { id: $tipoPrendaId }
     tipoServicio: { id: $tipoServicioId }
     cantidad: $cantidad
+    detalle: $detalle
     precioUnitario: $precioUnitario
     subtotal: $subtotal
   })
@@ -440,6 +490,16 @@ mutation AnularComanda(
   $id: UUID!
   $motivoAnulacion: String!
 ) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para anular comandas") }
+    }
+    comanda(id: $id)
+      @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this != 'ENTREGADA' && this != 'ANULADA'", message: "La comanda ya está cerrada")
+    }
+  }
   comanda_update(
     id: $id
     data: {
@@ -460,6 +520,17 @@ mutation AnularComanda(
 mutation EntregarComanda(
   $id: UUID!
 ) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para entregar comandas") }
+    }
+    comanda(id: $id)
+      @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this == 'FINALIZADA'", message: "Solo se puede entregar una comanda finalizada")
+      cliente { email telefono }
+    }
+  }
   comanda_update(
     id: $id
     data: {
@@ -475,18 +546,37 @@ mutation EntregarComanda(
     estadoNuevo: ENTREGADA
     motivo: "Entrega a cliente"
   })
+  comandaNotificacion_insert(data: {
+    comanda: { id: $id }
+    destinatario_expr: "response.query.comanda.cliente.email"
+    mensaje: "Su comanda fue entregada correctamente"
+  })
 }
 
 
 mutation EditarComanda(
   $id: UUID!
   $valorTotal: Float!
+  $empresa: String
+  $proyecto: String
   $observaciones: String
 ) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para editar comandas") }
+    }
+    comanda(id: $id)
+      @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this == 'PENDIENTE'", message: "Solo se puede editar una comanda pendiente")
+    }
+  }
   comanda_update(
     id: $id
     data: {
       valorTotal: $valorTotal
+      empresa: $empresa
+      proyecto: $proyecto
       observaciones: $observaciones
       actualizadoEn_expr: "request.time"
     }
@@ -496,5 +586,29 @@ mutation EditarComanda(
 mutation EliminarDetallesComanda(
   $comandaId: UUID!
 ) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para editar comandas") }
+    }
+    comanda(id: $comandaId)
+      @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this == 'PENDIENTE'", message: "Solo se pueden reemplazar prendas de una comanda pendiente")
+    }
+  }
   comandaDetalle_deleteMany(where: { comandaId: { eq: $comandaId } })
+}
+
+mutation CrearTipoPrenda($nombre: String!) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para crear prendas") }
+    }
+  }
+  tipoPrenda_insert(data: { nombre: $nombre, activo: true })
+}
+
+mutation CrearTipoServicio($nombre: String!, $precioBase: Float!) @auth(level: USER) {
+  tipoServicio_insert(data: { nombre: $nombre, precioBase: $precioBase, unidadCobro: PRENDA, activo: true })
 }

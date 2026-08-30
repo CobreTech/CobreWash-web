@@ -46,6 +46,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*EntregarComanda*](#entregarcomanda)
   - [*EditarComanda*](#editarcomanda)
   - [*EliminarDetallesComanda*](#eliminardetallescomanda)
+  - [*CrearTipoPrenda*](#creartipoprenda)
+  - [*CrearTipoServicio*](#creartiposervicio)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `example`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -419,6 +421,7 @@ export interface GetComandaPorQrData {
     comandaDetalles_on_comanda: ({
       cantidad: number;
       pesoKg?: number | null;
+      precioUnitario: number;
       tipoPrenda: {
         nombre: string;
       };
@@ -1151,7 +1154,7 @@ export default function RegistrarseComponent() {
   const registrarseVars: RegistrarseVariables = {
     rolId: ..., 
     rut: ..., 
-    nombre: ..., 
+    nombre: ...,
     apellido: ..., 
     telefono: ..., // optional
     email: ..., 
@@ -2905,3 +2908,192 @@ export default function EliminarDetallesComandaComponent() {
 }
 ```
 
+## CrearTipoPrenda
+You can execute the `CrearTipoPrenda` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCrearTipoPrenda(options?: useDataConnectMutationOptions<CrearTipoPrendaData, FirebaseError, CrearTipoPrendaVariables>): UseDataConnectMutationResult<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCrearTipoPrenda(dc: DataConnect, options?: useDataConnectMutationOptions<CrearTipoPrendaData, FirebaseError, CrearTipoPrendaVariables>): UseDataConnectMutationResult<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+```
+
+### Variables
+The `CrearTipoPrenda` Mutation requires an argument of type `CrearTipoPrendaVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CrearTipoPrendaVariables {
+  nombre: string;
+}
+```
+### Return Type
+Recall that calling the `CrearTipoPrenda` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CrearTipoPrenda` Mutation is of type `CrearTipoPrendaData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CrearTipoPrendaData {
+  tipoPrenda_insert: TipoPrenda_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CrearTipoPrenda`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CrearTipoPrendaVariables } from '@dataconnect/generated';
+import { useCrearTipoPrenda } from '@dataconnect/generated/react'
+
+export default function CrearTipoPrendaComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCrearTipoPrenda();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCrearTipoPrenda(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearTipoPrenda(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearTipoPrenda(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCrearTipoPrenda` Mutation requires an argument of type `CrearTipoPrendaVariables`:
+  const crearTipoPrendaVars: CrearTipoPrendaVariables = {
+    nombre: ...,
+  };
+  mutation.mutate(crearTipoPrendaVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ nombre: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(crearTipoPrendaVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.tipoPrenda_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CrearTipoServicio
+You can execute the `CrearTipoServicio` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCrearTipoServicio(options?: useDataConnectMutationOptions<CrearTipoServicioData, FirebaseError, CrearTipoServicioVariables>): UseDataConnectMutationResult<CrearTipoServicioData, CrearTipoServicioVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCrearTipoServicio(dc: DataConnect, options?: useDataConnectMutationOptions<CrearTipoServicioData, FirebaseError, CrearTipoServicioVariables>): UseDataConnectMutationResult<CrearTipoServicioData, CrearTipoServicioVariables>;
+```
+
+### Variables
+The `CrearTipoServicio` Mutation requires an argument of type `CrearTipoServicioVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CrearTipoServicioVariables {
+  nombre: string;
+  precioBase: number;
+}
+```
+### Return Type
+Recall that calling the `CrearTipoServicio` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CrearTipoServicio` Mutation is of type `CrearTipoServicioData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CrearTipoServicioData {
+  tipoServicio_insert: TipoServicio_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CrearTipoServicio`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CrearTipoServicioVariables } from '@dataconnect/generated';
+import { useCrearTipoServicio } from '@dataconnect/generated/react'
+
+export default function CrearTipoServicioComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCrearTipoServicio();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCrearTipoServicio(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearTipoServicio(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCrearTipoServicio(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCrearTipoServicio` Mutation requires an argument of type `CrearTipoServicioVariables`:
+  const crearTipoServicioVars: CrearTipoServicioVariables = {
+    nombre: ...,
+    precioBase: ...,
+  };
+  mutation.mutate(crearTipoServicioVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ nombre: ..., precioBase: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(crearTipoServicioVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.tipoServicio_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```

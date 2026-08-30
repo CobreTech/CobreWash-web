@@ -73,6 +73,7 @@ query GetComandaPorQr($codigoQr: UUID!)
     comandaDetalles_on_comanda {
       cantidad
       pesoKg
+      precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }
     }
@@ -171,13 +172,31 @@ query GetMisSalidasVehiculo @auth(level: USER) {
 
 # ==================== COMANDAS (SPRINT 03) ====================
 
-query GetComandas @auth(level: USER) {
-  comandas(orderBy: [{ creadoEn: DESC }]) {
+query GetComandas(
+  $limit: Int = 8
+  $offset: Int = 0
+  $estado: ComandaEstado
+  $cliente: String
+  $fechaDesde: Timestamp
+  $fechaHasta: Timestamp
+) @auth(level: USER) {
+  comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+    orderBy: [{ creadoEn: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
     id
     numeroComanda
     codigoQr
     estado
     valorTotal
+    empresa
+    proyecto
     fechaRecepcion
     fechaEntregaEstimada
     observaciones
@@ -192,11 +211,26 @@ query GetComandas @auth(level: USER) {
     }
     comandaDetalles_on_comanda {
       cantidad
+      detalle
       precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }
     }
   }
+  total: comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+  ) {
+    _count
+  }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
+  finalizadas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
+  entregadas: comandas(where: { estado: { eq: ENTREGADA } }) { _count }
+  anuladas: comandas(where: { estado: { eq: ANULADA } }) { _count }
 }
 
 query GetComandaDetalle($id: UUID!) @auth(level: USER) {
@@ -205,6 +239,8 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
     numeroComanda
     estado
     valorTotal
+    empresa
+    proyecto
     observaciones
     motivoAnulacion
     fechaRecepcion
@@ -220,6 +256,7 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
     comandaDetalles_on_comanda {
       id
       cantidad
+      detalle
       pesoKg
       precioUnitario
       subtotal

@@ -39,6 +39,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*EntregarComanda*](#entregarcomanda)
   - [*EditarComanda*](#editarcomanda)
   - [*EliminarDetallesComanda*](#eliminardetallescomanda)
+  - [*CrearTipoPrenda*](#creartipoprenda)
+  - [*CrearTipoServicio*](#creartiposervicio)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `example`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -449,6 +451,7 @@ export interface GetComandaPorQrData {
     comandaDetalles_on_comanda: ({
       cantidad: number;
       pesoKg?: number | null;
+      precioUnitario: number;
       tipoPrenda: {
         nombre: string;
       };
@@ -1319,7 +1322,7 @@ import { connectorConfig, registrarse, RegistrarseVariables } from '@dataconnect
 const registrarseVars: RegistrarseVariables = {
   rolId: ..., 
   rut: ..., 
-  nombre: ..., 
+  nombre: ...,
   apellido: ..., 
   telefono: ..., // optional
   email: ..., 
@@ -1354,7 +1357,7 @@ import { connectorConfig, registrarseRef, RegistrarseVariables } from '@dataconn
 const registrarseVars: RegistrarseVariables = {
   rolId: ..., 
   rut: ..., 
-  nombre: ..., 
+  nombre: ...,
   apellido: ..., 
   telefono: ..., // optional
   email: ..., 
@@ -3433,3 +3436,223 @@ executeMutation(ref).then((response) => {
 });
 ```
 
+## CrearTipoPrenda
+You can execute the `CrearTipoPrenda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+crearTipoPrenda(vars: CrearTipoPrendaVariables): MutationPromise<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+
+interface CrearTipoPrendaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearTipoPrendaVariables): MutationRef<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+}
+export const crearTipoPrendaRef: CrearTipoPrendaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+crearTipoPrenda(dc: DataConnect, vars: CrearTipoPrendaVariables): MutationPromise<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+
+interface CrearTipoPrendaRef {
+  ...
+  (dc: DataConnect, vars: CrearTipoPrendaVariables): MutationRef<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+}
+export const crearTipoPrendaRef: CrearTipoPrendaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the crearTipoPrendaRef:
+```typescript
+const name = crearTipoPrendaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CrearTipoPrenda` mutation requires an argument of type `CrearTipoPrendaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CrearTipoPrendaVariables {
+  nombre: string;
+}
+```
+### Return Type
+Recall that executing the `CrearTipoPrenda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CrearTipoPrendaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CrearTipoPrendaData {
+  tipoPrenda_insert: TipoPrenda_Key;
+}
+```
+### Using `CrearTipoPrenda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, crearTipoPrenda, CrearTipoPrendaVariables } from '@dataconnect/generated';
+
+// The `CrearTipoPrenda` mutation requires an argument of type `CrearTipoPrendaVariables`:
+const crearTipoPrendaVars: CrearTipoPrendaVariables = {
+  nombre: ...,
+};
+
+// Call the `crearTipoPrenda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await crearTipoPrenda(crearTipoPrendaVars);
+// Variables can be defined inline as well.
+const { data } = await crearTipoPrenda({ nombre: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await crearTipoPrenda(dataConnect, crearTipoPrendaVars);
+
+console.log(data.tipoPrenda_insert);
+
+// Or, you can use the `Promise` API.
+crearTipoPrenda(crearTipoPrendaVars).then((response) => {
+  const data = response.data;
+  console.log(data.tipoPrenda_insert);
+});
+```
+
+### Using `CrearTipoPrenda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, crearTipoPrendaRef, CrearTipoPrendaVariables } from '@dataconnect/generated';
+
+// The `CrearTipoPrenda` mutation requires an argument of type `CrearTipoPrendaVariables`:
+const crearTipoPrendaVars: CrearTipoPrendaVariables = {
+  nombre: ...,
+};
+
+// Call the `crearTipoPrendaRef()` function to get a reference to the mutation.
+const ref = crearTipoPrendaRef(crearTipoPrendaVars);
+// Variables can be defined inline as well.
+const ref = crearTipoPrendaRef({ nombre: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = crearTipoPrendaRef(dataConnect, crearTipoPrendaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.tipoPrenda_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.tipoPrenda_insert);
+});
+```
+
+## CrearTipoServicio
+You can execute the `CrearTipoServicio` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+crearTipoServicio(vars: CrearTipoServicioVariables): MutationPromise<CrearTipoServicioData, CrearTipoServicioVariables>;
+
+interface CrearTipoServicioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearTipoServicioVariables): MutationRef<CrearTipoServicioData, CrearTipoServicioVariables>;
+}
+export const crearTipoServicioRef: CrearTipoServicioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+crearTipoServicio(dc: DataConnect, vars: CrearTipoServicioVariables): MutationPromise<CrearTipoServicioData, CrearTipoServicioVariables>;
+
+interface CrearTipoServicioRef {
+  ...
+  (dc: DataConnect, vars: CrearTipoServicioVariables): MutationRef<CrearTipoServicioData, CrearTipoServicioVariables>;
+}
+export const crearTipoServicioRef: CrearTipoServicioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the crearTipoServicioRef:
+```typescript
+const name = crearTipoServicioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CrearTipoServicio` mutation requires an argument of type `CrearTipoServicioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CrearTipoServicioVariables {
+  nombre: string;
+  precioBase: number;
+}
+```
+### Return Type
+Recall that executing the `CrearTipoServicio` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CrearTipoServicioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CrearTipoServicioData {
+  tipoServicio_insert: TipoServicio_Key;
+}
+```
+### Using `CrearTipoServicio`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, crearTipoServicio, CrearTipoServicioVariables } from '@dataconnect/generated';
+
+// The `CrearTipoServicio` mutation requires an argument of type `CrearTipoServicioVariables`:
+const crearTipoServicioVars: CrearTipoServicioVariables = {
+  nombre: ...,
+  precioBase: ...,
+};
+
+// Call the `crearTipoServicio()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await crearTipoServicio(crearTipoServicioVars);
+// Variables can be defined inline as well.
+const { data } = await crearTipoServicio({ nombre: ..., precioBase: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await crearTipoServicio(dataConnect, crearTipoServicioVars);
+
+console.log(data.tipoServicio_insert);
+
+// Or, you can use the `Promise` API.
+crearTipoServicio(crearTipoServicioVars).then((response) => {
+  const data = response.data;
+  console.log(data.tipoServicio_insert);
+});
+```
+
+### Using `CrearTipoServicio`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, crearTipoServicioRef, CrearTipoServicioVariables } from '@dataconnect/generated';
+
+// The `CrearTipoServicio` mutation requires an argument of type `CrearTipoServicioVariables`:
+const crearTipoServicioVars: CrearTipoServicioVariables = {
+  nombre: ...,
+  precioBase: ...,
+};
+
+// Call the `crearTipoServicioRef()` function to get a reference to the mutation.
+const ref = crearTipoServicioRef(crearTipoServicioVars);
+// Variables can be defined inline as well.
+const ref = crearTipoServicioRef({ nombre: ..., precioBase: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = crearTipoServicioRef(dataConnect, crearTipoServicioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.tipoServicio_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.tipoServicio_insert);
+});
+```
