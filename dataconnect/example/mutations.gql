@@ -393,3 +393,87 @@ mutation AgregarFotoInspeccionVehiculo(
     orden: $orden
   })
 }
+
+# ==================== COMANDAS (SPRINT 03) ====================
+
+mutation CrearComanda(
+  $numeroComanda: String!
+  $clienteId: UUID!
+  $valorTotal: Float!
+  $observaciones: String
+) @auth(level: USER) @transaction {
+  comanda_insert(data: {
+    numeroComanda: $numeroComanda
+    cliente: { id: $clienteId }
+    recepcionistaId_expr: "auth.uid"
+    estado: PENDIENTE
+    valorTotal: $valorTotal
+    observaciones: $observaciones
+  })
+  comandaHistorialEstado_insert(data: {
+    comandaId_expr: "response.comanda_insert.id"
+    usuarioId_expr: "auth.uid"
+    estadoNuevo: PENDIENTE
+    motivo: "Creación de comanda"
+  })
+}
+
+mutation AgregarComandaDetalle(
+  $comandaId: UUID!
+  $tipoPrendaId: UUID!
+  $tipoServicioId: UUID!
+  $cantidad: Int!
+  $precioUnitario: Float!
+  $subtotal: Float!
+) @auth(level: USER) {
+  comandaDetalle_insert(data: {
+    comanda: { id: $comandaId }
+    tipoPrenda: { id: $tipoPrendaId }
+    tipoServicio: { id: $tipoServicioId }
+    cantidad: $cantidad
+    precioUnitario: $precioUnitario
+    subtotal: $subtotal
+  })
+}
+
+mutation AnularComanda(
+  $id: UUID!
+  $motivoAnulacion: String!
+) @auth(level: USER) @transaction {
+  comanda_update(
+    id: $id
+    data: {
+      estado: ANULADA
+      motivoAnulacion: $motivoAnulacion
+      actualizadoEn_expr: "request.time"
+    }
+  ) @check(expr: "this != null", message: "Comanda no encontrada")
+  
+  comandaHistorialEstado_insert(data: {
+    comanda: { id: $id }
+    usuarioId_expr: "auth.uid"
+    estadoNuevo: ANULADA
+    motivo: $motivoAnulacion
+  })
+}
+
+mutation EntregarComanda(
+  $id: UUID!
+) @auth(level: USER) @transaction {
+  comanda_update(
+    id: $id
+    data: {
+      estado: ENTREGADA
+      fechaEntregaReal_expr: "request.time"
+      actualizadoEn_expr: "request.time"
+    }
+  ) @check(expr: "this != null", message: "Comanda no encontrada")
+  
+  comandaHistorialEstado_insert(data: {
+    comanda: { id: $id }
+    usuarioId_expr: "auth.uid"
+    estadoNuevo: ENTREGADA
+    motivo: "Entrega a cliente"
+  })
+}
+

@@ -168,3 +168,101 @@ query GetMisSalidasVehiculo @auth(level: USER) {
     }
   }
 }
+
+# ==================== COMANDAS (SPRINT 03) ====================
+
+query GetComandas @auth(level: USER) {
+  comandas(orderBy: [{ creadoEn: DESC }]) {
+    id
+    numeroComanda
+    codigoQr
+    estado
+    valorTotal
+    fechaRecepcion
+    fechaEntregaEstimada
+    observaciones
+    motivoAnulacion
+    cliente {
+      id
+      nombre
+      telefono
+      email
+      tipoCliente
+      direccion
+    }
+    comandaDetalles_on_comanda {
+      cantidad
+      precioUnitario
+      tipoPrenda { nombre }
+      tipoServicio { nombre }
+    }
+  }
+}
+
+query GetComandaDetalle($id: UUID!) @auth(level: USER) {
+  comanda(id: $id) {
+    id
+    numeroComanda
+    estado
+    valorTotal
+    observaciones
+    motivoAnulacion
+    fechaRecepcion
+    fechaEntregaEstimada
+    cliente {
+      id
+      nombre
+      telefono
+      email
+      tipoCliente
+      direccion
+    }
+    comandaDetalles_on_comanda {
+      id
+      cantidad
+      pesoKg
+      precioUnitario
+      subtotal
+      tipoPrenda {
+        id
+        nombre
+      }
+      tipoServicio {
+        id
+        nombre
+      }
+    }
+    comandaHistorialEstados_on_comanda(orderBy: [{ fecha: DESC }]) {
+      id
+      estadoAnterior
+      estadoNuevo
+      fecha
+      motivo
+      usuario {
+        nombre
+      }
+    }
+  }
+}
+
+query GetCatalogosComanda @auth(level: USER) {
+  tipoServicios(where: { activo: { eq: true } }) {
+    id
+    nombre
+    precioBase
+    unidadCobro
+  }
+  tipoPrendas(where: { activo: { eq: true } }) {
+    id
+    nombre
+  }
+  clientes(orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    tipoCliente
+    telefono
+    email
+    direccion
+  }
+}
+

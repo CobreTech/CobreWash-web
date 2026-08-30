@@ -17,6 +17,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetInsumoPorQr*](#getinsumoporqr)
   - [*GetVehiculos*](#getvehiculos)
   - [*GetMisSalidasVehiculo*](#getmissalidasvehiculo)
+  - [*GetComandas*](#getcomandas)
+  - [*GetComandaDetalle*](#getcomandadetalle)
+  - [*GetCatalogosComanda*](#getcatalogoscomanda)
 - [**Mutations**](#mutations)
   - [*Registrarse*](#registrarse)
   - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
@@ -30,6 +33,10 @@ This README will guide you through the process of using the generated JavaScript
   - [*IniciarSalidaVehiculo*](#iniciarsalidavehiculo)
   - [*RegistrarInspeccionDespues*](#registrarinspecciondespues)
   - [*AgregarFotoInspeccionVehiculo*](#agregarfotoinspeccionvehiculo)
+  - [*CrearComanda*](#crearcomanda)
+  - [*AgregarComandaDetalle*](#agregarcomandadetalle)
+  - [*AnularComanda*](#anularcomanda)
+  - [*EntregarComanda*](#entregarcomanda)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `example`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -458,7 +465,7 @@ import { connectorConfig, getComandaPorQr, GetComandaPorQrVariables } from '@dat
 
 // The `GetComandaPorQr` query requires an argument of type `GetComandaPorQrVariables`:
 const getComandaPorQrVars: GetComandaPorQrVariables = {
-  codigoQr: ...,
+  codigoQr: ..., 
 };
 
 // Call the `getComandaPorQr()` function to execute the query.
@@ -488,7 +495,7 @@ import { connectorConfig, getComandaPorQrRef, GetComandaPorQrVariables } from '@
 
 // The `GetComandaPorQr` query requires an argument of type `GetComandaPorQrVariables`:
 const getComandaPorQrVars: GetComandaPorQrVariables = {
-  codigoQr: ...,
+  codigoQr: ..., 
 };
 
 // Call the `getComandaPorQrRef()` function to get a reference to the query.
@@ -575,7 +582,7 @@ import { connectorConfig, getInsumoPorQr, GetInsumoPorQrVariables } from '@datac
 
 // The `GetInsumoPorQr` query requires an argument of type `GetInsumoPorQrVariables`:
 const getInsumoPorQrVars: GetInsumoPorQrVariables = {
-  codigoQr: ...,
+  codigoQr: ..., 
 };
 
 // Call the `getInsumoPorQr()` function to execute the query.
@@ -605,7 +612,7 @@ import { connectorConfig, getInsumoPorQrRef, GetInsumoPorQrVariables } from '@da
 
 // The `GetInsumoPorQr` query requires an argument of type `GetInsumoPorQrVariables`:
 const getInsumoPorQrVars: GetInsumoPorQrVariables = {
-  codigoQr: ...,
+  codigoQr: ..., 
 };
 
 // Call the `getInsumoPorQrRef()` function to get a reference to the query.
@@ -848,6 +855,392 @@ executeQuery(ref).then((response) => {
 });
 ```
 
+## GetComandas
+You can execute the `GetComandas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getComandas(options?: ExecuteQueryOptions): QueryPromise<GetComandasData, undefined>;
+
+interface GetComandasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetComandasData, undefined>;
+}
+export const getComandasRef: GetComandasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getComandas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetComandasData, undefined>;
+
+interface GetComandasRef {
+  ...
+  (dc: DataConnect): QueryRef<GetComandasData, undefined>;
+}
+export const getComandasRef: GetComandasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getComandasRef:
+```typescript
+const name = getComandasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetComandas` query has no variables.
+### Return Type
+Recall that executing the `GetComandas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetComandasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetComandasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    codigoQr: UUIDString;
+    estado: ComandaEstado;
+    valorTotal: number;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    observaciones?: string | null;
+    motivoAnulacion?: string | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      telefono?: string | null;
+      email?: string | null;
+      tipoCliente: TipoCliente;
+      direccion?: string | null;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+      precioUnitario: number;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+  } & Comanda_Key)[];
+}
+```
+### Using `GetComandas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getComandas } from '@dataconnect/generated';
+
+
+// Call the `getComandas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getComandas();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getComandas(dataConnect);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+getComandas().then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+### Using `GetComandas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getComandasRef } from '@dataconnect/generated';
+
+
+// Call the `getComandasRef()` function to get a reference to the query.
+const ref = getComandasRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getComandasRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+## GetComandaDetalle
+You can execute the `GetComandaDetalle` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getComandaDetalle(vars: GetComandaDetalleVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleData, GetComandaDetalleVariables>;
+
+interface GetComandaDetalleRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComandaDetalleVariables): QueryRef<GetComandaDetalleData, GetComandaDetalleVariables>;
+}
+export const getComandaDetalleRef: GetComandaDetalleRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getComandaDetalle(dc: DataConnect, vars: GetComandaDetalleVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleData, GetComandaDetalleVariables>;
+
+interface GetComandaDetalleRef {
+  ...
+  (dc: DataConnect, vars: GetComandaDetalleVariables): QueryRef<GetComandaDetalleData, GetComandaDetalleVariables>;
+}
+export const getComandaDetalleRef: GetComandaDetalleRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getComandaDetalleRef:
+```typescript
+const name = getComandaDetalleRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetComandaDetalle` query requires an argument of type `GetComandaDetalleVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetComandaDetalleVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `GetComandaDetalle` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetComandaDetalleData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetComandaDetalleData {
+  comanda?: {
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    valorTotal: number;
+    observaciones?: string | null;
+    motivoAnulacion?: string | null;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      telefono?: string | null;
+      email?: string | null;
+      tipoCliente: TipoCliente;
+      direccion?: string | null;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      id: UUIDString;
+      cantidad: number;
+      pesoKg?: number | null;
+      precioUnitario: number;
+      subtotal: number;
+      tipoPrenda: {
+        id: UUIDString;
+        nombre: string;
+      } & TipoPrenda_Key;
+      tipoServicio: {
+        id: UUIDString;
+        nombre: string;
+      } & TipoServicio_Key;
+    } & ComandaDetalle_Key)[];
+    comandaHistorialEstados_on_comanda: ({
+      id: UUIDString;
+      estadoAnterior?: ComandaEstado | null;
+      estadoNuevo: ComandaEstado;
+      fecha: TimestampString;
+      motivo?: string | null;
+      usuario?: {
+        nombre: string;
+      };
+    } & ComandaHistorialEstado_Key)[];
+  } & Comanda_Key;
+}
+```
+### Using `GetComandaDetalle`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getComandaDetalle, GetComandaDetalleVariables } from '@dataconnect/generated';
+
+// The `GetComandaDetalle` query requires an argument of type `GetComandaDetalleVariables`:
+const getComandaDetalleVars: GetComandaDetalleVariables = {
+  id: ..., 
+};
+
+// Call the `getComandaDetalle()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getComandaDetalle(getComandaDetalleVars);
+// Variables can be defined inline as well.
+const { data } = await getComandaDetalle({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getComandaDetalle(dataConnect, getComandaDetalleVars);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+getComandaDetalle(getComandaDetalleVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+### Using `GetComandaDetalle`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getComandaDetalleRef, GetComandaDetalleVariables } from '@dataconnect/generated';
+
+// The `GetComandaDetalle` query requires an argument of type `GetComandaDetalleVariables`:
+const getComandaDetalleVars: GetComandaDetalleVariables = {
+  id: ..., 
+};
+
+// Call the `getComandaDetalleRef()` function to get a reference to the query.
+const ref = getComandaDetalleRef(getComandaDetalleVars);
+// Variables can be defined inline as well.
+const ref = getComandaDetalleRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getComandaDetalleRef(dataConnect, getComandaDetalleVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+## GetCatalogosComanda
+You can execute the `GetCatalogosComanda` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getCatalogosComanda(options?: ExecuteQueryOptions): QueryPromise<GetCatalogosComandaData, undefined>;
+
+interface GetCatalogosComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetCatalogosComandaData, undefined>;
+}
+export const getCatalogosComandaRef: GetCatalogosComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getCatalogosComanda(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCatalogosComandaData, undefined>;
+
+interface GetCatalogosComandaRef {
+  ...
+  (dc: DataConnect): QueryRef<GetCatalogosComandaData, undefined>;
+}
+export const getCatalogosComandaRef: GetCatalogosComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getCatalogosComandaRef:
+```typescript
+const name = getCatalogosComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetCatalogosComanda` query has no variables.
+### Return Type
+Recall that executing the `GetCatalogosComanda` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetCatalogosComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetCatalogosComandaData {
+  tipoServicios: ({
+    id: UUIDString;
+    nombre: string;
+    precioBase: number;
+    unidadCobro: UnidadCobro;
+  } & TipoServicio_Key)[];
+  tipoPrendas: ({
+    id: UUIDString;
+    nombre: string;
+  } & TipoPrenda_Key)[];
+  clientes: ({
+    id: UUIDString;
+    nombre: string;
+    tipoCliente: TipoCliente;
+    telefono?: string | null;
+    email?: string | null;
+    direccion?: string | null;
+  } & Cliente_Key)[];
+}
+```
+### Using `GetCatalogosComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getCatalogosComanda } from '@dataconnect/generated';
+
+
+// Call the `getCatalogosComanda()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getCatalogosComanda();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getCatalogosComanda(dataConnect);
+
+console.log(data.tipoServicios);
+console.log(data.tipoPrendas);
+console.log(data.clientes);
+
+// Or, you can use the `Promise` API.
+getCatalogosComanda().then((response) => {
+  const data = response.data;
+  console.log(data.tipoServicios);
+  console.log(data.tipoPrendas);
+  console.log(data.clientes);
+});
+```
+
+### Using `GetCatalogosComanda`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getCatalogosComandaRef } from '@dataconnect/generated';
+
+
+// Call the `getCatalogosComandaRef()` function to get a reference to the query.
+const ref = getCatalogosComandaRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getCatalogosComandaRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.tipoServicios);
+console.log(data.tipoPrendas);
+console.log(data.clientes);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.tipoServicios);
+  console.log(data.tipoPrendas);
+  console.log(data.clientes);
+});
+```
+
 # Mutations
 
 There are two ways to execute a Data Connect Mutation using the generated Web SDK:
@@ -922,12 +1315,12 @@ import { connectorConfig, registrarse, RegistrarseVariables } from '@dataconnect
 
 // The `Registrarse` mutation requires an argument of type `RegistrarseVariables`:
 const registrarseVars: RegistrarseVariables = {
-  rolId: ...,
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  rolId: ..., 
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
 };
 
 // Call the `registrarse()` function to execute the mutation.
@@ -957,12 +1350,12 @@ import { connectorConfig, registrarseRef, RegistrarseVariables } from '@dataconn
 
 // The `Registrarse` mutation requires an argument of type `RegistrarseVariables`:
 const registrarseVars: RegistrarseVariables = {
-  rolId: ...,
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  rolId: ..., 
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
 };
 
 // Call the `registrarseRef()` function to get a reference to the mutation.
@@ -1047,13 +1440,13 @@ import { connectorConfig, crearUsuarioAdministrado, CrearUsuarioAdministradoVari
 
 // The `CrearUsuarioAdministrado` mutation requires an argument of type `CrearUsuarioAdministradoVariables`:
 const crearUsuarioAdministradoVars: CrearUsuarioAdministradoVariables = {
-  id: ...,
-  rolId: ...,
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  id: ..., 
+  rolId: ..., 
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
 };
 
 // Call the `crearUsuarioAdministrado()` function to execute the mutation.
@@ -1083,13 +1476,13 @@ import { connectorConfig, crearUsuarioAdministradoRef, CrearUsuarioAdministradoV
 
 // The `CrearUsuarioAdministrado` mutation requires an argument of type `CrearUsuarioAdministradoVariables`:
 const crearUsuarioAdministradoVars: CrearUsuarioAdministradoVariables = {
-  id: ...,
-  rolId: ...,
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  id: ..., 
+  rolId: ..., 
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
 };
 
 // Call the `crearUsuarioAdministradoRef()` function to get a reference to the mutation.
@@ -1175,13 +1568,13 @@ import { connectorConfig, registrarseComoCliente, RegistrarseComoClienteVariable
 
 // The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseComoClienteVariables`:
 const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
   direccion: ..., // optional
-  tipoCliente: ...,
+  tipoCliente: ..., 
 };
 
 // Call the `registrarseComoCliente()` function to execute the mutation.
@@ -1213,13 +1606,13 @@ import { connectorConfig, registrarseComoClienteRef, RegistrarseComoClienteVaria
 
 // The `RegistrarseComoCliente` mutation requires an argument of type `RegistrarseComoClienteVariables`:
 const registrarseComoClienteVars: RegistrarseComoClienteVariables = {
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
   direccion: ..., // optional
-  tipoCliente: ...,
+  tipoCliente: ..., 
 };
 
 // Call the `registrarseComoClienteRef()` function to get a reference to the mutation.
@@ -1308,14 +1701,14 @@ import { connectorConfig, crearClienteAdministrado, CrearClienteAdministradoVari
 
 // The `CrearClienteAdministrado` mutation requires an argument of type `CrearClienteAdministradoVariables`:
 const crearClienteAdministradoVars: CrearClienteAdministradoVariables = {
-  id: ...,
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  id: ..., 
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
   direccion: ..., // optional
-  tipoCliente: ...,
+  tipoCliente: ..., 
 };
 
 // Call the `crearClienteAdministrado()` function to execute the mutation.
@@ -1347,14 +1740,14 @@ import { connectorConfig, crearClienteAdministradoRef, CrearClienteAdministradoV
 
 // The `CrearClienteAdministrado` mutation requires an argument of type `CrearClienteAdministradoVariables`:
 const crearClienteAdministradoVars: CrearClienteAdministradoVariables = {
-  id: ...,
-  rut: ...,
-  nombre: ...,
-  apellido: ...,
+  id: ..., 
+  rut: ..., 
+  nombre: ..., 
+  apellido: ..., 
   telefono: ..., // optional
-  email: ...,
+  email: ..., 
   direccion: ..., // optional
-  tipoCliente: ...,
+  tipoCliente: ..., 
 };
 
 // Call the `crearClienteAdministradoRef()` function to get a reference to the mutation.
@@ -1440,12 +1833,12 @@ import { connectorConfig, actualizarUsuario, ActualizarUsuarioVariables } from '
 
 // The `ActualizarUsuario` mutation requires an argument of type `ActualizarUsuarioVariables`:
 const actualizarUsuarioVars: ActualizarUsuarioVariables = {
-  id: ...,
-  rolId: ...,
-  nombre: ...,
+  id: ..., 
+  rolId: ..., 
+  nombre: ..., 
   apellido: ..., // optional
   telefono: ..., // optional
-  activo: ...,
+  activo: ..., 
 };
 
 // Call the `actualizarUsuario()` function to execute the mutation.
@@ -1475,12 +1868,12 @@ import { connectorConfig, actualizarUsuarioRef, ActualizarUsuarioVariables } fro
 
 // The `ActualizarUsuario` mutation requires an argument of type `ActualizarUsuarioVariables`:
 const actualizarUsuarioVars: ActualizarUsuarioVariables = {
-  id: ...,
-  rolId: ...,
-  nombre: ...,
+  id: ..., 
+  rolId: ..., 
+  nombre: ..., 
   apellido: ..., // optional
   telefono: ..., // optional
-  activo: ...,
+  activo: ..., 
 };
 
 // Call the `actualizarUsuarioRef()` function to get a reference to the mutation.
@@ -1563,9 +1956,9 @@ import { connectorConfig, crearVehiculo, CrearVehiculoVariables } from '@datacon
 
 // The `CrearVehiculo` mutation requires an argument of type `CrearVehiculoVariables`:
 const crearVehiculoVars: CrearVehiculoVariables = {
-  patente: ...,
-  marca: ...,
-  modelo: ...,
+  patente: ..., 
+  marca: ..., 
+  modelo: ..., 
   anio: ..., // optional
   descripcion: ..., // optional
 };
@@ -1597,9 +1990,9 @@ import { connectorConfig, crearVehiculoRef, CrearVehiculoVariables } from '@data
 
 // The `CrearVehiculo` mutation requires an argument of type `CrearVehiculoVariables`:
 const crearVehiculoVars: CrearVehiculoVariables = {
-  patente: ...,
-  marca: ...,
-  modelo: ...,
+  patente: ..., 
+  marca: ..., 
+  modelo: ..., 
   anio: ..., // optional
   descripcion: ..., // optional
 };
@@ -1686,13 +2079,13 @@ import { connectorConfig, actualizarVehiculo, ActualizarVehiculoVariables } from
 
 // The `ActualizarVehiculo` mutation requires an argument of type `ActualizarVehiculoVariables`:
 const actualizarVehiculoVars: ActualizarVehiculoVariables = {
-  id: ...,
-  patente: ...,
-  marca: ...,
-  modelo: ...,
+  id: ..., 
+  patente: ..., 
+  marca: ..., 
+  modelo: ..., 
   anio: ..., // optional
   descripcion: ..., // optional
-  activo: ...,
+  activo: ..., 
 };
 
 // Call the `actualizarVehiculo()` function to execute the mutation.
@@ -1722,13 +2115,13 @@ import { connectorConfig, actualizarVehiculoRef, ActualizarVehiculoVariables } f
 
 // The `ActualizarVehiculo` mutation requires an argument of type `ActualizarVehiculoVariables`:
 const actualizarVehiculoVars: ActualizarVehiculoVariables = {
-  id: ...,
-  patente: ...,
-  marca: ...,
-  modelo: ...,
+  id: ..., 
+  patente: ..., 
+  marca: ..., 
+  modelo: ..., 
   anio: ..., // optional
   descripcion: ..., // optional
-  activo: ...,
+  activo: ..., 
 };
 
 // Call the `actualizarVehiculoRef()` function to get a reference to the mutation.
@@ -1809,8 +2202,8 @@ import { connectorConfig, crearSalidaVehiculo, CrearSalidaVehiculoVariables } fr
 
 // The `CrearSalidaVehiculo` mutation requires an argument of type `CrearSalidaVehiculoVariables`:
 const crearSalidaVehiculoVars: CrearSalidaVehiculoVariables = {
-  vehiculoId: ...,
-  repartidorId: ...,
+  vehiculoId: ..., 
+  repartidorId: ..., 
   observaciones: ..., // optional
 };
 
@@ -1841,8 +2234,8 @@ import { connectorConfig, crearSalidaVehiculoRef, CrearSalidaVehiculoVariables }
 
 // The `CrearSalidaVehiculo` mutation requires an argument of type `CrearSalidaVehiculoVariables`:
 const crearSalidaVehiculoVars: CrearSalidaVehiculoVariables = {
-  vehiculoId: ...,
-  repartidorId: ...,
+  vehiculoId: ..., 
+  repartidorId: ..., 
   observaciones: ..., // optional
 };
 
@@ -1925,9 +2318,9 @@ import { connectorConfig, registrarInspeccionAntes, RegistrarInspeccionAntesVari
 
 // The `RegistrarInspeccionAntes` mutation requires an argument of type `RegistrarInspeccionAntesVariables`:
 const registrarInspeccionAntesVars: RegistrarInspeccionAntesVariables = {
-  salidaId: ...,
-  estadoVehiculo: ...,
-  kilometraje: ...,
+  salidaId: ..., 
+  estadoVehiculo: ..., 
+  kilometraje: ..., 
   observaciones: ..., // optional
 };
 
@@ -1958,9 +2351,9 @@ import { connectorConfig, registrarInspeccionAntesRef, RegistrarInspeccionAntesV
 
 // The `RegistrarInspeccionAntes` mutation requires an argument of type `RegistrarInspeccionAntesVariables`:
 const registrarInspeccionAntesVars: RegistrarInspeccionAntesVariables = {
-  salidaId: ...,
-  estadoVehiculo: ...,
-  kilometraje: ...,
+  salidaId: ..., 
+  estadoVehiculo: ..., 
+  kilometraje: ..., 
   observaciones: ..., // optional
 };
 
@@ -2040,7 +2433,7 @@ import { connectorConfig, iniciarSalidaVehiculo, IniciarSalidaVehiculoVariables 
 
 // The `IniciarSalidaVehiculo` mutation requires an argument of type `IniciarSalidaVehiculoVariables`:
 const iniciarSalidaVehiculoVars: IniciarSalidaVehiculoVariables = {
-  salidaId: ...,
+  salidaId: ..., 
 };
 
 // Call the `iniciarSalidaVehiculo()` function to execute the mutation.
@@ -2070,7 +2463,7 @@ import { connectorConfig, iniciarSalidaVehiculoRef, IniciarSalidaVehiculoVariabl
 
 // The `IniciarSalidaVehiculo` mutation requires an argument of type `IniciarSalidaVehiculoVariables`:
 const iniciarSalidaVehiculoVars: IniciarSalidaVehiculoVariables = {
-  salidaId: ...,
+  salidaId: ..., 
 };
 
 // Call the `iniciarSalidaVehiculoRef()` function to get a reference to the mutation.
@@ -2153,9 +2546,9 @@ import { connectorConfig, registrarInspeccionDespues, RegistrarInspeccionDespues
 
 // The `RegistrarInspeccionDespues` mutation requires an argument of type `RegistrarInspeccionDespuesVariables`:
 const registrarInspeccionDespuesVars: RegistrarInspeccionDespuesVariables = {
-  salidaId: ...,
-  estadoVehiculo: ...,
-  kilometraje: ...,
+  salidaId: ..., 
+  estadoVehiculo: ..., 
+  kilometraje: ..., 
   observaciones: ..., // optional
 };
 
@@ -2188,9 +2581,9 @@ import { connectorConfig, registrarInspeccionDespuesRef, RegistrarInspeccionDesp
 
 // The `RegistrarInspeccionDespues` mutation requires an argument of type `RegistrarInspeccionDespuesVariables`:
 const registrarInspeccionDespuesVars: RegistrarInspeccionDespuesVariables = {
-  salidaId: ...,
-  estadoVehiculo: ...,
-  kilometraje: ...,
+  salidaId: ..., 
+  estadoVehiculo: ..., 
+  kilometraje: ..., 
   observaciones: ..., // optional
 };
 
@@ -2275,10 +2668,10 @@ import { connectorConfig, agregarFotoInspeccionVehiculo, AgregarFotoInspeccionVe
 
 // The `AgregarFotoInspeccionVehiculo` mutation requires an argument of type `AgregarFotoInspeccionVehiculoVariables`:
 const agregarFotoInspeccionVehiculoVars: AgregarFotoInspeccionVehiculoVariables = {
-  inspeccionId: ...,
-  rutaStorage: ...,
+  inspeccionId: ..., 
+  rutaStorage: ..., 
   descripcion: ..., // optional
-  orden: ...,
+  orden: ..., 
 };
 
 // Call the `agregarFotoInspeccionVehiculo()` function to execute the mutation.
@@ -2308,10 +2701,10 @@ import { connectorConfig, agregarFotoInspeccionVehiculoRef, AgregarFotoInspeccio
 
 // The `AgregarFotoInspeccionVehiculo` mutation requires an argument of type `AgregarFotoInspeccionVehiculoVariables`:
 const agregarFotoInspeccionVehiculoVars: AgregarFotoInspeccionVehiculoVariables = {
-  inspeccionId: ...,
-  rutaStorage: ...,
+  inspeccionId: ..., 
+  rutaStorage: ..., 
   descripcion: ..., // optional
-  orden: ...,
+  orden: ..., 
 };
 
 // Call the `agregarFotoInspeccionVehiculoRef()` function to get a reference to the mutation.
@@ -2333,6 +2726,484 @@ console.log(data.fotoInspeccionVehiculo_insert);
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.fotoInspeccionVehiculo_insert);
+});
+```
+
+## CrearComanda
+You can execute the `CrearComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+crearComanda(vars: CrearComandaVariables): MutationPromise<CrearComandaData, CrearComandaVariables>;
+
+interface CrearComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearComandaVariables): MutationRef<CrearComandaData, CrearComandaVariables>;
+}
+export const crearComandaRef: CrearComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+crearComanda(dc: DataConnect, vars: CrearComandaVariables): MutationPromise<CrearComandaData, CrearComandaVariables>;
+
+interface CrearComandaRef {
+  ...
+  (dc: DataConnect, vars: CrearComandaVariables): MutationRef<CrearComandaData, CrearComandaVariables>;
+}
+export const crearComandaRef: CrearComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the crearComandaRef:
+```typescript
+const name = crearComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CrearComanda` mutation requires an argument of type `CrearComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CrearComandaVariables {
+  numeroComanda: string;
+  clienteId: UUIDString;
+  valorTotal: number;
+  observaciones?: string | null;
+}
+```
+### Return Type
+Recall that executing the `CrearComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CrearComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CrearComandaData {
+  comanda_insert: Comanda_Key;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+```
+### Using `CrearComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, crearComanda, CrearComandaVariables } from '@dataconnect/generated';
+
+// The `CrearComanda` mutation requires an argument of type `CrearComandaVariables`:
+const crearComandaVars: CrearComandaVariables = {
+  numeroComanda: ..., 
+  clienteId: ..., 
+  valorTotal: ..., 
+  observaciones: ..., // optional
+};
+
+// Call the `crearComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await crearComanda(crearComandaVars);
+// Variables can be defined inline as well.
+const { data } = await crearComanda({ numeroComanda: ..., clienteId: ..., valorTotal: ..., observaciones: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await crearComanda(dataConnect, crearComandaVars);
+
+console.log(data.comanda_insert);
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+crearComanda(crearComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_insert);
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+### Using `CrearComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, crearComandaRef, CrearComandaVariables } from '@dataconnect/generated';
+
+// The `CrearComanda` mutation requires an argument of type `CrearComandaVariables`:
+const crearComandaVars: CrearComandaVariables = {
+  numeroComanda: ..., 
+  clienteId: ..., 
+  valorTotal: ..., 
+  observaciones: ..., // optional
+};
+
+// Call the `crearComandaRef()` function to get a reference to the mutation.
+const ref = crearComandaRef(crearComandaVars);
+// Variables can be defined inline as well.
+const ref = crearComandaRef({ numeroComanda: ..., clienteId: ..., valorTotal: ..., observaciones: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = crearComandaRef(dataConnect, crearComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comanda_insert);
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_insert);
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+## AgregarComandaDetalle
+You can execute the `AgregarComandaDetalle` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+agregarComandaDetalle(vars: AgregarComandaDetalleVariables): MutationPromise<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+
+interface AgregarComandaDetalleRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AgregarComandaDetalleVariables): MutationRef<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+}
+export const agregarComandaDetalleRef: AgregarComandaDetalleRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+agregarComandaDetalle(dc: DataConnect, vars: AgregarComandaDetalleVariables): MutationPromise<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+
+interface AgregarComandaDetalleRef {
+  ...
+  (dc: DataConnect, vars: AgregarComandaDetalleVariables): MutationRef<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+}
+export const agregarComandaDetalleRef: AgregarComandaDetalleRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the agregarComandaDetalleRef:
+```typescript
+const name = agregarComandaDetalleRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AgregarComandaDetalle` mutation requires an argument of type `AgregarComandaDetalleVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AgregarComandaDetalleVariables {
+  comandaId: UUIDString;
+  tipoPrendaId: UUIDString;
+  tipoServicioId: UUIDString;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+}
+```
+### Return Type
+Recall that executing the `AgregarComandaDetalle` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AgregarComandaDetalleData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AgregarComandaDetalleData {
+  comandaDetalle_insert: ComandaDetalle_Key;
+}
+```
+### Using `AgregarComandaDetalle`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, agregarComandaDetalle, AgregarComandaDetalleVariables } from '@dataconnect/generated';
+
+// The `AgregarComandaDetalle` mutation requires an argument of type `AgregarComandaDetalleVariables`:
+const agregarComandaDetalleVars: AgregarComandaDetalleVariables = {
+  comandaId: ..., 
+  tipoPrendaId: ..., 
+  tipoServicioId: ..., 
+  cantidad: ..., 
+  precioUnitario: ..., 
+  subtotal: ..., 
+};
+
+// Call the `agregarComandaDetalle()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await agregarComandaDetalle(agregarComandaDetalleVars);
+// Variables can be defined inline as well.
+const { data } = await agregarComandaDetalle({ comandaId: ..., tipoPrendaId: ..., tipoServicioId: ..., cantidad: ..., precioUnitario: ..., subtotal: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await agregarComandaDetalle(dataConnect, agregarComandaDetalleVars);
+
+console.log(data.comandaDetalle_insert);
+
+// Or, you can use the `Promise` API.
+agregarComandaDetalle(agregarComandaDetalleVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandaDetalle_insert);
+});
+```
+
+### Using `AgregarComandaDetalle`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, agregarComandaDetalleRef, AgregarComandaDetalleVariables } from '@dataconnect/generated';
+
+// The `AgregarComandaDetalle` mutation requires an argument of type `AgregarComandaDetalleVariables`:
+const agregarComandaDetalleVars: AgregarComandaDetalleVariables = {
+  comandaId: ..., 
+  tipoPrendaId: ..., 
+  tipoServicioId: ..., 
+  cantidad: ..., 
+  precioUnitario: ..., 
+  subtotal: ..., 
+};
+
+// Call the `agregarComandaDetalleRef()` function to get a reference to the mutation.
+const ref = agregarComandaDetalleRef(agregarComandaDetalleVars);
+// Variables can be defined inline as well.
+const ref = agregarComandaDetalleRef({ comandaId: ..., tipoPrendaId: ..., tipoServicioId: ..., cantidad: ..., precioUnitario: ..., subtotal: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = agregarComandaDetalleRef(dataConnect, agregarComandaDetalleVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comandaDetalle_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandaDetalle_insert);
+});
+```
+
+## AnularComanda
+You can execute the `AnularComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+anularComanda(vars: AnularComandaVariables): MutationPromise<AnularComandaData, AnularComandaVariables>;
+
+interface AnularComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AnularComandaVariables): MutationRef<AnularComandaData, AnularComandaVariables>;
+}
+export const anularComandaRef: AnularComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+anularComanda(dc: DataConnect, vars: AnularComandaVariables): MutationPromise<AnularComandaData, AnularComandaVariables>;
+
+interface AnularComandaRef {
+  ...
+  (dc: DataConnect, vars: AnularComandaVariables): MutationRef<AnularComandaData, AnularComandaVariables>;
+}
+export const anularComandaRef: AnularComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the anularComandaRef:
+```typescript
+const name = anularComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AnularComanda` mutation requires an argument of type `AnularComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AnularComandaVariables {
+  id: UUIDString;
+  motivoAnulacion: string;
+}
+```
+### Return Type
+Recall that executing the `AnularComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AnularComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AnularComandaData {
+  comanda_update?: Comanda_Key | null;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+```
+### Using `AnularComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, anularComanda, AnularComandaVariables } from '@dataconnect/generated';
+
+// The `AnularComanda` mutation requires an argument of type `AnularComandaVariables`:
+const anularComandaVars: AnularComandaVariables = {
+  id: ..., 
+  motivoAnulacion: ..., 
+};
+
+// Call the `anularComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await anularComanda(anularComandaVars);
+// Variables can be defined inline as well.
+const { data } = await anularComanda({ id: ..., motivoAnulacion: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await anularComanda(dataConnect, anularComandaVars);
+
+console.log(data.comanda_update);
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+anularComanda(anularComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_update);
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+### Using `AnularComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, anularComandaRef, AnularComandaVariables } from '@dataconnect/generated';
+
+// The `AnularComanda` mutation requires an argument of type `AnularComandaVariables`:
+const anularComandaVars: AnularComandaVariables = {
+  id: ..., 
+  motivoAnulacion: ..., 
+};
+
+// Call the `anularComandaRef()` function to get a reference to the mutation.
+const ref = anularComandaRef(anularComandaVars);
+// Variables can be defined inline as well.
+const ref = anularComandaRef({ id: ..., motivoAnulacion: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = anularComandaRef(dataConnect, anularComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comanda_update);
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_update);
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+## EntregarComanda
+You can execute the `EntregarComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+entregarComanda(vars: EntregarComandaVariables): MutationPromise<EntregarComandaData, EntregarComandaVariables>;
+
+interface EntregarComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EntregarComandaVariables): MutationRef<EntregarComandaData, EntregarComandaVariables>;
+}
+export const entregarComandaRef: EntregarComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+entregarComanda(dc: DataConnect, vars: EntregarComandaVariables): MutationPromise<EntregarComandaData, EntregarComandaVariables>;
+
+interface EntregarComandaRef {
+  ...
+  (dc: DataConnect, vars: EntregarComandaVariables): MutationRef<EntregarComandaData, EntregarComandaVariables>;
+}
+export const entregarComandaRef: EntregarComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the entregarComandaRef:
+```typescript
+const name = entregarComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `EntregarComanda` mutation requires an argument of type `EntregarComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface EntregarComandaVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `EntregarComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `EntregarComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface EntregarComandaData {
+  comanda_update?: Comanda_Key | null;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+```
+### Using `EntregarComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, entregarComanda, EntregarComandaVariables } from '@dataconnect/generated';
+
+// The `EntregarComanda` mutation requires an argument of type `EntregarComandaVariables`:
+const entregarComandaVars: EntregarComandaVariables = {
+  id: ..., 
+};
+
+// Call the `entregarComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await entregarComanda(entregarComandaVars);
+// Variables can be defined inline as well.
+const { data } = await entregarComanda({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await entregarComanda(dataConnect, entregarComandaVars);
+
+console.log(data.comanda_update);
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+entregarComanda(entregarComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_update);
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+### Using `EntregarComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, entregarComandaRef, EntregarComandaVariables } from '@dataconnect/generated';
+
+// The `EntregarComanda` mutation requires an argument of type `EntregarComandaVariables`:
+const entregarComandaVars: EntregarComandaVariables = {
+  id: ..., 
+};
+
+// Call the `entregarComandaRef()` function to get a reference to the mutation.
+const ref = entregarComandaRef(entregarComandaVars);
+// Variables can be defined inline as well.
+const ref = entregarComandaRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = entregarComandaRef(dataConnect, entregarComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comanda_update);
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_update);
+  console.log(data.comandaHistorialEstado_insert);
 });
 ```
 

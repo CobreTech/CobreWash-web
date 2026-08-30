@@ -34,6 +34,11 @@ export enum TipoCliente {
   PARTICULAR = "PARTICULAR",
 };
 
+export enum UnidadCobro {
+  PRENDA = "PRENDA",
+  KILO = "KILO",
+};
+
 
 
 export interface ActualizarUsuarioData {
@@ -63,6 +68,19 @@ export interface ActualizarVehiculoVariables {
   activo: boolean;
 }
 
+export interface AgregarComandaDetalleData {
+  comandaDetalle_insert: ComandaDetalle_Key;
+}
+
+export interface AgregarComandaDetalleVariables {
+  comandaId: UUIDString;
+  tipoPrendaId: UUIDString;
+  tipoServicioId: UUIDString;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+}
+
 export interface AgregarFotoInspeccionVehiculoData {
   fotoInspeccionVehiculo_insert: FotoInspeccionVehiculo_Key;
 }
@@ -77,6 +95,16 @@ export interface AgregarFotoInspeccionVehiculoVariables {
 export interface AlertaInventario_Key {
   id: UUIDString;
   __typename?: 'AlertaInventario_Key';
+}
+
+export interface AnularComandaData {
+  comanda_update?: Comanda_Key | null;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+
+export interface AnularComandaVariables {
+  id: UUIDString;
+  motivoAnulacion: string;
 }
 
 export interface Aviso_Key {
@@ -126,6 +154,18 @@ export interface CrearClienteAdministradoVariables {
   tipoCliente: TipoCliente;
 }
 
+export interface CrearComandaData {
+  comanda_insert: Comanda_Key;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+
+export interface CrearComandaVariables {
+  numeroComanda: string;
+  clienteId: UUIDString;
+  valorTotal: number;
+  observaciones?: string | null;
+}
+
 export interface CrearSalidaVehiculoData {
   salidaVehiculo_insert: SalidaVehiculo_Key;
 }
@@ -162,6 +202,15 @@ export interface CrearVehiculoVariables {
   descripcion?: string | null;
 }
 
+export interface EntregarComandaData {
+  comanda_update?: Comanda_Key | null;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+
+export interface EntregarComandaVariables {
+  id: UUIDString;
+}
+
 export interface EtapaProduccion_Key {
   id: UUIDString;
   __typename?: 'EtapaProduccion_Key';
@@ -170,6 +219,77 @@ export interface EtapaProduccion_Key {
 export interface FotoInspeccionVehiculo_Key {
   id: UUIDString;
   __typename?: 'FotoInspeccionVehiculo_Key';
+}
+
+export interface GetCatalogosComandaData {
+  tipoServicios: ({
+    id: UUIDString;
+    nombre: string;
+    precioBase: number;
+    unidadCobro: UnidadCobro;
+  } & TipoServicio_Key)[];
+  tipoPrendas: ({
+    id: UUIDString;
+    nombre: string;
+  } & TipoPrenda_Key)[];
+  clientes: ({
+    id: UUIDString;
+    nombre: string;
+    tipoCliente: TipoCliente;
+    telefono?: string | null;
+    email?: string | null;
+    direccion?: string | null;
+  } & Cliente_Key)[];
+}
+
+export interface GetComandaDetalleData {
+  comanda?: {
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    valorTotal: number;
+    observaciones?: string | null;
+    motivoAnulacion?: string | null;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      telefono?: string | null;
+      email?: string | null;
+      tipoCliente: TipoCliente;
+      direccion?: string | null;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      id: UUIDString;
+      cantidad: number;
+      pesoKg?: number | null;
+      precioUnitario: number;
+      subtotal: number;
+      tipoPrenda: {
+        id: UUIDString;
+        nombre: string;
+      } & TipoPrenda_Key;
+      tipoServicio: {
+        id: UUIDString;
+        nombre: string;
+      } & TipoServicio_Key;
+    } & ComandaDetalle_Key)[];
+    comandaHistorialEstados_on_comanda: ({
+      id: UUIDString;
+      estadoAnterior?: ComandaEstado | null;
+      estadoNuevo: ComandaEstado;
+      fecha: TimestampString;
+      motivo?: string | null;
+      usuario?: {
+        nombre: string;
+      };
+    } & ComandaHistorialEstado_Key)[];
+  } & Comanda_Key;
+}
+
+export interface GetComandaDetalleVariables {
+  id: UUIDString;
 }
 
 export interface GetComandaPorQrData {
@@ -197,6 +317,38 @@ export interface GetComandaPorQrData {
 
 export interface GetComandaPorQrVariables {
   codigoQr: UUIDString;
+}
+
+export interface GetComandasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    codigoQr: UUIDString;
+    estado: ComandaEstado;
+    valorTotal: number;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    observaciones?: string | null;
+    motivoAnulacion?: string | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      telefono?: string | null;
+      email?: string | null;
+      tipoCliente: TipoCliente;
+      direccion?: string | null;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+      precioUnitario: number;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+  } & Comanda_Key)[];
 }
 
 export interface GetInsumoPorQrData {
@@ -572,6 +724,54 @@ export const agregarFotoInspeccionVehiculoRef: AgregarFotoInspeccionVehiculoRef;
 export function agregarFotoInspeccionVehiculo(vars: AgregarFotoInspeccionVehiculoVariables): MutationPromise<AgregarFotoInspeccionVehiculoData, AgregarFotoInspeccionVehiculoVariables>;
 export function agregarFotoInspeccionVehiculo(dc: DataConnect, vars: AgregarFotoInspeccionVehiculoVariables): MutationPromise<AgregarFotoInspeccionVehiculoData, AgregarFotoInspeccionVehiculoVariables>;
 
+interface CrearComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearComandaVariables): MutationRef<CrearComandaData, CrearComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearComandaVariables): MutationRef<CrearComandaData, CrearComandaVariables>;
+  operationName: string;
+}
+export const crearComandaRef: CrearComandaRef;
+
+export function crearComanda(vars: CrearComandaVariables): MutationPromise<CrearComandaData, CrearComandaVariables>;
+export function crearComanda(dc: DataConnect, vars: CrearComandaVariables): MutationPromise<CrearComandaData, CrearComandaVariables>;
+
+interface AgregarComandaDetalleRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AgregarComandaDetalleVariables): MutationRef<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AgregarComandaDetalleVariables): MutationRef<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+  operationName: string;
+}
+export const agregarComandaDetalleRef: AgregarComandaDetalleRef;
+
+export function agregarComandaDetalle(vars: AgregarComandaDetalleVariables): MutationPromise<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+export function agregarComandaDetalle(dc: DataConnect, vars: AgregarComandaDetalleVariables): MutationPromise<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+
+interface AnularComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AnularComandaVariables): MutationRef<AnularComandaData, AnularComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AnularComandaVariables): MutationRef<AnularComandaData, AnularComandaVariables>;
+  operationName: string;
+}
+export const anularComandaRef: AnularComandaRef;
+
+export function anularComanda(vars: AnularComandaVariables): MutationPromise<AnularComandaData, AnularComandaVariables>;
+export function anularComanda(dc: DataConnect, vars: AnularComandaVariables): MutationPromise<AnularComandaData, AnularComandaVariables>;
+
+interface EntregarComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EntregarComandaVariables): MutationRef<EntregarComandaData, EntregarComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EntregarComandaVariables): MutationRef<EntregarComandaData, EntregarComandaVariables>;
+  operationName: string;
+}
+export const entregarComandaRef: EntregarComandaRef;
+
+export function entregarComanda(vars: EntregarComandaVariables): MutationPromise<EntregarComandaData, EntregarComandaVariables>;
+export function entregarComanda(dc: DataConnect, vars: EntregarComandaVariables): MutationPromise<EntregarComandaData, EntregarComandaVariables>;
+
 interface GetRolesRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetRolesData, undefined>;
@@ -655,4 +855,40 @@ export const getMisSalidasVehiculoRef: GetMisSalidasVehiculoRef;
 
 export function getMisSalidasVehiculo(options?: ExecuteQueryOptions): QueryPromise<GetMisSalidasVehiculoData, undefined>;
 export function getMisSalidasVehiculo(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetMisSalidasVehiculoData, undefined>;
+
+interface GetComandasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetComandasData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetComandasData, undefined>;
+  operationName: string;
+}
+export const getComandasRef: GetComandasRef;
+
+export function getComandas(options?: ExecuteQueryOptions): QueryPromise<GetComandasData, undefined>;
+export function getComandas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetComandasData, undefined>;
+
+interface GetComandaDetalleRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComandaDetalleVariables): QueryRef<GetComandaDetalleData, GetComandaDetalleVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetComandaDetalleVariables): QueryRef<GetComandaDetalleData, GetComandaDetalleVariables>;
+  operationName: string;
+}
+export const getComandaDetalleRef: GetComandaDetalleRef;
+
+export function getComandaDetalle(vars: GetComandaDetalleVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleData, GetComandaDetalleVariables>;
+export function getComandaDetalle(dc: DataConnect, vars: GetComandaDetalleVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleData, GetComandaDetalleVariables>;
+
+interface GetCatalogosComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetCatalogosComandaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetCatalogosComandaData, undefined>;
+  operationName: string;
+}
+export const getCatalogosComandaRef: GetCatalogosComandaRef;
+
+export function getCatalogosComanda(options?: ExecuteQueryOptions): QueryPromise<GetCatalogosComandaData, undefined>;
+export function getCatalogosComanda(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCatalogosComandaData, undefined>;
 

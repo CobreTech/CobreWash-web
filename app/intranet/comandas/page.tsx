@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -16,14 +16,23 @@ import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import ComandaDetalle from "@/components/intranet/ComandaDetalle";
 import GlassSelect from "@/components/ui/GlassSelect";
 import {
-  COMANDAS,
   estadoConfig,
-  prendasTotales,
-  valorTotal,
-  type Comanda,
   type EstadoComanda,
   type PrendaLinea,
 } from "@/lib/mock/comandas";
+import { dataConnect } from "@/lib/firebase/client";
+import { 
+  TipoCliente, 
+  ComandaEstado,
+  getComandas,
+  getCatalogosComanda,
+  crearComanda,
+  agregarComandaDetalle,
+  anularComanda,
+  entregarComanda,
+  type GetComandasData,
+  type GetCatalogosComandaData
+} from "@/src/dataconnect-generated";
 
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
 const ESTADOS: EstadoComanda[] = ["Pendiente", "En proceso", "Listo", "Entregado", "Anulado"];
@@ -31,10 +40,34 @@ const TABS: ("Todas" | EstadoComanda)[] = ["Todas", ...ESTADOS];
 
 const servicios = ["Doméstica y Particular", "Industrial / Empresa", "Retiro a Domicilio"];
 
+const prendasTotales = (c: Comanda) => c.detalle.reduce((s, d) => s + d.cantidad, 0);
+const valorTotal = (c: Comanda) => c.detalle.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+
+// Map de tipos DB a UI
+export interface Comanda {
+  id: string; // numeroComanda publico, ej. "COBRE-2848"
+  cliente: string;
+  tipoCliente: TipoCliente;
+  telefono: string;
+  email: string;
+  direccion?: string;
+  servicio: string;
+  detalle: PrendaLinea[];
+  fechaRecepcion: string;
+  fechaEntregaEstimada?: string;
+  etapaActual: number | null;
+  estado: EstadoComanda;
+  operario?: string;
+  recepcionista?: string;
+  observaciones?: string;
+  horasEnEtapa?: number;
+  motivoAnulacion?: string;
+}
+
 type FormLinea = PrendaLinea;
 type FormState = {
   cliente: string;
-  tipoCliente: Comanda["tipoCliente"];
+  tipoCliente: TipoCliente;
   telefono: string;
   email: string;
   direccion: string;
@@ -44,7 +77,7 @@ type FormState = {
 
 const emptyForm: FormState = {
   cliente: "",
-  tipoCliente: "Particular",
+  tipoCliente: TipoCliente.PARTICULAR,
   telefono: "",
   email: "",
   direccion: "",
@@ -55,9 +88,61 @@ const emptyForm: FormState = {
 export default function ComandasPage() {
   const permitido = useRoleGuard(["admin", "recepcionista"]);
 
-  const [comandas, setComandas] = useState<Comanda[]>(COMANDAS);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Todas");
   const [search, setSearch] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [data, setData] = useState<GetComandasData | null>(null);
+  const [catData, setCatData] = useState<GetCatalogosComandaData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [resComandas, resCatalogos] = await Promise.all([
+        getComandas(dataConnect),
+        getCatalogosComanda(dataConnect)
+      ]);
+      setData(resComandas.data);
+      setCatData(resCatalogos.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const refetch = fetchData;
+
+  const comandas: Comanda[] = useMemo(() => {
+    return (data?.comandas || []).map((c) => ({
+      id: c.numeroComanda,
+      cliente: c.cliente.nombre,
+      tipoCliente: c.cliente.tipoCliente as TipoCliente,
+      telefono: c.cliente.telefono || "",
+      email: c.cliente.email || "",
+      direccion: c.cliente.direccion || "",
+      servicio: c.comandaDetalles_on_comanda[0]?.tipoServicio.nombre || "Lavado",
+      detalle: c.comandaDetalles_on_comanda.map((d) => ({
+        tipoPrenda: d.tipoPrenda.nombre,
+        servicio: d.tipoServicio.nombre,
+        cantidad: d.cantidad,
+        precioUnitario: d.precioUnitario,
+      })),
+      fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL"),
+      fechaEntregaEstimada: c.fechaEntregaEstimada ? new Date(c.fechaEntregaEstimada).toLocaleDateString("es-CL") : undefined,
+      etapaActual: c.estado === ComandaEstado.EN_PROCESO ? 1 : null,
+      estado: (c.estado === ComandaEstado.PENDIENTE ? "Pendiente" :
+               c.estado === ComandaEstado.EN_PROCESO ? "En proceso" :
+               c.estado === ComandaEstado.FINALIZADA ? "Listo" :
+               c.estado === ComandaEstado.ENTREGADA ? "Entregado" : "Anulado") as EstadoComanda,
+      motivoAnulacion: c.motivoAnulacion || undefined,
+      observaciones: c.observaciones || undefined,
+    }));
+  }, [data]);
 
   const [detalle, setDetalle] = useState<Comanda | null>(null);
   const [form, setForm] = useState<{ mode: "crear" } | { mode: "editar"; id: string } | null>(null);
@@ -82,7 +167,7 @@ export default function ComandasPage() {
 
   const totalFiltrado = filtered.reduce((s, c) => s + valorTotal(c), 0);
 
-  if (!permitido) {
+  if (!permitido || loading) {
     return (
       <div className="flex h-full items-center justify-center py-24">
         <Loader2 className="w-6 h-6 text-brand-500 animate-spin" />
@@ -109,59 +194,78 @@ export default function ComandasPage() {
     setForm({ mode: "editar", id: c.id });
   };
 
-  const guardar = () => {
+  const guardar = async () => {
     const detalleLimpio = formData.detalle.filter((d) => d.tipoPrenda.trim());
     if (!formData.cliente.trim() || detalleLimpio.length === 0) return;
 
-    if (form?.mode === "crear") {
-      const nuevo: Comanda = {
-        id: `COBRE-${Math.floor(2849 + Math.random() * 900)}`,
-        cliente: formData.cliente.trim(),
-        tipoCliente: formData.tipoCliente,
-        telefono: formData.telefono,
-        email: formData.email,
-        direccion: formData.direccion,
-        servicio: formData.servicio,
-        detalle: detalleLimpio,
-        fechaRecepcion: new Date().toLocaleDateString("es-CL") + " " + new Date().toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }),
-        etapaActual: null,
-        estado: "Pendiente",
-        recepcionista: "Recepción",
-      };
-      setComandas((prev) => [nuevo, ...prev]);
-    } else if (form?.mode === "editar") {
-      setComandas((prev) =>
-        prev.map((c) =>
-          c.id === form.id
-            ? {
-                ...c,
-                cliente: formData.cliente.trim(),
-                tipoCliente: formData.tipoCliente,
-                telefono: formData.telefono,
-                email: formData.email,
-                direccion: formData.direccion,
-                servicio: formData.servicio,
-                detalle: detalleLimpio,
-              }
-            : c,
-        ),
-      );
+    setIsSubmitting(true);
+    try {
+      if (form?.mode === "crear") {
+        const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+        const numero = `COBRE-${Math.floor(2849 + Math.random() * 9000)}`;
+        
+        const clienteId = catData?.clientes.find(c => c.nombre === formData.cliente)?.id || catData?.clientes[0]?.id;
+        
+        if (clienteId) {
+          const res = await crearComanda(dataConnect, {
+            numeroComanda: numero,
+            clienteId,
+            valorTotal: formTotal,
+            observaciones: "Ingresado via web"
+          });
+          
+          const newComandaId = res.data.comanda_insert.id;
+          
+          for (const d of detalleLimpio) {
+            const tpId = catData?.tipoPrendas.find(tp => tp.nombre.toLowerCase() === d.tipoPrenda.toLowerCase())?.id || catData?.tipoPrendas[0]?.id;
+            const tsId = catData?.tipoServicios.find(ts => ts.nombre === d.servicio)?.id || catData?.tipoServicios[0]?.id;
+            
+            if (tpId && tsId) {
+              await agregarComandaDetalle(dataConnect, {
+                comandaId: newComandaId,
+                tipoPrendaId: tpId,
+                tipoServicioId: tsId,
+                cantidad: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                subtotal: d.cantidad * d.precioUnitario
+              });
+            }
+          }
+        }
+      }
+      // TODO: Modo Editar (Requiere mutacion EditarComanda)
+      
+      await refetch();
+      setForm(null);
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar la comanda.");
+    } finally {
+      setIsSubmitting(false);
     }
-    setForm(null);
   };
 
-  const confirmarAnular = () => {
+  const confirmarAnular = async () => {
     if (!anular) return;
-    setComandas((prev) =>
-      prev.map((c) =>
-        c.id === anular.id
-          ? { ...c, estado: "Anulado", etapaActual: null, motivoAnulacion: motivo.trim() || "Sin motivo especificado." }
-          : c,
-      ),
-    );
-    setAnular(null);
-    setMotivo("");
-    setDetalle(null);
+    setIsSubmitting(true);
+    try {
+      const comandaOriginal = data?.comandas.find(c => c.numeroComanda === anular.id);
+      if (comandaOriginal) {
+        await anularComanda(dataConnect, {
+          id: comandaOriginal.id,
+          motivoAnulacion: motivo.trim() || "Anulación sin motivo"
+        });
+        await refetch();
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al anular la comanda.");
+    } finally {
+      setIsSubmitting(false);
+      setAnular(null);
+      setMotivo("");
+      setDetalle(null);
+    }
   };
 
   const updateLinea = (i: number, patch: Partial<FormLinea>) =>
@@ -352,12 +456,12 @@ export default function ComandasPage() {
       <AnimatePresence>
         {detalle && (
           <ComandaDetalle
-            comanda={detalle}
+            comanda={detalle as any}
             onClose={() => setDetalle(null)}
-            onEditar={openEditar}
+            onEditar={(c) => openEditar(c as any)}
             onAnular={(c) => {
               setDetalle(null);
-              setAnular(c);
+              setAnular(c as any);
             }}
           />
         )}
@@ -384,19 +488,36 @@ export default function ComandasPage() {
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <FieldInput label="Cliente" value={formData.cliente} onChange={(v) => setFormData({ ...formData, cliente: v })} placeholder="Nombre del cliente" />
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Tipo</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Cliente</label>
                     <GlassSelect
-                      value={formData.tipoCliente}
-                      onChange={(v) => setFormData({ ...formData, tipoCliente: v as Comanda["tipoCliente"] })}
-                      ariaLabel="Tipo de cliente"
-                      options={[
-                        { value: "Particular", label: "Particular" },
-                        { value: "Hotel/Empresa", label: "Hotel/Empresa" },
-                      ]}
+                      value={formData.cliente}
+                      onChange={(v) => {
+                        const c = catData?.clientes.find(cli => cli.nombre === v);
+                        setFormData({ 
+                          ...formData, 
+                          cliente: v,
+                          telefono: c?.telefono || formData.telefono,
+                          email: c?.email || formData.email,
+                          direccion: c?.direccion || formData.direccion
+                        });
+                      }}
+                      ariaLabel="Seleccionar cliente"
+                      options={(catData?.clientes || []).map((c) => ({ value: c.nombre, label: c.nombre }))}
                     />
                   </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Tipo</label>
+                      <GlassSelect
+                        value={formData.tipoCliente}
+                        onChange={(v) => setFormData({ ...formData, tipoCliente: v as TipoCliente })}
+                        ariaLabel="Tipo de cliente"
+                        options={[
+                          { value: TipoCliente.PARTICULAR, label: "Particular" },
+                          { value: TipoCliente.HOTEL, label: "Hotel/Empresa" },
+                        ]}
+                      />
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FieldInput label="Teléfono" value={formData.telefono} onChange={(v) => setFormData({ ...formData, telefono: v })} placeholder="+56 9 ..." />

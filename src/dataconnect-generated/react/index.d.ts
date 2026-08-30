@@ -1,4 +1,4 @@
-import { RegistrarseData, RegistrarseVariables, CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables, RegistrarseComoClienteData, RegistrarseComoClienteVariables, CrearClienteAdministradoData, CrearClienteAdministradoVariables, ActualizarUsuarioData, ActualizarUsuarioVariables, CrearVehiculoData, CrearVehiculoVariables, ActualizarVehiculoData, ActualizarVehiculoVariables, CrearSalidaVehiculoData, CrearSalidaVehiculoVariables, RegistrarInspeccionAntesData, RegistrarInspeccionAntesVariables, IniciarSalidaVehiculoData, IniciarSalidaVehiculoVariables, RegistrarInspeccionDespuesData, RegistrarInspeccionDespuesVariables, AgregarFotoInspeccionVehiculoData, AgregarFotoInspeccionVehiculoVariables, GetRolesData, GetMiPerfilData, GetUsuariosData, GetComandaPorQrData, GetComandaPorQrVariables, GetInsumoPorQrData, GetInsumoPorQrVariables, GetVehiculosData, GetMisSalidasVehiculoData } from '../';
+import { RegistrarseData, RegistrarseVariables, CrearUsuarioAdministradoData, CrearUsuarioAdministradoVariables, RegistrarseComoClienteData, RegistrarseComoClienteVariables, CrearClienteAdministradoData, CrearClienteAdministradoVariables, ActualizarUsuarioData, ActualizarUsuarioVariables, CrearVehiculoData, CrearVehiculoVariables, ActualizarVehiculoData, ActualizarVehiculoVariables, CrearSalidaVehiculoData, CrearSalidaVehiculoVariables, RegistrarInspeccionAntesData, RegistrarInspeccionAntesVariables, IniciarSalidaVehiculoData, IniciarSalidaVehiculoVariables, RegistrarInspeccionDespuesData, RegistrarInspeccionDespuesVariables, AgregarFotoInspeccionVehiculoData, AgregarFotoInspeccionVehiculoVariables, CrearComandaData, CrearComandaVariables, AgregarComandaDetalleData, AgregarComandaDetalleVariables, AnularComandaData, AnularComandaVariables, EntregarComandaData, EntregarComandaVariables, GetRolesData, GetMiPerfilData, GetUsuariosData, GetComandaPorQrData, GetComandaPorQrVariables, GetInsumoPorQrData, GetInsumoPorQrVariables, GetVehiculosData, GetMisSalidasVehiculoData, GetComandasData, GetComandaDetalleData, GetComandaDetalleVariables, GetCatalogosComandaData } from '../';
 import { UseDataConnectQueryResult, useDataConnectQueryOptions, UseDataConnectMutationResult, useDataConnectMutationOptions} from '@tanstack-query-firebase/react/data-connect';
 import { UseQueryResult, UseMutationResult} from '@tanstack/react-query';
 import { DataConnect } from 'firebase/data-connect';
@@ -41,6 +41,18 @@ export function useRegistrarInspeccionDespues(dc: DataConnect, options?: useData
 export function useAgregarFotoInspeccionVehiculo(options?: useDataConnectMutationOptions<AgregarFotoInspeccionVehiculoData, FirebaseError, AgregarFotoInspeccionVehiculoVariables>): UseDataConnectMutationResult<AgregarFotoInspeccionVehiculoData, AgregarFotoInspeccionVehiculoVariables>;
 export function useAgregarFotoInspeccionVehiculo(dc: DataConnect, options?: useDataConnectMutationOptions<AgregarFotoInspeccionVehiculoData, FirebaseError, AgregarFotoInspeccionVehiculoVariables>): UseDataConnectMutationResult<AgregarFotoInspeccionVehiculoData, AgregarFotoInspeccionVehiculoVariables>;
 
+export function useCrearComanda(options?: useDataConnectMutationOptions<CrearComandaData, FirebaseError, CrearComandaVariables>): UseDataConnectMutationResult<CrearComandaData, CrearComandaVariables>;
+export function useCrearComanda(dc: DataConnect, options?: useDataConnectMutationOptions<CrearComandaData, FirebaseError, CrearComandaVariables>): UseDataConnectMutationResult<CrearComandaData, CrearComandaVariables>;
+
+export function useAgregarComandaDetalle(options?: useDataConnectMutationOptions<AgregarComandaDetalleData, FirebaseError, AgregarComandaDetalleVariables>): UseDataConnectMutationResult<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+export function useAgregarComandaDetalle(dc: DataConnect, options?: useDataConnectMutationOptions<AgregarComandaDetalleData, FirebaseError, AgregarComandaDetalleVariables>): UseDataConnectMutationResult<AgregarComandaDetalleData, AgregarComandaDetalleVariables>;
+
+export function useAnularComanda(options?: useDataConnectMutationOptions<AnularComandaData, FirebaseError, AnularComandaVariables>): UseDataConnectMutationResult<AnularComandaData, AnularComandaVariables>;
+export function useAnularComanda(dc: DataConnect, options?: useDataConnectMutationOptions<AnularComandaData, FirebaseError, AnularComandaVariables>): UseDataConnectMutationResult<AnularComandaData, AnularComandaVariables>;
+
+export function useEntregarComanda(options?: useDataConnectMutationOptions<EntregarComandaData, FirebaseError, EntregarComandaVariables>): UseDataConnectMutationResult<EntregarComandaData, EntregarComandaVariables>;
+export function useEntregarComanda(dc: DataConnect, options?: useDataConnectMutationOptions<EntregarComandaData, FirebaseError, EntregarComandaVariables>): UseDataConnectMutationResult<EntregarComandaData, EntregarComandaVariables>;
+
 export function useGetRoles(options?: useDataConnectQueryOptions<GetRolesData>): UseDataConnectQueryResult<GetRolesData, undefined>;
 export function useGetRoles(dc: DataConnect, options?: useDataConnectQueryOptions<GetRolesData>): UseDataConnectQueryResult<GetRolesData, undefined>;
 
@@ -61,3 +73,12 @@ export function useGetVehiculos(dc: DataConnect, options?: useDataConnectQueryOp
 
 export function useGetMisSalidasVehiculo(options?: useDataConnectQueryOptions<GetMisSalidasVehiculoData>): UseDataConnectQueryResult<GetMisSalidasVehiculoData, undefined>;
 export function useGetMisSalidasVehiculo(dc: DataConnect, options?: useDataConnectQueryOptions<GetMisSalidasVehiculoData>): UseDataConnectQueryResult<GetMisSalidasVehiculoData, undefined>;
+
+export function useGetComandas(options?: useDataConnectQueryOptions<GetComandasData>): UseDataConnectQueryResult<GetComandasData, undefined>;
+export function useGetComandas(dc: DataConnect, options?: useDataConnectQueryOptions<GetComandasData>): UseDataConnectQueryResult<GetComandasData, undefined>;
+
+export function useGetComandaDetalle(vars: GetComandaDetalleVariables, options?: useDataConnectQueryOptions<GetComandaDetalleData>): UseDataConnectQueryResult<GetComandaDetalleData, GetComandaDetalleVariables>;
+export function useGetComandaDetalle(dc: DataConnect, vars: GetComandaDetalleVariables, options?: useDataConnectQueryOptions<GetComandaDetalleData>): UseDataConnectQueryResult<GetComandaDetalleData, GetComandaDetalleVariables>;
+
+export function useGetCatalogosComanda(options?: useDataConnectQueryOptions<GetCatalogosComandaData>): UseDataConnectQueryResult<GetCatalogosComandaData, undefined>;
+export function useGetCatalogosComanda(dc: DataConnect, options?: useDataConnectQueryOptions<GetCatalogosComandaData>): UseDataConnectQueryResult<GetCatalogosComandaData, undefined>;
