@@ -37,6 +37,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*AgregarComandaDetalle*](#agregarcomandadetalle)
   - [*AnularComanda*](#anularcomanda)
   - [*EntregarComanda*](#entregarcomanda)
+  - [*EditarComanda*](#editarcomanda)
+  - [*EliminarDetallesComanda*](#eliminardetallescomanda)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `example`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -3204,6 +3206,230 @@ executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.comanda_update);
   console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+## EditarComanda
+You can execute the `EditarComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+editarComanda(vars: EditarComandaVariables): MutationPromise<EditarComandaData, EditarComandaVariables>;
+
+interface EditarComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EditarComandaVariables): MutationRef<EditarComandaData, EditarComandaVariables>;
+}
+export const editarComandaRef: EditarComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+editarComanda(dc: DataConnect, vars: EditarComandaVariables): MutationPromise<EditarComandaData, EditarComandaVariables>;
+
+interface EditarComandaRef {
+  ...
+  (dc: DataConnect, vars: EditarComandaVariables): MutationRef<EditarComandaData, EditarComandaVariables>;
+}
+export const editarComandaRef: EditarComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the editarComandaRef:
+```typescript
+const name = editarComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `EditarComanda` mutation requires an argument of type `EditarComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface EditarComandaVariables {
+  id: UUIDString;
+  valorTotal: number;
+  observaciones?: string | null;
+}
+```
+### Return Type
+Recall that executing the `EditarComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `EditarComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface EditarComandaData {
+  comanda_update?: Comanda_Key | null;
+}
+```
+### Using `EditarComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, editarComanda, EditarComandaVariables } from '@dataconnect/generated';
+
+// The `EditarComanda` mutation requires an argument of type `EditarComandaVariables`:
+const editarComandaVars: EditarComandaVariables = {
+  id: ..., 
+  valorTotal: ..., 
+  observaciones: ..., // optional
+};
+
+// Call the `editarComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await editarComanda(editarComandaVars);
+// Variables can be defined inline as well.
+const { data } = await editarComanda({ id: ..., valorTotal: ..., observaciones: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await editarComanda(dataConnect, editarComandaVars);
+
+console.log(data.comanda_update);
+
+// Or, you can use the `Promise` API.
+editarComanda(editarComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_update);
+});
+```
+
+### Using `EditarComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, editarComandaRef, EditarComandaVariables } from '@dataconnect/generated';
+
+// The `EditarComanda` mutation requires an argument of type `EditarComandaVariables`:
+const editarComandaVars: EditarComandaVariables = {
+  id: ..., 
+  valorTotal: ..., 
+  observaciones: ..., // optional
+};
+
+// Call the `editarComandaRef()` function to get a reference to the mutation.
+const ref = editarComandaRef(editarComandaVars);
+// Variables can be defined inline as well.
+const ref = editarComandaRef({ id: ..., valorTotal: ..., observaciones: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = editarComandaRef(dataConnect, editarComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comanda_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda_update);
+});
+```
+
+## EliminarDetallesComanda
+You can execute the `EliminarDetallesComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+eliminarDetallesComanda(vars: EliminarDetallesComandaVariables): MutationPromise<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+
+interface EliminarDetallesComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EliminarDetallesComandaVariables): MutationRef<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+}
+export const eliminarDetallesComandaRef: EliminarDetallesComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+eliminarDetallesComanda(dc: DataConnect, vars: EliminarDetallesComandaVariables): MutationPromise<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+
+interface EliminarDetallesComandaRef {
+  ...
+  (dc: DataConnect, vars: EliminarDetallesComandaVariables): MutationRef<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+}
+export const eliminarDetallesComandaRef: EliminarDetallesComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the eliminarDetallesComandaRef:
+```typescript
+const name = eliminarDetallesComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `EliminarDetallesComanda` mutation requires an argument of type `EliminarDetallesComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface EliminarDetallesComandaVariables {
+  comandaId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `EliminarDetallesComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `EliminarDetallesComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface EliminarDetallesComandaData {
+  comandaDetalle_deleteMany: number;
+}
+```
+### Using `EliminarDetallesComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, eliminarDetallesComanda, EliminarDetallesComandaVariables } from '@dataconnect/generated';
+
+// The `EliminarDetallesComanda` mutation requires an argument of type `EliminarDetallesComandaVariables`:
+const eliminarDetallesComandaVars: EliminarDetallesComandaVariables = {
+  comandaId: ..., 
+};
+
+// Call the `eliminarDetallesComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await eliminarDetallesComanda(eliminarDetallesComandaVars);
+// Variables can be defined inline as well.
+const { data } = await eliminarDetallesComanda({ comandaId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await eliminarDetallesComanda(dataConnect, eliminarDetallesComandaVars);
+
+console.log(data.comandaDetalle_deleteMany);
+
+// Or, you can use the `Promise` API.
+eliminarDetallesComanda(eliminarDetallesComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandaDetalle_deleteMany);
+});
+```
+
+### Using `EliminarDetallesComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, eliminarDetallesComandaRef, EliminarDetallesComandaVariables } from '@dataconnect/generated';
+
+// The `EliminarDetallesComanda` mutation requires an argument of type `EliminarDetallesComandaVariables`:
+const eliminarDetallesComandaVars: EliminarDetallesComandaVariables = {
+  comandaId: ..., 
+};
+
+// Call the `eliminarDetallesComandaRef()` function to get a reference to the mutation.
+const ref = eliminarDetallesComandaRef(eliminarDetallesComandaVars);
+// Variables can be defined inline as well.
+const ref = eliminarDetallesComandaRef({ comandaId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = eliminarDetallesComandaRef(dataConnect, eliminarDetallesComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comandaDetalle_deleteMany);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandaDetalle_deleteMany);
 });
 ```
 

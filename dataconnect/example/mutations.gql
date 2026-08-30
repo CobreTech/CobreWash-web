@@ -425,7 +425,7 @@ mutation AgregarComandaDetalle(
   $cantidad: Int!
   $precioUnitario: Float!
   $subtotal: Float!
-) @auth(level: USER) {
+) @auth(level: USER) @transaction {
   comandaDetalle_insert(data: {
     comanda: { id: $comandaId }
     tipoPrenda: { id: $tipoPrendaId }
@@ -477,3 +477,24 @@ mutation EntregarComanda(
   })
 }
 
+
+mutation EditarComanda(
+  $id: UUID!
+  $valorTotal: Float!
+  $observaciones: String
+) @auth(level: USER) @transaction {
+  comanda_update(
+    id: $id
+    data: {
+      valorTotal: $valorTotal
+      observaciones: $observaciones
+      actualizadoEn_expr: "request.time"
+    }
+  ) @check(expr: "this != null", message: "Comanda no encontrada")
+}
+
+mutation EliminarDetallesComanda(
+  $comandaId: UUID!
+) @auth(level: USER) @transaction {
+  comandaDetalle_deleteMany(where: { comandaId: { eq: $comandaId } })
+}

@@ -202,6 +202,24 @@ export interface CrearVehiculoVariables {
   descripcion?: string | null;
 }
 
+export interface EditarComandaData {
+  comanda_update?: Comanda_Key | null;
+}
+
+export interface EditarComandaVariables {
+  id: UUIDString;
+  valorTotal: number;
+  observaciones?: string | null;
+}
+
+export interface EliminarDetallesComandaData {
+  comandaDetalle_deleteMany: number;
+}
+
+export interface EliminarDetallesComandaVariables {
+  comandaId: UUIDString;
+}
+
 export interface EntregarComandaData {
   comanda_update?: Comanda_Key | null;
   comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
@@ -771,6 +789,30 @@ export const entregarComandaRef: EntregarComandaRef;
 
 export function entregarComanda(vars: EntregarComandaVariables): MutationPromise<EntregarComandaData, EntregarComandaVariables>;
 export function entregarComanda(dc: DataConnect, vars: EntregarComandaVariables): MutationPromise<EntregarComandaData, EntregarComandaVariables>;
+
+interface EditarComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EditarComandaVariables): MutationRef<EditarComandaData, EditarComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EditarComandaVariables): MutationRef<EditarComandaData, EditarComandaVariables>;
+  operationName: string;
+}
+export const editarComandaRef: EditarComandaRef;
+
+export function editarComanda(vars: EditarComandaVariables): MutationPromise<EditarComandaData, EditarComandaVariables>;
+export function editarComanda(dc: DataConnect, vars: EditarComandaVariables): MutationPromise<EditarComandaData, EditarComandaVariables>;
+
+interface EliminarDetallesComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EliminarDetallesComandaVariables): MutationRef<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EliminarDetallesComandaVariables): MutationRef<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+  operationName: string;
+}
+export const eliminarDetallesComandaRef: EliminarDetallesComandaRef;
+
+export function eliminarDetallesComanda(vars: EliminarDetallesComandaVariables): MutationPromise<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+export function eliminarDetallesComanda(dc: DataConnect, vars: EliminarDetallesComandaVariables): MutationPromise<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
 
 interface GetRolesRef {
   /* Allow users to create refs without passing in DataConnect */

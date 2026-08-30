@@ -11,6 +11,7 @@ import {
   X,
   Trash2,
   Loader2,
+  Check,
 } from "lucide-react";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import ComandaDetalle from "@/components/intranet/ComandaDetalle";
@@ -28,6 +29,8 @@ import {
   getCatalogosComanda,
   crearComanda,
   agregarComandaDetalle,
+  editarComanda,
+  eliminarDetallesComanda,
   anularComanda,
   entregarComanda,
   type GetComandasData,
@@ -119,7 +122,7 @@ export default function ComandasPage() {
 
   const comandas: Comanda[] = useMemo(() => {
     return (data?.comandas || []).map((c) => ({
-      id: c.numeroComanda,
+      id: c.id,
       cliente: c.cliente.nombre,
       tipoCliente: c.cliente.tipoCliente as TipoCliente,
       telefono: c.cliente.telefono || "",
@@ -232,10 +235,35 @@ export default function ComandasPage() {
             }
           }
         }
-      }
-      // TODO: Modo Editar (Requiere mutacion EditarComanda)
-      
-      await refetch();
+        } else if (form?.mode === "editar") {
+          const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+          
+          await editarComanda(dataConnect, {
+            id: form.id,
+            valorTotal: formTotal,
+            observaciones: "Actualizado via web"
+          });
+
+          await eliminarDetallesComanda(dataConnect, { comandaId: form.id });
+
+          for (const d of detalleLimpio) {
+            const tpId = catData?.tipoPrendas.find(tp => tp.nombre.toLowerCase() === d.tipoPrenda.toLowerCase())?.id || catData?.tipoPrendas[0]?.id;
+            const tsId = catData?.tipoServicios.find(ts => ts.nombre === d.servicio)?.id || catData?.tipoServicios[0]?.id;
+            
+            if (tpId && tsId) {
+              await agregarComandaDetalle(dataConnect, {
+                comandaId: form.id,
+                tipoPrendaId: tpId,
+                tipoServicioId: tsId,
+                cantidad: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                subtotal: d.cantidad * d.precioUnitario
+              });
+            }
+          }
+        }
+        
+        await refetch();
       setForm(null);
     } catch (err) {
       console.error(err);
@@ -249,7 +277,7 @@ export default function ComandasPage() {
     if (!anular) return;
     setIsSubmitting(true);
     try {
-      const comandaOriginal = data?.comandas.find(c => c.numeroComanda === anular.id);
+      const comandaOriginal = data?.comandas.find(c => c.id === anular.id);
       if (comandaOriginal) {
         await anularComanda(dataConnect, {
           id: comandaOriginal.id,
@@ -424,10 +452,21 @@ export default function ComandasPage() {
                             </button>
                           )}
                           {c.estado !== "Anulado" && c.estado !== "Entregado" && (
-                            <button onClick={() => setAnular(c)} className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Anular">
-                              <Ban className="w-3.5 h-3.5" />
+                              <button onClick={() => setAnular(c as any)} className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Anular">
+                                <Ban className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {c.estado === "Listo" ? (
+                            <button onClick={async (e) => {
+                              e.stopPropagation();
+                              if (confirm(`¿Marcar la comanda ${c.id} como Entregada?`)) {
+                                await entregarComanda(dataConnect, { id: c.id });
+                                refetch();
+                              }
+                            }} className="p-1.5 rounded-lg text-stone-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-500/10 transition-colors" title="Marcar como entregada">
+                              <Check className="w-3.5 h-3.5" />
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       </td>
                     </motion.tr>

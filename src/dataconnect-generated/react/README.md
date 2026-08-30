@@ -44,6 +44,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*AgregarComandaDetalle*](#agregarcomandadetalle)
   - [*AnularComanda*](#anularcomanda)
   - [*EntregarComanda*](#entregarcomanda)
+  - [*EditarComanda*](#editarcomanda)
+  - [*EliminarDetallesComanda*](#eliminardetallescomanda)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `example`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -2706,6 +2708,198 @@ export default function EntregarComandaComponent() {
   if (mutation.isSuccess) {
     console.log(mutation.data.comanda_update);
     console.log(mutation.data.comandaHistorialEstado_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## EditarComanda
+You can execute the `EditarComanda` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useEditarComanda(options?: useDataConnectMutationOptions<EditarComandaData, FirebaseError, EditarComandaVariables>): UseDataConnectMutationResult<EditarComandaData, EditarComandaVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useEditarComanda(dc: DataConnect, options?: useDataConnectMutationOptions<EditarComandaData, FirebaseError, EditarComandaVariables>): UseDataConnectMutationResult<EditarComandaData, EditarComandaVariables>;
+```
+
+### Variables
+The `EditarComanda` Mutation requires an argument of type `EditarComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface EditarComandaVariables {
+  id: UUIDString;
+  valorTotal: number;
+  observaciones?: string | null;
+}
+```
+### Return Type
+Recall that calling the `EditarComanda` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `EditarComanda` Mutation is of type `EditarComandaData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface EditarComandaData {
+  comanda_update?: Comanda_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `EditarComanda`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, EditarComandaVariables } from '@dataconnect/generated';
+import { useEditarComanda } from '@dataconnect/generated/react'
+
+export default function EditarComandaComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useEditarComanda();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useEditarComanda(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useEditarComanda(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useEditarComanda(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useEditarComanda` Mutation requires an argument of type `EditarComandaVariables`:
+  const editarComandaVars: EditarComandaVariables = {
+    id: ..., 
+    valorTotal: ..., 
+    observaciones: ..., // optional
+  };
+  mutation.mutate(editarComandaVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., valorTotal: ..., observaciones: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(editarComandaVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.comanda_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## EliminarDetallesComanda
+You can execute the `EliminarDetallesComanda` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useEliminarDetallesComanda(options?: useDataConnectMutationOptions<EliminarDetallesComandaData, FirebaseError, EliminarDetallesComandaVariables>): UseDataConnectMutationResult<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useEliminarDetallesComanda(dc: DataConnect, options?: useDataConnectMutationOptions<EliminarDetallesComandaData, FirebaseError, EliminarDetallesComandaVariables>): UseDataConnectMutationResult<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
+```
+
+### Variables
+The `EliminarDetallesComanda` Mutation requires an argument of type `EliminarDetallesComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface EliminarDetallesComandaVariables {
+  comandaId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `EliminarDetallesComanda` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `EliminarDetallesComanda` Mutation is of type `EliminarDetallesComandaData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface EliminarDetallesComandaData {
+  comandaDetalle_deleteMany: number;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `EliminarDetallesComanda`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, EliminarDetallesComandaVariables } from '@dataconnect/generated';
+import { useEliminarDetallesComanda } from '@dataconnect/generated/react'
+
+export default function EliminarDetallesComandaComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useEliminarDetallesComanda();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useEliminarDetallesComanda(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useEliminarDetallesComanda(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useEliminarDetallesComanda(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useEliminarDetallesComanda` Mutation requires an argument of type `EliminarDetallesComandaVariables`:
+  const eliminarDetallesComandaVars: EliminarDetallesComandaVariables = {
+    comandaId: ..., 
+  };
+  mutation.mutate(eliminarDetallesComandaVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ comandaId: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(eliminarDetallesComandaVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.comandaDetalle_deleteMany);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

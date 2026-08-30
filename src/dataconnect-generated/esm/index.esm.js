@@ -228,6 +228,30 @@ export function entregarComanda(dcOrVars, vars) {
   return executeMutation(entregarComandaRef(dcInstance, inputVars));
 }
 
+export const editarComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EditarComanda', inputVars);
+}
+editarComandaRef.operationName = 'EditarComanda';
+
+export function editarComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(editarComandaRef(dcInstance, inputVars));
+}
+
+export const eliminarDetallesComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EliminarDetallesComanda', inputVars);
+}
+eliminarDetallesComandaRef.operationName = 'EliminarDetallesComanda';
+
+export function eliminarDetallesComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(eliminarDetallesComandaRef(dcInstance, inputVars));
+}
+
 export const getRolesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
