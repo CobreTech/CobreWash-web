@@ -21,7 +21,7 @@ export interface PrendaLinea {
 }
 
 export interface Comanda {
-  id: string; // numeroComanda público, ej. "COBRE-2848"
+  id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   cliente: string;
   empresa?: string;
   proyecto?: string;
@@ -82,7 +82,7 @@ export const CLIENTE_DEMO = "Laura Vega";
 
 export const COMANDAS: Comanda[] = [
   {
-    id: "COBRE-2848",
+    id: "ELCOBRE-14r3",
     cliente: "Laura Vega",
     tipoCliente: "Particular",
     telefono: "+56 9 8812 3344",
@@ -103,7 +103,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 2,
   },
   {
-    id: "COBRE-2847",
+    id: "ELCOBRE-28m7",
     cliente: "María González",
     tipoCliente: "Particular",
     telefono: "+56 9 7723 4455",
@@ -123,7 +123,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 0,
   },
   {
-    id: "COBRE-2846",
+    id: "ELCOBRE-28k6",
     cliente: "Empresa TechCorp S.A.",
     tipoCliente: "Hotel/Empresa",
     telefono: "+56 2 2234 5566",
@@ -143,7 +143,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 7,
   },
   {
-    id: "COBRE-2845",
+    id: "ELCOBRE-28j5",
     cliente: "Pedro Rodríguez",
     tipoCliente: "Particular",
     telefono: "+56 9 6634 7788",
@@ -163,7 +163,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 0,
   },
   {
-    id: "COBRE-2843",
+    id: "ELCOBRE-28h3",
     cliente: "Hotel Plaza Calama",
     tipoCliente: "Hotel/Empresa",
     telefono: "+56 2 2456 7890",
@@ -183,7 +183,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 9,
   },
   {
-    id: "COBRE-2841",
+    id: "ELCOBRE-28f1",
     cliente: "Clínica Santa María",
     tipoCliente: "Hotel/Empresa",
     telefono: "+56 2 2987 6543",
@@ -203,7 +203,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 1,
   },
   {
-    id: "COBRE-2840",
+    id: "ELCOBRE-28e0",
     cliente: "Carmen López",
     tipoCliente: "Particular",
     telefono: "+56 9 4456 2233",
@@ -220,7 +220,7 @@ export const COMANDAS: Comanda[] = [
     recepcionista: "Ignacio Díaz",
   },
   {
-    id: "COBRE-2838",
+    id: "ELCOBRE-28c8",
     cliente: "Laura Vega",
     tipoCliente: "Particular",
     telefono: "+56 9 8812 3344",
@@ -239,7 +239,7 @@ export const COMANDAS: Comanda[] = [
     recepcionista: "Paula Soto",
   },
   {
-    id: "COBRE-2837",
+    id: "ELCOBRE-28b7",
     cliente: "Valentina Ríos",
     tipoCliente: "Particular",
     telefono: "+56 9 3322 7788",
@@ -257,7 +257,7 @@ export const COMANDAS: Comanda[] = [
     horasEnEtapa: 3,
   },
   {
-    id: "COBRE-2835",
+    id: "ELCOBRE-2895",
     cliente: "Constructora Norte",
     tipoCliente: "Hotel/Empresa",
     telefono: "+56 2 2111 3344",

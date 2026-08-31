@@ -71,6 +71,13 @@ const PRENDAS_HOTEL = [
 const normalizarCatalogo = (value: string) =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("es-CL");
 
+const generarNumeroComanda = () => {
+  const alfabeto = "0123456789abcdefghijklmnopqrstuvwxyz";
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  const sufijo = Array.from(bytes, (byte) => alfabeto[byte % alfabeto.length]).join("");
+  return `ELCOBRE-${sufijo}`;
+};
+
 const leerDetalleHotel = (value?: string | null) => {
   const match = value?.match(/^Entregado: \d+ · Recibido: (\d+) · Pendiente: \d+(?: · (.*))?$/);
   return { recibido: match ? Number(match[1]) : 0, observacion: match?.[2] || value || "" };
@@ -90,7 +97,7 @@ const valorTotal = (c: Comanda) => c.detalle.reduce((s, d) => s + d.cantidad * d
 
 // Map de tipos DB a UI
 export interface Comanda {
-  id: string; // numeroComanda público, ej. "COBRE-2848"
+  id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   dbId: string; // UUID interno; nunca se muestra al usuario
   cliente: string;
   empresa?: string;
@@ -331,7 +338,7 @@ export default function ComandasPage() {
 
       if (form?.mode === "crear") {
         const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
-        const numero = `COBRE-${crypto.randomUUID().split("-")[0].toUpperCase()}`;
+        const numero = generarNumeroComanda();
         
         let clienteId = formData.clienteId;
 

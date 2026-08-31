@@ -42,7 +42,7 @@ export default function IntranetSidebar() {
   const ultimaNotif = {
     total: 3,
     titulo: "Nuevo pedido recibido",
-    detalle: "Comanda #COBRE-2848",
+    detalle: "Comanda #ELCOBRE-14r3",
     tiempo: "hace 3 min",
   };
 
