@@ -399,6 +399,7 @@ mutation AgregarFotoInspeccionVehiculo(
 mutation CrearClienteComanda(
   $nombre: String!
   $tipoCliente: TipoCliente!
+  $rut: String
   $telefono: String
   $email: String
   $direccion: String
@@ -414,10 +415,44 @@ mutation CrearClienteComanda(
   cliente_insert(data: {
     nombre: $nombre
     tipoCliente: $tipoCliente
+    rut: $rut
     telefono: $telefono
     email: $email
     direccion: $direccion
   })
+}
+
+mutation EditarFichaCliente(
+  $id: UUID!
+  $nombre: String!
+  $tipoCliente: TipoCliente!
+  $rut: String
+  $telefono: String
+  $email: String
+  $direccion: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para editar clientes")
+      }
+    }
+    cliente(id: $id) @check(expr: "this != null", message: "Cliente no encontrado") {
+      id
+    }
+  }
+  cliente_update(
+    id: $id
+    data: {
+      nombre: $nombre
+      tipoCliente: $tipoCliente
+      rut: $rut
+      telefono: $telefono
+      email: $email
+      direccion: $direccion
+    }
+  )
 }
 
 mutation CrearComanda(

@@ -280,6 +280,7 @@ export interface GetCatalogosComandaData {
   } & TipoPrenda_Key)[];
   clientes: ({
     id: UUIDString;
+    rut?: string | null;
     nombre: string;
     tipoCliente: TipoCliente;
     telefono?: string | null;

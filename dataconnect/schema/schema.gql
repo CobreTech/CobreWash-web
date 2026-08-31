@@ -51,6 +51,7 @@ type Usuario @table(name: "usuario") {
 type Cliente @table(name: "cliente") {
   id: UUID! @default(expr: "uuidV4()")
   usuario: Usuario
+  rut: String @unique @col(dataType: "varchar(12)")
   nombre: String! @col(dataType: "varchar(120)")
   tipoCliente: TipoCliente! @default(value: PARTICULAR)
   telefono: String @col(dataType: "varchar(20)")

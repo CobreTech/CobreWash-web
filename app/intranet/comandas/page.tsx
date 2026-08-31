@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -23,6 +23,7 @@ import {
   type Comanda as MockComanda,
 } from "@/lib/mock/comandas";
 import { dataConnect } from "@/lib/firebase/client";
+import { formatChileanPhone, formatRut, getChileanPhoneType, isValidChileanPhone, isValidRut } from "@/lib/validators";
 import { executeMutation, executeQuery, mutationRef, queryRef } from "firebase/data-connect";
 import { 
   TipoCliente, 
@@ -88,6 +89,7 @@ type CrearClienteComandaData = { cliente_insert: { id: string } };
 type CrearClienteComandaVariables = {
   nombre: string;
   tipoCliente: TipoCliente;
+  rut?: string;
   telefono?: string;
   email?: string;
   direccion?: string;
@@ -126,6 +128,7 @@ type FormLinea = PrendaLinea & { detalle: string; recibido: number };
 type FormState = {
   clienteId: string;
   cliente: string;
+  rut: string;
   empresa: string;
   proyecto: string;
   tipoCliente: TipoCliente;
@@ -140,6 +143,7 @@ type FormState = {
 const emptyForm: FormState = {
   clienteId: "",
   cliente: "",
+  rut: "",
   empresa: "",
   proyecto: "",
   tipoCliente: TipoCliente.PARTICULAR,
@@ -164,41 +168,61 @@ export default function ComandasPage() {
   const [data, setData] = useState<GetComandasData | null>(null);
   const [catData, setCatData] = useState<GetCatalogosComandaData | null>(null);
   const [loading, setLoading] = useState(true);
+  const solicitudActual = useRef(0);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silencioso = false) => {
+    const solicitud = ++solicitudActual.current;
     try {
-      setLoading(true);
+      if (!silencioso) setLoading(true);
       const estado = activeTab === "Todas" ? undefined :
         activeTab === "Pendiente" ? ComandaEstado.PENDIENTE :
         activeTab === "En proceso" ? ComandaEstado.EN_PROCESO :
         activeTab === "Listo" ? ComandaEstado.FINALIZADA :
         activeTab === "Entregado" ? ComandaEstado.ENTREGADA : ComandaEstado.ANULADA;
       const [resComandas, resCatalogos] = await Promise.all([
-        executeQuery(queryRef<GetComandasData, GetComandasVariables>(
-          dataConnect,
-          "GetComandasPaginadas",
-          {
-            limit: PAGE_SIZE,
-            offset: (page - 1) * PAGE_SIZE,
-            estado,
-            cliente: search.trim() || undefined,
-            fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
-            fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
-          },
-        )),
-        getCatalogosComanda(dataConnect)
+        executeQuery(
+          queryRef<GetComandasData, GetComandasVariables>(
+            dataConnect,
+            "GetComandasPaginadas",
+            {
+              limit: PAGE_SIZE,
+              offset: (page - 1) * PAGE_SIZE,
+              estado,
+              cliente: search.trim() || undefined,
+              fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
+              fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
+            },
+          ),
+          { fetchPolicy: "SERVER_ONLY" },
+        ),
+        getCatalogosComanda(dataConnect, { fetchPolicy: "SERVER_ONLY" }),
       ]);
-      setData(resComandas.data);
-      setCatData(resCatalogos.data);
+      if (solicitud === solicitudActual.current) {
+        setData(resComandas.data);
+        setCatData(resCatalogos.data);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
-      setLoading(false);
+      if (solicitud === solicitudActual.current) setLoading(false);
     }
   }, [activeTab, fechaDesde, fechaHasta, page, search]);
 
   useEffect(() => {
-    void Promise.resolve().then(fetchData);
+    void Promise.resolve().then(() => fetchData());
+    const actualizarSilenciosamente = () => void fetchData(true);
+    const alCambiarVisibilidad = () => {
+      if (document.visibilityState === "visible") actualizarSilenciosamente();
+    };
+    const intervalo = window.setInterval(actualizarSilenciosamente, 10_000);
+    window.addEventListener("focus", actualizarSilenciosamente);
+    document.addEventListener("visibilitychange", alCambiarVisibilidad);
+
+    return () => {
+      window.clearInterval(intervalo);
+      window.removeEventListener("focus", actualizarSilenciosamente);
+      document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+    };
   }, [fetchData]);
 
   const refetch = fetchData;
@@ -285,6 +309,7 @@ export default function ComandasPage() {
       ...emptyForm,
       clienteId: cliente?.id || "",
       cliente: cliente?.nombre || "",
+      rut: cliente?.rut || "",
       tipoCliente: cliente?.tipoCliente || TipoCliente.PARTICULAR,
       servicio: servicio?.nombre || "",
       detalle: [{
@@ -300,17 +325,19 @@ export default function ComandasPage() {
     setForm({ mode: "crear" });
   };
   const openEditar = (c: Comanda) => {
+    const fichaCliente = catData?.clientes.find((cliente) => cliente.nombre === c.cliente);
     setDetalle(null);
     setNuevoCliente(false);
     setFormData({
       cliente: c.cliente,
+      rut: fichaCliente?.rut || "",
       empresa: c.empresa || "",
       proyecto: c.proyecto || "",
       tipoCliente: c.tipoCliente,
       telefono: c.telefono,
       email: c.email,
       direccion: c.direccion ?? "",
-      clienteId: catData?.clientes.find((cliente) => cliente.nombre === c.cliente)?.id || "",
+      clienteId: fichaCliente?.id || "",
       servicio: c.servicio,
       detalle: c.detalle.map((d) => {
         const hotel = leerDetalleHotel(d.detalle);
@@ -325,6 +352,18 @@ export default function ComandasPage() {
     const detalleLimpio = formData.detalle.filter((d) => d.tipoPrenda.trim());
     if (!formData.cliente.trim() || detalleLimpio.length === 0) {
       alert("Selecciona un cliente y agrega al menos una prenda.");
+      return;
+    }
+    if (nuevoCliente && !isValidRut(formData.rut)) {
+      alert("Ingresa un RUT chileno válido para el cliente.");
+      return;
+    }
+    if (nuevoCliente && formData.telefono.trim() && !isValidChileanPhone(formData.telefono)) {
+      alert("Ingresa un celular o teléfono fijo chileno válido.");
+      return;
+    }
+    if (nuevoCliente && formData.email.trim() && !/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
+      alert("Ingresa un correo válido.");
       return;
     }
 
@@ -380,7 +419,8 @@ export default function ComandasPage() {
           const variables: CrearClienteComandaVariables = {
             nombre: formData.cliente.trim(),
             tipoCliente: formData.tipoCliente,
-            telefono: formData.telefono.trim() || undefined,
+            rut: formatRut(formData.rut),
+            telefono: formData.telefono.trim() ? formatChileanPhone(formData.telefono) : undefined,
             email: formData.email.trim() || undefined,
             direccion: formData.direccion.trim() || undefined,
           };
@@ -449,7 +489,7 @@ export default function ComandasPage() {
           }
         }
         
-        await refetch();
+        await refetch(true);
       setNotice(form?.mode === "crear" ? "Comanda creada correctamente." : "Comanda actualizada correctamente.");
       setForm(null);
     } catch (err) {
@@ -470,7 +510,7 @@ export default function ComandasPage() {
           id: comandaOriginal.id,
           motivoAnulacion: motivo.trim() || "Anulación sin motivo"
         });
-        await refetch();
+        await refetch(true);
         setNotice(`Comanda ${anular.id} anulada correctamente.`);
       }
     } catch (err) {
@@ -663,7 +703,7 @@ export default function ComandasPage() {
                               if (confirm(`¿Marcar la comanda ${c.id} como Entregada?`)) {
                                 try {
                                   await entregarComanda(dataConnect, { id: c.dbId });
-                                  await refetch();
+                                  await refetch(true);
                                   setNotice(`Comanda ${c.id} entregada correctamente. Se registró la fecha y el historial.`);
                                 } catch (error) {
                                   console.error(error);
@@ -762,7 +802,7 @@ export default function ComandasPage() {
                       onChange={(v) => {
                         if (v === "__nuevo__") {
                           setNuevoCliente(true);
-                          setFormData({ ...formData, clienteId: "", cliente: "", telefono: "", email: "", direccion: "" });
+                          setFormData({ ...formData, clienteId: "", cliente: "", rut: "", telefono: "", email: "", direccion: "" });
                           return;
                         }
                         const c = catData?.clientes.find(cli => cli.id === v);
@@ -772,6 +812,7 @@ export default function ComandasPage() {
                           ...formData, 
                           clienteId: c?.id || "",
                           cliente: c?.nombre || "",
+                          rut: c?.rut || "",
                           tipoCliente: c?.tipoCliente || TipoCliente.PARTICULAR,
                           telefono: c?.telefono || "",
                           email: c?.email || "",
@@ -784,8 +825,10 @@ export default function ComandasPage() {
                         });
                       }}
                       ariaLabel="Seleccionar cliente"
+                      searchable
+                      searchPlaceholder="Buscar por nombre o RUT…"
                       options={[
-                        ...(catData?.clientes || []).map((c) => ({ value: c.id, label: c.nombre })),
+                        ...(catData?.clientes || []).map((c) => ({ value: c.id, label: c.rut ? `${c.nombre} · ${c.rut}` : c.nombre })),
                         { value: "__nuevo__", label: "+ Registrar cliente nuevo" },
                       ]}
                     />
@@ -816,14 +859,27 @@ export default function ComandasPage() {
                     </div>
                 </div>
                 {nuevoCliente && (
-                  <FieldInput label="Nombre del cliente" value={formData.cliente} onChange={(v) => setFormData({ ...formData, cliente: v })} placeholder="Nombre o razón social" />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <FieldInput label="Nombre del cliente" value={formData.cliente} onChange={(v) => setFormData({ ...formData, cliente: v })} placeholder="Nombre o razón social" />
+                    <FieldInput
+                      label="RUT de persona o empresa"
+                      value={formData.rut}
+                      onChange={(v) => setFormData({ ...formData, rut: formatRut(v) })}
+                      placeholder="12.345.678-5"
+                      hint={formData.rut ? (isValidRut(formData.rut) ? "RUT válido" : "Dígito verificador incorrecto") : "Obligatorio"}
+                      valid={formData.rut ? isValidRut(formData.rut) : undefined}
+                    />
+                  </div>
+                )}
+                {!nuevoCliente && formData.rut && (
+                  <p className="text-xs text-stone-500 dark:text-stone-400"><strong>RUT:</strong> {formData.rut}</p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FieldInput label="Empresa" value={formData.empresa} onChange={(v) => setFormData({ ...formData, empresa: v })} placeholder="Empresa o mandante" />
                   <FieldInput label="Proyecto" value={formData.proyecto} onChange={(v) => setFormData({ ...formData, proyecto: v })} placeholder="Proyecto, faena u orden" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <FieldInput label="Teléfono" value={formData.telefono} onChange={(v) => setFormData({ ...formData, telefono: v })} placeholder="+56 9 ..." />
+                  <FieldInput label="Teléfono" value={formData.telefono} onChange={(v) => setFormData({ ...formData, telefono: formatChileanPhone(v) })} placeholder="+56 9 1234 5678" hint={nuevoCliente && formData.telefono ? (getChileanPhoneType(formData.telefono) || "Número chileno incompleto") : undefined} valid={nuevoCliente && formData.telefono ? isValidChileanPhone(formData.telefono) : undefined} />
                   <FieldInput label="Correo" value={formData.email} onChange={(v) => setFormData({ ...formData, email: v })} placeholder="correo@ejemplo.com" />
                 </div>
                 <FieldInput label="Dirección" value={formData.direccion} onChange={(v) => setFormData({ ...formData, direccion: v })} placeholder="Dirección de retiro / entrega" />
@@ -925,7 +981,7 @@ export default function ComandasPage() {
   );
 }
 
-function FieldInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function FieldInput({ label, value, onChange, placeholder, hint, valid }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string; valid?: boolean }) {
   return (
     <div className="space-y-1.5">
       <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">{label}</label>
@@ -933,8 +989,9 @@ function FieldInput({ label, value, onChange, placeholder }: { label: string; va
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-600 focus:outline-none focus:border-brand-500 text-sm font-medium"
+        className={`w-full rounded-xl border bg-stone-50 px-4 py-3 text-sm font-medium text-stone-800 outline-none placeholder-stone-400 focus:border-brand-500 dark:bg-stone-800 dark:text-stone-200 dark:placeholder-stone-600 ${valid === false ? "border-red-400 dark:border-red-500" : valid === true ? "border-emerald-400 dark:border-emerald-500" : "border-stone-200 dark:border-white/10"}`}
       />
+      {hint && <p className={`text-[10px] ${valid === false ? "text-red-500" : valid === true ? "text-emerald-600 dark:text-emerald-400" : "text-stone-400"}`}>{hint}</p>}
     </div>
   );
 }

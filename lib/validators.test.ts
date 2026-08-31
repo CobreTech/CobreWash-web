@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { cleanRut, formatRut, isValidRut, validatePassword } from "@/lib/validators";
+import {
+  cleanChileanPhone,
+  cleanRut,
+  formatChileanPhone,
+  formatRut,
+  getChileanPhoneType,
+  isValidChileanPhone,
+  isValidRut,
+  validatePassword,
+} from "@/lib/validators";
 
 describe("RUT", () => {
   it("normaliza y formatea entradas con puntos, guion y dígito K", () => {
@@ -34,5 +43,25 @@ describe("contraseña", () => {
       valid: true,
       message: "Contraseña válida",
     });
+  });
+});
+
+describe("teléfono chileno", () => {
+  it("normaliza y formatea celulares con o sin código de país", () => {
+    expect(cleanChileanPhone("+56 9 8765 4321")).toBe("987654321");
+    expect(formatChileanPhone("987654321")).toBe("+56 9 8765 4321");
+    expect(getChileanPhoneType("+56 9 8765 4321")).toBe("Celular");
+  });
+
+  it("formatea teléfonos fijos de Santiago y regiones", () => {
+    expect(formatChileanPhone("223456789")).toBe("+56 2 2345 6789");
+    expect(formatChileanPhone("552345678")).toBe("+56 55 234 5678");
+    expect(getChileanPhoneType("+56 55 234 5678")).toBe("Teléfono fijo");
+  });
+
+  it("rechaza números incompletos y códigos de área inexistentes", () => {
+    expect(isValidChileanPhone("+56 9 1234")).toBe(false);
+    expect(isValidChileanPhone("+56 88 123 4567")).toBe(false);
+    expect(isValidChileanPhone("+56 41 234 5678")).toBe(true);
   });
 });
