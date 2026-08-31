@@ -23,11 +23,10 @@ import {
   type Comanda as MockComanda,
 } from "@/lib/mock/comandas";
 import { dataConnect } from "@/lib/firebase/client";
-import { executeMutation, mutationRef } from "firebase/data-connect";
+import { executeMutation, executeQuery, mutationRef, queryRef } from "firebase/data-connect";
 import { 
   TipoCliente, 
   ComandaEstado,
-  getComandas,
   getCatalogosComanda,
   crearComanda,
   agregarComandaDetalle,
@@ -37,6 +36,7 @@ import {
   entregarComanda,
   crearTipoPrenda,
   type GetComandasData,
+  type GetComandasVariables,
   type GetCatalogosComandaData
 } from "@/src/dataconnect-generated";
 
@@ -172,14 +172,18 @@ export default function ComandasPage() {
         activeTab === "Listo" ? ComandaEstado.FINALIZADA :
         activeTab === "Entregado" ? ComandaEstado.ENTREGADA : ComandaEstado.ANULADA;
       const [resComandas, resCatalogos] = await Promise.all([
-        getComandas(dataConnect, {
-          limit: PAGE_SIZE,
-          offset: (page - 1) * PAGE_SIZE,
-          estado,
-          cliente: search.trim() || undefined,
-          fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
-          fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
-        }),
+        executeQuery(queryRef<GetComandasData, GetComandasVariables>(
+          dataConnect,
+          "GetComandasPaginadas",
+          {
+            limit: PAGE_SIZE,
+            offset: (page - 1) * PAGE_SIZE,
+            estado,
+            cliente: search.trim() || undefined,
+            fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
+            fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
+          },
+        )),
         getCatalogosComanda(dataConnect)
       ]);
       setData(resComandas.data);

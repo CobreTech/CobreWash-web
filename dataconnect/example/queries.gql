@@ -172,6 +172,8 @@ query GetMisSalidasVehiculo @auth(level: USER) {
 
 # ==================== COMANDAS (SPRINT 03) ====================
 
+# Contrato anterior conservado mientras los previews existentes migran a la
+# consulta paginada. Las nuevas versiones no deben utilizar esta operación.
 query GetComandas(
   $limit: Int = 8
   $offset: Int = 0
@@ -179,7 +181,78 @@ query GetComandas(
   $cliente: String
   $fechaDesde: Timestamp
   $fechaHasta: Timestamp
+) @auth(level: USER) @retired(reason: "Usar GetComandasPaginadas") {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar comandas")
+    }
+  }
+  comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+    orderBy: [{ creadoEn: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    numeroComanda
+    codigoQr
+    estado
+    valorTotal
+    empresa
+    proyecto
+    fechaRecepcion
+    fechaEntregaEstimada
+    observaciones
+    motivoAnulacion
+    cliente {
+      id
+      nombre
+      telefono
+      email
+      tipoCliente
+      direccion
+    }
+    comandaDetalles_on_comanda {
+      cantidad
+      detalle
+      precioUnitario
+      tipoPrenda { nombre }
+      tipoServicio { nombre }
+    }
+  }
+  total: comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+  ) { _count }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
+  finalizadas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
+  entregadas: comandas(where: { estado: { eq: ENTREGADA } }) { _count }
+  anuladas: comandas(where: { estado: { eq: ANULADA } }) { _count }
+}
+
+query GetComandasPaginadas(
+  $limit: Int = 8
+  $offset: Int = 0
+  $estado: ComandaEstado
+  $cliente: String
+  $fechaDesde: Timestamp
+  $fechaHasta: Timestamp
 ) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar comandas")
+    }
+  }
   comandas(
     where: {
       estado: { eq: $estado }
