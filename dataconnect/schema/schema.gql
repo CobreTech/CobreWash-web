@@ -51,6 +51,7 @@ type Usuario @table(name: "usuario") {
 type Cliente @table(name: "cliente") {
   id: UUID! @default(expr: "uuidV4()")
   usuario: Usuario
+  rut: String @unique @col(dataType: "varchar(12)")
   nombre: String! @col(dataType: "varchar(120)")
   tipoCliente: TipoCliente! @default(value: PARTICULAR)
   telefono: String @col(dataType: "varchar(20)")
@@ -105,6 +106,8 @@ type Comanda @table(name: "comanda") {
   numeroComanda: String! @unique @col(dataType: "varchar(20)")
   codigoQr: UUID! @unique @default(expr: "uuidV4()")
   cliente: Cliente!
+  empresa: String @col(dataType: "varchar(120)")
+  proyecto: String @col(dataType: "varchar(120)")
   recepcionista: Usuario
   estado: ComandaEstado! @default(value: PENDIENTE)
   valorTotal: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
@@ -124,6 +127,7 @@ type ComandaDetalle @table(name: "comanda_detalle") {
   tipoPrenda: TipoPrenda!
   tipoServicio: TipoServicio!
   cantidad: Int! @default(value: 1)
+  detalle: String @col(dataType: "varchar(200)")
   pesoKg: Float @col(dataType: "numeric(8,2)")
   precioUnitario: Float! @col(dataType: "numeric(10,2)") @default(value: 0)
   subtotal: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
@@ -137,6 +141,17 @@ type ComandaHistorialEstado @table(name: "comanda_historial_estado") {
   estadoAnterior: ComandaEstado
   estadoNuevo: ComandaEstado!
   motivo: String @col(dataType: "varchar(300)")
+  fecha: Timestamp! @default(expr: "request.time")
+}
+
+# Notificación persistente generada al cerrar una entrega. El canal registra
+# el destino disponible del cliente; un integrador externo puede despacharla.
+type ComandaNotificacion @table(name: "comanda_notificacion") {
+  id: UUID! @default(expr: "uuidV4()")
+  comanda: Comanda!
+  destinatario: String @col(dataType: "varchar(120)")
+  mensaje: String! @col(dataType: "varchar(300)")
+  leida: Boolean! @default(value: false)
   fecha: Timestamp! @default(expr: "request.time")
 }
 

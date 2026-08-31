@@ -25,11 +25,14 @@ interface Resultado {
 // Mock: cualquier número devuelve una comanda de ejemplo. La etapa mostrada
 // varía según el último dígito para que se sienta más real.
 function consultarMock(codigo: string): Resultado {
-  const limpio = codigo.trim().toUpperCase();
+  const limpio = codigo.trim();
+  const prefijo = limpio.toUpperCase();
   const digitos = limpio.replace(/\D/g, "");
   const ultimo = digitos.length ? parseInt(digitos[digitos.length - 1], 10) : 2;
   return {
-    codigo: limpio.startsWith("COBRE-") ? limpio : `COBRE-${limpio || "0000"}`,
+    codigo: prefijo.startsWith("ELCOBRE-") || prefijo.startsWith("COBRE-")
+      ? limpio
+      : `ELCOBRE-${limpio || "14r3"}`,
     servicio: "Lavandería · Servicio estándar",
     fechaIngreso: "01/06/2026",
     etapaActual: ultimo % ETAPAS.length,
@@ -121,8 +124,8 @@ function SeguimientoContent() {
                 type="text"
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value)}
-                placeholder="Ej: COBRE-2848 o 2848"
-                className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 font-bold placeholder-stone-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all text-sm uppercase"
+                placeholder="Ej: ELCOBRE-14r3 o 14r3"
+                className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-800 font-bold placeholder-stone-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all text-sm"
               />
               <Search className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
             </div>

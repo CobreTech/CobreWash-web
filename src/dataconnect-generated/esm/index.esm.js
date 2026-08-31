@@ -252,6 +252,30 @@ export function eliminarDetallesComanda(dcOrVars, vars) {
   return executeMutation(eliminarDetallesComandaRef(dcInstance, inputVars));
 }
 
+export const crearTipoPrendaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearTipoPrenda', inputVars);
+}
+crearTipoPrendaRef.operationName = 'CrearTipoPrenda';
+
+export function crearTipoPrenda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearTipoPrendaRef(dcInstance, inputVars));
+}
+
+export const crearTipoServicioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearTipoServicio', inputVars);
+}
+crearTipoServicioRef.operationName = 'CrearTipoServicio';
+
+export function crearTipoServicio(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearTipoServicioRef(dcInstance, inputVars));
+}
+
 export const getRolesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -343,16 +367,16 @@ export function getMisSalidasVehiculo(dcOrOptions, options) {
   return executeQuery(getMisSalidasVehiculoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
-export const getComandasRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+export const getComandasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, false);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetComandas');
+  return queryRef(dcInstance, 'GetComandas', inputVars);
 }
 getComandasRef.operationName = 'GetComandas';
 
-export function getComandas(dcOrOptions, options) {
+export function getComandas(dcOrVars, varsOrOptions, options) {
   
-  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getComandasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
@@ -381,4 +405,3 @@ export function getCatalogosComanda(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getCatalogosComandaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
-

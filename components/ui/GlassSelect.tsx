@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, Search } from "lucide-react";
 
 export interface GlassSelectOption {
   value: string;
@@ -24,6 +24,8 @@ export default function GlassSelect({
   className = "",
   disabled = false,
   ariaLabel,
+  searchable = false,
+  searchPlaceholder = "Buscar…",
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -33,10 +35,25 @@ export default function GlassSelect({
   className?: string;
   disabled?: boolean;
   ariaLabel?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
+  const normalizedSearch = search
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLocaleLowerCase("es-CL");
+  const filteredOptions = normalizedSearch
+    ? options.filter((option) => option.label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es-CL")
+      .includes(normalizedSearch))
+    : options;
 
   useEffect(() => {
     if (!open) return;
@@ -62,7 +79,11 @@ export default function GlassSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
-        onClick={() => !disabled && setOpen((o) => !o)}
+        onClick={() => {
+          if (disabled) return;
+          setSearch("");
+          setOpen((o) => !o);
+        }}
         className={`w-full flex items-center ${Icon ? "pl-10" : "pl-4"} pr-10 py-3 rounded-xl border bg-stone-50 dark:bg-stone-800 text-sm font-medium text-left transition-colors focus:outline-none ${
           open ? "border-brand-500" : "border-stone-200 dark:border-white/10"
         } ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"} ${
@@ -91,7 +112,24 @@ export default function GlassSelect({
             className="absolute z-[70] mt-2 w-full max-h-56 overflow-y-auto rounded-2xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-stone-900/90 backdrop-blur-xl p-1.5 shadow-premium"
             style={{ WebkitBackdropFilter: "blur(20px)" }}
           >
-            {options.map((opt) => {
+            {searchable && (
+              <li className="sticky top-0 z-10 mb-1 bg-white/95 p-1 dark:bg-stone-900/95">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
+                  <input
+                    autoFocus
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    onKeyDown={(event) => event.stopPropagation()}
+                    placeholder={searchPlaceholder}
+                    aria-label={searchPlaceholder}
+                    className="w-full rounded-lg border border-stone-200 bg-stone-50 py-2 pl-8 pr-3 text-sm text-stone-800 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800 dark:text-stone-200"
+                  />
+                </div>
+              </li>
+            )}
+            {filteredOptions.map((opt) => {
               const active = opt.value === value;
               return (
                 <li key={opt.value} role="option" aria-selected={active}>
@@ -113,6 +151,9 @@ export default function GlassSelect({
                 </li>
               );
             })}
+            {filteredOptions.length === 0 && (
+              <li className="px-3 py-4 text-center text-xs text-stone-400">Sin resultados</li>
+            )}
           </motion.ul>
         )}
       </AnimatePresence>

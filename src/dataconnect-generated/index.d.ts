@@ -77,6 +77,7 @@ export interface AgregarComandaDetalleVariables {
   tipoPrendaId: UUIDString;
   tipoServicioId: UUIDString;
   cantidad: number;
+  detalle?: string | null;
   precioUnitario: number;
   subtotal: number;
 }
@@ -133,6 +134,11 @@ export interface ComandaHistorialEstado_Key {
   __typename?: 'ComandaHistorialEstado_Key';
 }
 
+export interface ComandaNotificacion_Key {
+  id: UUIDString;
+  __typename?: 'ComandaNotificacion_Key';
+}
+
 export interface Comanda_Key {
   id: UUIDString;
   __typename?: 'Comanda_Key';
@@ -162,6 +168,8 @@ export interface CrearComandaData {
 export interface CrearComandaVariables {
   numeroComanda: string;
   clienteId: UUIDString;
+  empresa?: string | null;
+  proyecto?: string | null;
   valorTotal: number;
   observaciones?: string | null;
 }
@@ -174,6 +182,23 @@ export interface CrearSalidaVehiculoVariables {
   vehiculoId: UUIDString;
   repartidorId: string;
   observaciones?: string | null;
+}
+
+export interface CrearTipoPrendaData {
+  tipoPrenda_insert: TipoPrenda_Key;
+}
+
+export interface CrearTipoPrendaVariables {
+  nombre: string;
+}
+
+export interface CrearTipoServicioData {
+  tipoServicio_insert: TipoServicio_Key;
+}
+
+export interface CrearTipoServicioVariables {
+  nombre: string;
+  precioBase: number;
 }
 
 export interface CrearUsuarioAdministradoData {
@@ -209,6 +234,8 @@ export interface EditarComandaData {
 export interface EditarComandaVariables {
   id: UUIDString;
   valorTotal: number;
+  empresa?: string | null;
+  proyecto?: string | null;
   observaciones?: string | null;
 }
 
@@ -223,6 +250,7 @@ export interface EliminarDetallesComandaVariables {
 export interface EntregarComandaData {
   comanda_update?: Comanda_Key | null;
   comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+  comandaNotificacion_insert: ComandaNotificacion_Key;
 }
 
 export interface EntregarComandaVariables {
@@ -252,6 +280,7 @@ export interface GetCatalogosComandaData {
   } & TipoPrenda_Key)[];
   clientes: ({
     id: UUIDString;
+    rut?: string | null;
     nombre: string;
     tipoCliente: TipoCliente;
     telefono?: string | null;
@@ -266,6 +295,8 @@ export interface GetComandaDetalleData {
     numeroComanda: string;
     estado: ComandaEstado;
     valorTotal: number;
+    empresa?: string | null;
+    proyecto?: string | null;
     observaciones?: string | null;
     motivoAnulacion?: string | null;
     fechaRecepcion: TimestampString;
@@ -281,6 +312,7 @@ export interface GetComandaDetalleData {
     comandaDetalles_on_comanda: ({
       id: UUIDString;
       cantidad: number;
+      detalle?: string | null;
       pesoKg?: number | null;
       precioUnitario: number;
       subtotal: number;
@@ -323,6 +355,7 @@ export interface GetComandaPorQrData {
     comandaDetalles_on_comanda: ({
       cantidad: number;
       pesoKg?: number | null;
+      precioUnitario: number;
       tipoPrenda: {
         nombre: string;
       };
@@ -344,6 +377,8 @@ export interface GetComandasData {
     codigoQr: UUIDString;
     estado: ComandaEstado;
     valorTotal: number;
+    empresa?: string | null;
+    proyecto?: string | null;
     fechaRecepcion: TimestampString;
     fechaEntregaEstimada?: TimestampString | null;
     observaciones?: string | null;
@@ -358,6 +393,7 @@ export interface GetComandasData {
     } & Cliente_Key;
     comandaDetalles_on_comanda: ({
       cantidad: number;
+      detalle?: string | null;
       precioUnitario: number;
       tipoPrenda: {
         nombre: string;
@@ -367,6 +403,23 @@ export interface GetComandasData {
       };
     })[];
   } & Comanda_Key)[];
+  total: ({
+    _count: number;
+  })[];
+  pendientes: ({ _count: number })[];
+  enProceso: ({ _count: number })[];
+  finalizadas: ({ _count: number })[];
+  entregadas: ({ _count: number })[];
+  anuladas: ({ _count: number })[];
+}
+
+export interface GetComandasVariables {
+  limit?: number | null;
+  offset?: number | null;
+  estado?: ComandaEstado | null;
+  cliente?: string | null;
+  fechaDesde?: TimestampString | null;
+  fechaHasta?: TimestampString | null;
 }
 
 export interface GetInsumoPorQrData {
@@ -814,6 +867,30 @@ export const eliminarDetallesComandaRef: EliminarDetallesComandaRef;
 export function eliminarDetallesComanda(vars: EliminarDetallesComandaVariables): MutationPromise<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
 export function eliminarDetallesComanda(dc: DataConnect, vars: EliminarDetallesComandaVariables): MutationPromise<EliminarDetallesComandaData, EliminarDetallesComandaVariables>;
 
+interface CrearTipoPrendaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearTipoPrendaVariables): MutationRef<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearTipoPrendaVariables): MutationRef<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+  operationName: string;
+}
+export const crearTipoPrendaRef: CrearTipoPrendaRef;
+
+export function crearTipoPrenda(vars: CrearTipoPrendaVariables): MutationPromise<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+export function crearTipoPrenda(dc: DataConnect, vars: CrearTipoPrendaVariables): MutationPromise<CrearTipoPrendaData, CrearTipoPrendaVariables>;
+
+interface CrearTipoServicioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearTipoServicioVariables): MutationRef<CrearTipoServicioData, CrearTipoServicioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearTipoServicioVariables): MutationRef<CrearTipoServicioData, CrearTipoServicioVariables>;
+  operationName: string;
+}
+export const crearTipoServicioRef: CrearTipoServicioRef;
+
+export function crearTipoServicio(vars: CrearTipoServicioVariables): MutationPromise<CrearTipoServicioData, CrearTipoServicioVariables>;
+export function crearTipoServicio(dc: DataConnect, vars: CrearTipoServicioVariables): MutationPromise<CrearTipoServicioData, CrearTipoServicioVariables>;
+
 interface GetRolesRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetRolesData, undefined>;
@@ -900,15 +977,15 @@ export function getMisSalidasVehiculo(dc: DataConnect, options?: ExecuteQueryOpt
 
 interface GetComandasRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<GetComandasData, undefined>;
+  (vars?: GetComandasVariables): QueryRef<GetComandasData, GetComandasVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<GetComandasData, undefined>;
+  (dc: DataConnect, vars?: GetComandasVariables): QueryRef<GetComandasData, GetComandasVariables>;
   operationName: string;
 }
 export const getComandasRef: GetComandasRef;
 
-export function getComandas(options?: ExecuteQueryOptions): QueryPromise<GetComandasData, undefined>;
-export function getComandas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetComandasData, undefined>;
+export function getComandas(vars?: GetComandasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasData, GetComandasVariables>;
+export function getComandas(dc: DataConnect, vars?: GetComandasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasData, GetComandasVariables>;
 
 interface GetComandaDetalleRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -933,4 +1010,3 @@ export const getCatalogosComandaRef: GetCatalogosComandaRef;
 
 export function getCatalogosComanda(options?: ExecuteQueryOptions): QueryPromise<GetCatalogosComandaData, undefined>;
 export function getCatalogosComanda(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCatalogosComandaData, undefined>;
-

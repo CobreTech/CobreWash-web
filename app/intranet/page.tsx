@@ -369,19 +369,19 @@ export default function DashboardPage() {
   ];
 
   const recentOrders = [
-    { id: "COBRE-2847", client: "María González", service: "Doméstica", status: "Listo", amount: 15200 },
-    { id: "COBRE-2846", client: "Empresa TechCorp S.A.", service: "Industrial", status: "En proceso", amount: 245000 },
-    { id: "COBRE-2845", client: "Pedro Rodríguez", service: "Retiro", status: "Recibido", amount: 8500 },
-    { id: "COBRE-2844", client: "Ana Martínez", service: "Doméstica", status: "Listo", amount: 12800 },
-    { id: "COBRE-2843", client: "Hotel Plaza Santiago", service: "Industrial", status: "En proceso", amount: 380000 },
+    { id: "ELCOBRE-28m7", client: "María González", service: "Doméstica", status: "Listo", amount: 15200 },
+    { id: "ELCOBRE-28k6", client: "Empresa TechCorp S.A.", service: "Industrial", status: "En proceso", amount: 245000 },
+    { id: "ELCOBRE-28j5", client: "Pedro Rodríguez", service: "Retiro", status: "Recibido", amount: 8500 },
+    { id: "ELCOBRE-28i4", client: "Ana Martínez", service: "Doméstica", status: "Listo", amount: 12800 },
+    { id: "ELCOBRE-28h3", client: "Hotel Plaza Santiago", service: "Industrial", status: "En proceso", amount: 380000 },
   ];
 
   const activity = [
-    { text: "Nuevo pedido #COBRE-2848 recibido", time: "hace 3 min", dot: "bg-sky-400" },
-    { text: "COBRE-2847 marcado como Listo", time: "hace 11 min", dot: "bg-green-400" },
+    { text: "Nuevo pedido #ELCOBRE-14r3 recibido", time: "hace 3 min", dot: "bg-sky-400" },
+    { text: "ELCOBRE-28m7 marcado como Listo", time: "hace 11 min", dot: "bg-green-400" },
     { text: "Stock de Suavizante bajo mínimo", time: "hace 25 min", dot: "bg-amber-400" },
     { text: "Carlos H. inició turno operativo", time: "hace 38 min", dot: "bg-brand-400" },
-    { text: "COBRE-2843 ingresó a lavado", time: "hace 52 min", dot: "bg-brand-400" },
+    { text: "ELCOBRE-28h3 ingresó a lavado", time: "hace 52 min", dot: "bg-brand-400" },
     { text: "Factura emitida a TechCorp S.A.", time: "hace 1 h", dot: "bg-emerald-400" },
   ];
 

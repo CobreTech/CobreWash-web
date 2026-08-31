@@ -73,6 +73,7 @@ query GetComandaPorQr($codigoQr: UUID!)
     comandaDetalles_on_comanda {
       cantidad
       pesoKg
+      precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }
     }
@@ -171,13 +172,39 @@ query GetMisSalidasVehiculo @auth(level: USER) {
 
 # ==================== COMANDAS (SPRINT 03) ====================
 
-query GetComandas @auth(level: USER) {
-  comandas(orderBy: [{ creadoEn: DESC }]) {
+# Contrato anterior conservado mientras los previews existentes migran a la
+# consulta paginada. Las nuevas versiones no deben utilizar esta operación.
+query GetComandas(
+  $limit: Int = 8
+  $offset: Int = 0
+  $estado: ComandaEstado
+  $cliente: String
+  $fechaDesde: Timestamp
+  $fechaHasta: Timestamp
+) @auth(level: USER) @retired(reason: "Usar GetComandasPaginadas") {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar comandas")
+    }
+  }
+  comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+    orderBy: [{ creadoEn: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
     id
     numeroComanda
     codigoQr
     estado
     valorTotal
+    empresa
+    proyecto
     fechaRecepcion
     fechaEntregaEstimada
     observaciones
@@ -192,11 +219,91 @@ query GetComandas @auth(level: USER) {
     }
     comandaDetalles_on_comanda {
       cantidad
+      detalle
       precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }
     }
   }
+  total: comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+  ) { _count }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
+  finalizadas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
+  entregadas: comandas(where: { estado: { eq: ENTREGADA } }) { _count }
+  anuladas: comandas(where: { estado: { eq: ANULADA } }) { _count }
+}
+
+query GetComandasPaginadas(
+  $limit: Int = 8
+  $offset: Int = 0
+  $estado: ComandaEstado
+  $cliente: String
+  $fechaDesde: Timestamp
+  $fechaHasta: Timestamp
+) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar comandas")
+    }
+  }
+  comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+    orderBy: [{ creadoEn: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    numeroComanda
+    codigoQr
+    estado
+    valorTotal
+    empresa
+    proyecto
+    fechaRecepcion
+    fechaEntregaEstimada
+    observaciones
+    motivoAnulacion
+    cliente {
+      id
+      nombre
+      telefono
+      email
+      tipoCliente
+      direccion
+    }
+    comandaDetalles_on_comanda {
+      cantidad
+      detalle
+      precioUnitario
+      tipoPrenda { nombre }
+      tipoServicio { nombre }
+    }
+  }
+  total: comandas(
+    where: {
+      estado: { eq: $estado }
+      cliente: { nombre: { contains: $cliente } }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+    }
+  ) {
+    _count
+  }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
+  finalizadas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
+  entregadas: comandas(where: { estado: { eq: ENTREGADA } }) { _count }
+  anuladas: comandas(where: { estado: { eq: ANULADA } }) { _count }
 }
 
 query GetComandaDetalle($id: UUID!) @auth(level: USER) {
@@ -205,6 +312,8 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
     numeroComanda
     estado
     valorTotal
+    empresa
+    proyecto
     observaciones
     motivoAnulacion
     fechaRecepcion
@@ -220,6 +329,7 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
     comandaDetalles_on_comanda {
       id
       cantidad
+      detalle
       pesoKg
       precioUnitario
       subtotal
@@ -258,11 +368,77 @@ query GetCatalogosComanda @auth(level: USER) {
   }
   clientes(orderBy: [{ nombre: ASC }]) {
     id
+    rut
     nombre
     tipoCliente
     telefono
     email
     direccion
+  }
+}
+
+# Diagnóstico operativo de solo lectura. NO_ACCESS impide invocarlo desde la
+# aplicación; se utiliza únicamente con credenciales administrativas del CLI.
+query DiagnosticoComandas @auth(level: NO_ACCESS) {
+  tipoPrendas(orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    activo
+  }
+  tipoServicios(orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    activo
+    precioBase
+  }
+  comandas(orderBy: [{ creadoEn: DESC }], limit: 20) {
+    id
+    numeroComanda
+    valorTotal
+    comandaDetalles_on_comanda {
+      id
+      cantidad
+      precioUnitario
+      subtotal
+      tipoPrenda {
+        id
+        nombre
+      }
+      tipoServicio {
+        id
+        nombre
+      }
+    }
+  }
+}
+
+# Fichas administrativas de clientes para recepción y administración. Incluye
+# sus comandas para calcular métricas sin depender de datos mock.
+query GetFichasClientes @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar clientes")
+    }
+  }
+  clientes(orderBy: [{ nombre: ASC }]) {
+    id
+    rut
+    nombre
+    tipoCliente
+    telefono
+    email
+    direccion
+    creadoEn
+    comandas_on_cliente(orderBy: [{ creadoEn: DESC }]) {
+      id
+      estado
+      valorTotal
+      fechaRecepcion
+      comandaDetalles_on_comanda {
+        cantidad
+      }
+    }
   }
 }
 

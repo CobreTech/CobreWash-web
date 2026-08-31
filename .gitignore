@@ -57,3 +57,6 @@ GEMINI.md
 AGENTS.md
 skills-lock.json
 .aider*
+
+# Local migration and diagnostic artifacts
+/scratch/

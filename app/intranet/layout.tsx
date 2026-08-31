@@ -2,6 +2,7 @@ import IntranetSidebar from "@/components/intranet/Sidebar";
 import IntranetTopbar from "@/components/intranet/Topbar";
 import AuthGuard from "@/components/intranet/AuthGuard";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import Script from "next/script";
 
 export const metadata = {
   title: "Intranet | Lavandería El Cobre",
@@ -21,9 +22,9 @@ const NO_FLASH_THEME_SCRIPT = `
 export default function IntranetLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* Rendered by this Server Component (outside the client ThemeProvider tree)
-          so the browser actually executes it and we avoid the theme flash. */}
-      <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+      <Script id="intranet-theme" strategy="beforeInteractive">
+        {NO_FLASH_THEME_SCRIPT}
+      </Script>
       <ThemeProvider>
         <AuthGuard>
           <div className="relative flex h-screen bg-gradient-to-br from-orange-50 via-stone-50 to-amber-50/60 dark:from-stone-950 dark:via-stone-950 dark:to-stone-900 overflow-hidden">

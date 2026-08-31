@@ -406,13 +406,13 @@ export default function Navbar() {
                       <input
                         type="text"
                         autoFocus
-                        placeholder="Ej: COBRE-1234 o 1234"
+                        placeholder="Ej: ELCOBRE-14r3 o 14r3"
                         value={trackingCode}
                         onChange={(e) => {
                           setTrackingCode(e.target.value);
                           if (trackingError) setTrackingError("");
                         }}
-                        className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-850 font-bold placeholder-stone-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all text-sm uppercase"
+                        className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-stone-200 bg-stone-50/50 text-stone-850 font-bold placeholder-stone-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all text-sm"
                       />
                       <Search className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                     </div>
