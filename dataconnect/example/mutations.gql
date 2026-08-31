@@ -609,6 +609,12 @@ mutation CrearTipoPrenda($nombre: String!) @auth(level: USER) @transaction {
   tipoPrenda_insert(data: { nombre: $nombre, activo: true })
 }
 
-mutation CrearTipoServicio($nombre: String!, $precioBase: Float!) @auth(level: USER) {
+mutation CrearTipoServicio($nombre: String!, $precioBase: Float!) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para crear servicios") }
+    }
+  }
   tipoServicio_insert(data: { nombre: $nombre, precioBase: $precioBase, unidadCobro: PRENDA, activo: true })
 }

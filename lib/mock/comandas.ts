@@ -31,6 +31,8 @@ export interface Comanda {
   direccion?: string;
   servicio: string;
   detalle: PrendaLinea[];
+  /** Total persistido de la comanda; los mocks antiguos pueden recalcularlo. */
+  valorTotal?: number;
   fechaRecepcion: string;
   fechaEntregaEstimada?: string;
   /** Índice 0-4 de la etapa en curso; 5 = entregado; null = pendiente/anulado. */
@@ -48,7 +50,7 @@ export const prendasTotales = (c: Comanda) =>
   c.detalle.reduce((s, d) => s + d.cantidad, 0);
 
 export const valorTotal = (c: Comanda) =>
-  c.detalle.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+  c.valorTotal ?? c.detalle.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
 
 /** Progreso 0-100 según la etapa completada. */
 export const progreso = (c: Comanda) => {

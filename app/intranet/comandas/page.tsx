@@ -35,6 +35,7 @@ import {
   anularComanda,
   entregarComanda,
   crearTipoPrenda,
+  crearTipoServicio,
   type GetComandasData,
   type GetComandasVariables,
   type GetCatalogosComandaData
@@ -93,7 +94,7 @@ type CrearClienteComandaVariables = {
 };
 
 const prendasTotales = (c: Comanda) => c.detalle.reduce((s, d) => s + d.cantidad, 0);
-const valorTotal = (c: Comanda) => c.detalle.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+const valorTotal = (c: Comanda) => c.valorTotal;
 
 // Map de tipos DB a UI
 export interface Comanda {
@@ -108,6 +109,7 @@ export interface Comanda {
   direccion?: string;
   servicio: string;
   detalle: PrendaLinea[];
+  valorTotal: number;
   fechaRecepcion: string;
   fechaRecepcionIso: string;
   fechaEntregaEstimada?: string;
@@ -222,6 +224,7 @@ export default function ComandasPage() {
         precioUnitario: d.precioUnitario,
         detalle: d.detalle || "",
       })),
+      valorTotal: c.valorTotal,
       fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL"),
       fechaRecepcionIso: new Date(c.fechaRecepcion).toISOString().slice(0, 10),
       fechaEntregaEstimada: c.fechaEntregaEstimada ? new Date(c.fechaEntregaEstimada).toLocaleDateString("es-CL") : undefined,
@@ -339,6 +342,28 @@ export default function ComandasPage() {
         tiposPrendaResueltos.set(clave, id);
         return id;
       };
+      const tiposServicioResueltos = new Map(
+        (catData?.tipoServicios || []).map((tipo) => [normalizarCatalogo(tipo.nombre), tipo.id]),
+      );
+      const resolverTipoServicioId = async (nombre?: string) => {
+        const nombreResuelto = nombre?.trim() || "Lavado";
+        const clave = normalizarCatalogo(nombreResuelto);
+        const existente = tiposServicioResueltos.get(clave);
+        if (existente) return existente;
+        const creado = await crearTipoServicio(dataConnect, { nombre: nombreResuelto, precioBase: 0 });
+        const id = creado.data.tipoServicio_insert.id;
+        tiposServicioResueltos.set(clave, id);
+        return id;
+      };
+      // Resolver primero todas las claves foráneas. Así nunca se crea una
+      // cabecera de comanda si sus prendas no pueden relacionarse.
+      const lineasResueltas = await Promise.all(
+        detalleLimpio.map(async (linea) => ({
+          linea,
+          tipoPrendaId: await resolverTipoPrendaId(linea.tipoPrenda),
+          tipoServicioId: await resolverTipoServicioId(linea.servicio),
+        })),
+      );
 
       if (form?.mode === "crear") {
         const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
@@ -375,15 +400,11 @@ export default function ComandasPage() {
           
           const newComandaId = res.data.comanda_insert.id;
           
-          for (const d of detalleLimpio) {
-            const tpId = await resolverTipoPrendaId(d.tipoPrenda);
-            const tsId = catData?.tipoServicios.find(ts => ts.nombre === d.servicio)?.id;
-            
-            if (tpId && tsId) {
+          for (const { linea: d, tipoPrendaId, tipoServicioId } of lineasResueltas) {
               await agregarComandaDetalle(dataConnect, {
                 comandaId: newComandaId,
-                tipoPrendaId: tpId,
-                tipoServicioId: tsId,
+                tipoPrendaId,
+                tipoServicioId,
                 cantidad: d.cantidad,
                 detalle: formData.tipoCliente === TipoCliente.HOTEL
                   ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
@@ -391,7 +412,6 @@ export default function ComandasPage() {
                 precioUnitario: d.precioUnitario,
                 subtotal: d.cantidad * d.precioUnitario
               });
-            }
           }
         } else {
           throw new Error("El cliente seleccionado no existe en el catálogo.");
@@ -409,15 +429,11 @@ export default function ComandasPage() {
 
           await eliminarDetallesComanda(dataConnect, { comandaId: form.id });
 
-          for (const d of detalleLimpio) {
-            const tpId = await resolverTipoPrendaId(d.tipoPrenda);
-            const tsId = catData?.tipoServicios.find(ts => ts.nombre === d.servicio)?.id;
-            
-            if (tpId && tsId) {
+          for (const { linea: d, tipoPrendaId, tipoServicioId } of lineasResueltas) {
               await agregarComandaDetalle(dataConnect, {
                 comandaId: form.id,
-                tipoPrendaId: tpId,
-                tipoServicioId: tsId,
+                tipoPrendaId,
+                tipoServicioId,
                 cantidad: d.cantidad,
                 detalle: formData.tipoCliente === TipoCliente.HOTEL
                   ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
@@ -425,7 +441,6 @@ export default function ComandasPage() {
                 precioUnitario: d.precioUnitario,
                 subtotal: d.cantidad * d.precioUnitario
               });
-            }
           }
         }
         

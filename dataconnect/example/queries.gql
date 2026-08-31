@@ -376,3 +376,38 @@ query GetCatalogosComanda @auth(level: USER) {
   }
 }
 
+# Diagnóstico operativo de solo lectura. NO_ACCESS impide invocarlo desde la
+# aplicación; se utiliza únicamente con credenciales administrativas del CLI.
+query DiagnosticoComandas @auth(level: NO_ACCESS) {
+  tipoPrendas(orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    activo
+  }
+  tipoServicios(orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    activo
+    precioBase
+  }
+  comandas(orderBy: [{ creadoEn: DESC }], limit: 20) {
+    id
+    numeroComanda
+    valorTotal
+    comandaDetalles_on_comanda {
+      id
+      cantidad
+      precioUnitario
+      subtotal
+      tipoPrenda {
+        id
+        nombre
+      }
+      tipoServicio {
+        id
+        nombre
+      }
+    }
+  }
+}
+
