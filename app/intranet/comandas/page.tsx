@@ -330,8 +330,13 @@ export default function ComandasPage() {
 
     setIsSubmitting(true);
     try {
+      // El formulario puede conservar un catálogo anterior en memoria después
+      // de un intento parcial. Forzar lectura de red evita recrear nombres que
+      // ya existen y chocan con sus índices únicos.
+      const catalogosActuales = (await getCatalogosComanda(dataConnect, { fetchPolicy: "SERVER_ONLY" })).data;
+      setCatData(catalogosActuales);
       const tiposPrendaResueltos = new Map(
-        (catData?.tipoPrendas || []).map((tipo) => [normalizarCatalogo(tipo.nombre), tipo.id]),
+        catalogosActuales.tipoPrendas.map((tipo) => [normalizarCatalogo(tipo.nombre), tipo.id]),
       );
       const resolverTipoPrendaId = async (nombre: string) => {
         const clave = normalizarCatalogo(nombre);
@@ -343,7 +348,7 @@ export default function ComandasPage() {
         return id;
       };
       const tiposServicioResueltos = new Map(
-        (catData?.tipoServicios || []).map((tipo) => [normalizarCatalogo(tipo.nombre), tipo.id]),
+        catalogosActuales.tipoServicios.map((tipo) => [normalizarCatalogo(tipo.nombre), tipo.id]),
       );
       const resolverTipoServicioId = async (nombre?: string) => {
         const nombreResuelto = nombre?.trim() || "Lavado";
