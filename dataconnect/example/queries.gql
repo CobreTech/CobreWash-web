@@ -247,7 +247,7 @@ query GetComandasPaginadas(
   $fechaDesde: Timestamp
   $fechaHasta: Timestamp
 ) @auth(level: USER) {
-  yo: usuario(id_expr: "auth.uid") @redact {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar comandas")
@@ -282,6 +282,11 @@ query GetComandasPaginadas(
       tipoCliente
       direccion
     }
+
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      etapa { nombre orden descripcion tiempoEstimadoMin }
+    }
     comandaDetalles_on_comanda {
       cantidad
       detalle
@@ -307,6 +312,10 @@ query GetComandasPaginadas(
 }
 
 query GetComandaDetalle($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar comandas") }
+  }
   comanda(id: $id) {
     id
     numeroComanda
@@ -325,6 +334,11 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
       email
       tipoCliente
       direccion
+    }
+
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      etapa { nombre orden descripcion tiempoEstimadoMin }
     }
     comandaDetalles_on_comanda {
       id

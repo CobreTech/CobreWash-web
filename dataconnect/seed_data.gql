@@ -1,0 +1,26 @@
+# Exclusivamente para el emulador: fixtures de las pruebas de producción.
+mutation SeedProduccion @transaction {
+  rol_upsertMany(data: [
+    {id:"00000000-0000-4000-8000-000000000001",nombre:"admin"}
+    {id:"00000000-0000-4000-8000-000000000002",nombre:"recepcionista"}
+    {id:"00000000-0000-4000-8000-000000000003",nombre:"operario"}
+    {id:"00000000-0000-4000-8000-000000000004",nombre:"cliente"}
+  ])
+  usuario_upsertMany(data: [
+    {id:"test-admin",rolId:"00000000-0000-4000-8000-000000000001",nombre:"Admin",email:"admin@example.test",activo:true}
+    {id:"test-recepcion",rolId:"00000000-0000-4000-8000-000000000002",nombre:"Recepción",email:"recepcion@example.test",activo:true}
+    {id:"test-operario",rolId:"00000000-0000-4000-8000-000000000003",nombre:"Operario",email:"operario@example.test",activo:true}
+    {id:"test-cliente",rolId:"00000000-0000-4000-8000-000000000004",nombre:"Cliente",email:"cliente@example.test",activo:true}
+    {id:"test-inactivo",rolId:"00000000-0000-4000-8000-000000000001",nombre:"Inactivo",email:"inactivo@example.test",activo:false}
+  ])
+  cliente_upsert(data:{id:"00000000-0000-4000-8000-000000000010",nombre:"Cliente de prueba"})
+  tipoPrenda_upsert(data:{id:"00000000-0000-4000-8000-000000000011",nombre:"Camisa"})
+  tipoServicio_upsert(data:{id:"00000000-0000-4000-8000-000000000012",nombre:"Lavado",precioBase:1000})
+  etapaProduccion_upsertMany(data:[
+    {id:"00000000-0000-4000-8000-000000000020",nombre:"Recepción",orden:1}
+    {id:"00000000-0000-4000-8000-000000000021",nombre:"Lavado",orden:2}
+    {id:"00000000-0000-4000-8000-000000000022",nombre:"Secado",orden:3}
+    {id:"00000000-0000-4000-8000-000000000023",nombre:"Planchado",orden:4}
+    {id:"00000000-0000-4000-8000-000000000024",nombre:"Entrega",orden:5}
+  ])
+}

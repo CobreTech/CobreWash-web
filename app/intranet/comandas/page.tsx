@@ -22,6 +22,9 @@ import {
   type PrendaLinea,
   type Comanda as MockComanda,
 } from "@/lib/mock/comandas";
+import { normalizarEtapas, type EtapaVisible } from "@/lib/produccion/modelo";
+import { guardarComandaConFlujo, type CrearComandaConFlujoVariables } from "@/lib/produccion/guardar";
+import { getMiComandaGuardada } from "@/src/dataconnect-generated";
 import { dataConnect } from "@/lib/firebase/client";
 import { formatChileanPhone, formatRut, getChileanPhoneType, isValidChileanPhone, isValidRut } from "@/lib/validators";
 import { executeMutation, executeQuery, mutationRef, queryRef } from "firebase/data-connect";
@@ -29,7 +32,6 @@ import {
   TipoCliente, 
   ComandaEstado,
   getCatalogosComanda,
-  crearComanda,
   agregarComandaDetalle,
   editarComanda,
   eliminarDetallesComanda,
@@ -37,8 +39,8 @@ import {
   entregarComanda,
   crearTipoPrenda,
   crearTipoServicio,
-  type GetComandasData,
-  type GetComandasVariables,
+  type GetComandasPaginadasData,
+  type GetComandasPaginadasVariables,
   type GetCatalogosComandaData
 } from "@/src/dataconnect-generated";
 
@@ -116,6 +118,7 @@ export interface Comanda {
   fechaRecepcionIso: string;
   fechaEntregaEstimada?: string;
   etapaActual: number | null;
+  etapas: EtapaVisible[];
   estado: EstadoComanda;
   operario?: string;
   recepcionista?: string;
@@ -165,10 +168,13 @@ export default function ComandasPage() {
   const [page, setPage] = useState(1);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [data, setData] = useState<GetComandasData | null>(null);
+  const [data, setData] = useState<GetComandasPaginadasData | null>(null);
   const [catData, setCatData] = useState<GetCatalogosComandaData | null>(null);
   const [loading, setLoading] = useState(true);
   const solicitudActual = useRef(0);
+  const creacion = useRef<{ id: string; numero: string } | null>(null);
+  const guardando = useRef(false);
+  const envioPendiente = useRef<CrearComandaConFlujoVariables | null>(null);
 
   const fetchData = useCallback(async (silencioso = false) => {
     const solicitud = ++solicitudActual.current;
@@ -181,7 +187,7 @@ export default function ComandasPage() {
         activeTab === "Entregado" ? ComandaEstado.ENTREGADA : ComandaEstado.ANULADA;
       const [resComandas, resCatalogos] = await Promise.all([
         executeQuery(
-          queryRef<GetComandasData, GetComandasVariables>(
+          queryRef<GetComandasPaginadasData, GetComandasPaginadasVariables>(
             dataConnect,
             "GetComandasPaginadas",
             {
@@ -252,7 +258,8 @@ export default function ComandasPage() {
       fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL"),
       fechaRecepcionIso: new Date(c.fechaRecepcion).toISOString().slice(0, 10),
       fechaEntregaEstimada: c.fechaEntregaEstimada ? new Date(c.fechaEntregaEstimada).toLocaleDateString("es-CL") : undefined,
-      etapaActual: c.estado === ComandaEstado.EN_PROCESO ? 1 : null,
+      etapaActual: null,
+      etapas: normalizarEtapas(c.comandaEtapas_on_comanda),
       estado: (c.estado === ComandaEstado.PENDIENTE ? "Pendiente" :
                c.estado === ComandaEstado.EN_PROCESO ? "En proceso" :
                c.estado === ComandaEstado.FINALIZADA ? "Listo" :
@@ -322,6 +329,8 @@ export default function ComandasPage() {
       }],
     });
     setNuevoCliente((catData?.clientes.length ?? 0) === 0);
+    creacion.current = { id: crypto.randomUUID(), numero: generarNumeroComanda() };
+    envioPendiente.current = null;
     setForm({ mode: "crear" });
   };
   const openEditar = (c: Comanda) => {
@@ -349,6 +358,7 @@ export default function ComandasPage() {
   };
 
   const guardar = async () => {
+    if (guardando.current) return;
     const detalleLimpio = formData.detalle.filter((d) => d.tipoPrenda.trim());
     if (!formData.cliente.trim() || detalleLimpio.length === 0) {
       alert("Selecciona un cliente y agrega al menos una prenda.");
@@ -367,8 +377,20 @@ export default function ComandasPage() {
       return;
     }
 
+    guardando.current = true;
     setIsSubmitting(true);
     try {
+      if (form?.mode === "crear" && envioPendiente.current) {
+        const anterior = await getMiComandaGuardada(dataConnect, { id: envioPendiente.current.id }, { fetchPolicy: "SERVER_ONLY" });
+        if (anterior.data.comanda) {
+          envioPendiente.current = null;
+          await refetch(true);
+          setNotice("Comanda creada correctamente.");
+          setForm(null);
+          return;
+        }
+        envioPendiente.current = null;
+      }
       // El formulario puede conservar un catálogo anterior en memoria después
       // de un intento parcial. Forzar lectura de red evita recrear nombres que
       // ya existen y chocan con sus índices únicos.
@@ -410,9 +432,7 @@ export default function ComandasPage() {
       );
 
       if (form?.mode === "crear") {
-        const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
-        const numero = generarNumeroComanda();
-        
+        const identidad = creacion.current ??= { id: crypto.randomUUID(), numero: generarNumeroComanda() };
         let clienteId = formData.clienteId;
 
         if (nuevoCliente) {
@@ -431,36 +451,30 @@ export default function ComandasPage() {
           );
           const clienteCreado = await executeMutation(clienteRef);
           clienteId = clienteCreado.data.cliente_insert.id;
+          setNuevoCliente(false);
+          setFormData((prev) => ({ ...prev, clienteId }));
         }
         
-        if (clienteId) {
-          const res = await crearComanda(dataConnect, {
-            numeroComanda: numero,
-            clienteId,
-            empresa: formData.empresa.trim() || undefined,
-            proyecto: formData.proyecto.trim() || undefined,
-            valorTotal: formTotal,
-            observaciones: formData.observaciones.trim() || undefined,
-          });
-          
-          const newComandaId = res.data.comanda_insert.id;
-          
-          for (const { linea: d, tipoPrendaId, tipoServicioId } of lineasResueltas) {
-              await agregarComandaDetalle(dataConnect, {
-                comandaId: newComandaId,
-                tipoPrendaId,
-                tipoServicioId,
-                cantidad: d.cantidad,
-                detalle: formData.tipoCliente === TipoCliente.HOTEL
-                  ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
-                  : d.detalle.trim() || undefined,
-                precioUnitario: d.precioUnitario,
-                subtotal: d.cantidad * d.precioUnitario
-              });
-          }
-        } else {
-          throw new Error("El cliente seleccionado no existe en el catálogo.");
-        }
+
+        if (!clienteId) throw new Error("El cliente seleccionado no existe en el catálogo.");
+        const variables: CrearComandaConFlujoVariables = {
+          id: identidad.id,
+          numeroComanda: identidad.numero,
+          clienteId,
+          empresa: formData.empresa.trim() || undefined,
+          proyecto: formData.proyecto.trim() || undefined,
+          observaciones: formData.observaciones.trim() || undefined,
+          detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }) => ({
+            tipoPrendaId, tipoServicioId, cantidad: d.cantidad,
+            detalle: formData.tipoCliente === TipoCliente.HOTEL
+              ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
+              : d.detalle.trim() || undefined,
+            precioUnitario: d.precioUnitario, subtotal: d.cantidad * d.precioUnitario,
+          })),
+        };
+        envioPendiente.current = variables;
+        await guardarComandaConFlujo(variables);
+        envioPendiente.current = null;
         } else if (form?.mode === "editar") {
           const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
           
@@ -496,6 +510,7 @@ export default function ComandasPage() {
       console.error(err);
       alert("Error al guardar la comanda.");
     } finally {
+      guardando.current = false;
       setIsSubmitting(false);
     }
   };
@@ -754,7 +769,7 @@ export default function ComandasPage() {
       <AnimatePresence>
         {detalle && (
           <ComandaDetalle
-            comanda={detalle as unknown as MockComanda}
+            comanda={(comandas.find((c) => c.dbId === detalle.dbId) ?? detalle) as unknown as MockComanda}
             onClose={() => setDetalle(null)}
             onEditar={(c) => {
               const original = comandas.find((item) => item.id === c.id);

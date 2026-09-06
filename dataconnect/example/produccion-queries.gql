@@ -1,0 +1,45 @@
+query GetEtapasProduccion @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista', 'operario']", message: "Acceso reservado al personal") }
+  }
+  etapaProduccions(orderBy: [{ orden: ASC }]) { id nombre orden descripcion tiempoEstimadoMin }
+}
+
+# El operario consulta la cola de producción. La asignación de trabajo es RF23;
+# el responsable que reporta cada avance se registrará en RF24.
+query GetSeguimientoProduccion($limit: Int = 20, $offset: Int = 0, $buscar: String = "") @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista', 'operario']", message: "Acceso reservado al personal") }
+  }
+  comandas(where: {
+    _and: [
+      { estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } }
+      { _or: [{ numeroComanda: { contains: $buscar } }, { cliente: { nombre: { contains: $buscar } } }] }
+    ]
+  }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id numeroComanda estado fechaRecepcion
+    cliente { nombre }
+    comandaDetalles_on_comanda { cantidad tipoPrenda { nombre } tipoServicio { nombre } }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      etapa { nombre orden descripcion tiempoEstimadoMin }
+    }
+  }
+  total: comandas(where: {
+    _and: [
+      { estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } }
+      { _or: [{ numeroComanda: { contains: $buscar } }, { cliente: { nombre: { contains: $buscar } } }] }
+    ]
+  }) { _count }
+}
+
+# Confirmación de un guardado cuya respuesta se perdió, acotada a su creador.
+query GetMiComandaGuardada($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista', 'operario']", message: "Acceso reservado al personal") }
+  }
+  comanda(first: { where: { id: { eq: $id }, recepcionistaId: { eq_expr: "auth.uid" } } }) { id numeroComanda }
+}

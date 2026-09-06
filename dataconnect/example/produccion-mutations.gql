@@ -1,0 +1,76 @@
+# Asociación controlada de comandas anteriores: nunca altera estados cerrados,
+# no inventa avances históricos y la clave compuesta impide duplicaciones.
+mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para gestionar comandas") }
+    }
+    etapas: etapaProduccions(orderBy: [{ orden: ASC }], limit: 6)
+      @check(expr: "this.size() == 5 && this[0].orden == 1 && this[1].orden == 2 && this[2].orden == 3 && this[3].orden == 4 && this[4].orden == 5", message: "Configura las cinco etapas de producción antes de guardar") {
+      id nombre orden descripcion tiempoEstimadoMin
+    }
+    comanda(id: $id) @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this == 'PENDIENTE'", message: "Solo se puede asociar un flujo nuevo a comandas pendientes")
+      comandaEtapas_on_comanda @check(expr: "this.size() == 0", message: "La comanda ya tiene un flujo", optional: true) { etapaId }
+    }
+  }
+  comandaEtapa_insertMany(data: [
+    {
+      comandaId: $id
+      etapaId_expr: "response.query.etapas[0].id"
+      nombreEtapa_expr: "response.query.etapas[0].nombre"
+      ordenEtapa_expr: "response.query.etapas[0].orden"
+      descripcionEtapa_expr: "response.query.etapas[0].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[0].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId: $id
+      etapaId_expr: "response.query.etapas[1].id"
+      nombreEtapa_expr: "response.query.etapas[1].nombre"
+      ordenEtapa_expr: "response.query.etapas[1].orden"
+      descripcionEtapa_expr: "response.query.etapas[1].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[1].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId: $id
+      etapaId_expr: "response.query.etapas[2].id"
+      nombreEtapa_expr: "response.query.etapas[2].nombre"
+      ordenEtapa_expr: "response.query.etapas[2].orden"
+      descripcionEtapa_expr: "response.query.etapas[2].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[2].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId: $id
+      etapaId_expr: "response.query.etapas[3].id"
+      nombreEtapa_expr: "response.query.etapas[3].nombre"
+      ordenEtapa_expr: "response.query.etapas[3].orden"
+      descripcionEtapa_expr: "response.query.etapas[3].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[3].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId: $id
+      etapaId_expr: "response.query.etapas[4].id"
+      nombreEtapa_expr: "response.query.etapas[4].nombre"
+      ordenEtapa_expr: "response.query.etapas[4].orden"
+      descripcionEtapa_expr: "response.query.etapas[4].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[4].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+  ])
+}
+
+mutation ConfigurarEtapaProduccion($id: UUID!, $nombre: String!, $descripcion: String, $tiempoEstimadoMin: Int)
+  @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.nombre.size() > 0 && vars.nombre.size() <= 40 && (vars.tiempoEstimadoMin == null || vars.tiempoEstimadoMin > 0)", message: "Nombre o tiempo estimado inválido") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede configurar etapas") }
+    }
+  }
+  etapaProduccion_update(id: $id, data: { nombre: $nombre, descripcion: $descripcion, tiempoEstimadoMin: $tiempoEstimadoMin }) @check(expr: "this != null", message: "Etapa no encontrada")
+}

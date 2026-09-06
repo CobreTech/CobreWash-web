@@ -1,0 +1,91 @@
+# RF17: se conserva CrearComanda para clientes anteriores; la web usa esta
+# operación atómica. @allow impide inyectar IDs, comanda, estado o timestamps.
+mutation CrearComandaConFlujo(
+  $id: UUID!
+  $numeroComanda: String!
+  $clienteId: UUID!
+  $empresa: String
+  $proyecto: String
+  $observaciones: String
+  $detalles: [ComandaDetalle_Data!]! @allow(fields: "tipoPrendaId tipoServicioId cantidad detalle precioUnitario subtotal", maxCount: 100)
+) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.detalles.size() > 0 && vars.detalles.all(d, has(d.tipoPrendaId) && d.tipoPrendaId != null && has(d.tipoServicioId) && d.tipoServicioId != null && has(d.cantidad) && d.cantidad != null && d.cantidad > 0 && has(d.precioUnitario) && d.precioUnitario != null && d.precioUnitario >= 0 && has(d.subtotal) && d.subtotal != null && d.subtotal >= 0 && d.subtotal == double(d.cantidad) * d.precioUnitario)", message: "Las prendas, cantidades y montos son inválidos") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para gestionar comandas") }
+    }
+    etapas: etapaProduccions(orderBy: [{ orden: ASC }], limit: 6)
+      @check(expr: "this.size() == 5 && this[0].orden == 1 && this[1].orden == 2 && this[2].orden == 3 && this[3].orden == 4 && this[4].orden == 5", message: "Configura las cinco etapas de producción antes de guardar") {
+      id nombre orden descripcion tiempoEstimadoMin
+    }
+    cliente(id: $clienteId) @check(expr: "this != null", message: "Cliente no encontrado") { id }
+  }
+  comanda_insert(data: {
+    id: $id
+    numeroComanda: $numeroComanda
+    clienteId: $clienteId
+    empresa: $empresa
+    proyecto: $proyecto
+    observaciones: $observaciones
+    recepcionistaId_expr: "auth.uid"
+    estado: PENDIENTE
+    comandaDetalles_on_comanda: $detalles
+  })
+  comandaEtapa_insertMany(data: [
+    {
+      comandaId_expr: "response.comanda_insert.id"
+      etapaId_expr: "response.query.etapas[0].id"
+      nombreEtapa_expr: "response.query.etapas[0].nombre"
+      ordenEtapa_expr: "response.query.etapas[0].orden"
+      descripcionEtapa_expr: "response.query.etapas[0].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[0].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId_expr: "response.comanda_insert.id"
+      etapaId_expr: "response.query.etapas[1].id"
+      nombreEtapa_expr: "response.query.etapas[1].nombre"
+      ordenEtapa_expr: "response.query.etapas[1].orden"
+      descripcionEtapa_expr: "response.query.etapas[1].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[1].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId_expr: "response.comanda_insert.id"
+      etapaId_expr: "response.query.etapas[2].id"
+      nombreEtapa_expr: "response.query.etapas[2].nombre"
+      ordenEtapa_expr: "response.query.etapas[2].orden"
+      descripcionEtapa_expr: "response.query.etapas[2].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[2].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId_expr: "response.comanda_insert.id"
+      etapaId_expr: "response.query.etapas[3].id"
+      nombreEtapa_expr: "response.query.etapas[3].nombre"
+      ordenEtapa_expr: "response.query.etapas[3].orden"
+      descripcionEtapa_expr: "response.query.etapas[3].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[3].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+    {
+      comandaId_expr: "response.comanda_insert.id"
+      etapaId_expr: "response.query.etapas[4].id"
+      nombreEtapa_expr: "response.query.etapas[4].nombre"
+      ordenEtapa_expr: "response.query.etapas[4].orden"
+      descripcionEtapa_expr: "response.query.etapas[4].descripcion"
+      tiempoEstimadoMin_expr: "response.query.etapas[4].tiempoEstimadoMin"
+      estado: PENDIENTE
+    }
+  ])
+  totales: query @redact {
+    detalles: comandaDetalles(where: { comandaId: { eq: $id } }) { subtotal_sum }
+  }
+  comanda_update(id: $id, data: { valorTotal_expr: "response.totales.detalles[0].subtotal_sum" })
+  comandaHistorialEstado_insert(data: {
+    comandaId: $id
+    usuarioId_expr: "auth.uid"
+    estadoNuevo: PENDIENTE
+    motivo: "Creación de comanda y asociación de flujo de producción"
+  })
+}

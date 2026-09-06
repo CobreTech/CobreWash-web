@@ -35,7 +35,7 @@ export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
   admin: [
     { href: "/intranet", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: "/intranet/comandas", label: "Comandas", icon: ClipboardList, badge: 5 },
-    { href: "/intranet/seguimiento", label: "Seguimiento", icon: Package, badge: 6 },
+    { href: "/intranet/seguimiento", label: "Seguimiento", icon: Package },
     { href: "/intranet/inventario", label: "Inventario", icon: Archive },
     { href: "/intranet/reportes", label: "Reportes", icon: BarChart3 },
     { href: "/intranet/comunicacion", label: "Comunicación", icon: Megaphone },
@@ -49,7 +49,7 @@ export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
     { href: "/intranet/configuracion", label: "Configuración", icon: Settings },
   ],
   operario: [
-    { href: "/intranet/seguimiento", label: "Mis Tareas", icon: Package },
+    { href: "/intranet/seguimiento", label: "Producción", icon: Package },
     { href: "/intranet/comunicacion", label: "Avisos", icon: Megaphone },
     { href: "/intranet/configuracion", label: "Configuración", icon: Settings },
   ],

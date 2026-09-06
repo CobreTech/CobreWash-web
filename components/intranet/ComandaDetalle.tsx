@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import QrCode from "@/components/intranet/QrCode";
+import FlujoProduccion from "@/components/intranet/FlujoProduccion";
 import {
   ETAPAS,
   estadoConfig,
@@ -155,7 +156,8 @@ export default function ComandaDetalle({
             </div>
 
             {/* Progress */}
-            {comanda.estado !== "Anulado" && (
+            {comanda.estado !== "Anulado" && comanda.etapas !== undefined && <FlujoProduccion etapas={comanda.etapas} />}
+            {comanda.estado !== "Anulado" && comanda.etapas === undefined && (
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-600 mb-2">
                   Producción · {progreso(comanda)}%
