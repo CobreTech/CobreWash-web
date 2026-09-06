@@ -3,8 +3,9 @@
 Una comanda se considera aprobada cuando se guarda correctamente. La web usa
 `CrearComandaConFlujo` para insertar cabecera, prendas, cinco etapas e historial
 en una transacción; el total se calcula en el servidor desde las prendas.
-Todas las etapas comienzan pendientes. RF18, RF19 y RF24 incorporarán el avance,
-las fechas de finalización y el operario que lo registra.
+Todas las etapas comienzan pendientes. RF18 permite que administración y operarios
+completen, en orden, Recepción, Lavado, Secado, Planchado y Entrega. RF19 y RF24
+incorporarán las fechas de finalización y el operario que registra cada avance.
 
 El catálogo vive en `EtapaProduccion`. La asociación `ComandaEtapa` conserva
 nombre, orden, descripción y tiempo estimado al crear el flujo. La configuración
@@ -23,6 +24,28 @@ La secuencia inicial es Recepción → Lavado → Secado → Planchado → Entre
 - El UUID de creación se conserva durante los reintentos. Si se pierde la respuesta,
   se consulta la comanda del mismo creador antes de presentar el guardado como fallido.
 - El estado global de una comanda y el estado de sus etapas son conceptos distintos.
+
+## RF18 · Avance por etapa
+
+La primera etapa no completada es la etapa actual. La operación
+`CompletarEtapaComanda` valida la secuencia dentro de una transacción: rechaza
+saltos, repeticiones, etapas ajenas, flujos incompletos y comandas cerradas. Tras
+cada avance activa la etapa siguiente. Al completar Planchado deja la comanda
+`FINALIZADA`, lista para entregar; al completar Entrega la cierra como `ENTREGADA`.
+
+La acción está disponible para perfiles activos `admin` y `operario`. Recepción
+puede consultar el flujo, pero no reportar avances. La interfaz reutiliza el
+lenguaje visual de Comandas, con las cinco tarjetas horizontales, estados,
+animaciones y botón principal con gradiente.
+
+## Indicadores y filtros de comandas
+
+El badge de Comandas en el sidebar consulta la base de datos y suma únicamente
+comandas `PENDIENTE` y `EN_PROCESO`. Los indicadores del módulo Comandas permiten
+seleccionar uno o varios estados; un segundo clic deselecciona cada estado y, sin
+selecciones, la tabla vuelve a mostrar todos. La consulta pagina y filtra la
+selección completa en el servidor y mantiene compatible la variable individual
+usada por clientes anteriores.
 
 Admin y recepción crean y asocian comandas. El personal activo consulta producción;
 solo admin configura el catálogo. Las operaciones comprueban la existencia del
@@ -61,7 +84,7 @@ emulador local del puerto 9499. Sus fixtures están en `dataconnect/seed_data.gq
 y no se despliegan. No ejecutar simultáneamente los dos últimos comandos:
 comparten la copia temporal de configuración en `scratch/production-test`.
 
-Validación de esta entrega: 50 pruebas unitarias, 22 escenarios de integración,
+Validación acumulada: 51 pruebas unitarias, 24 escenarios de integración,
 ESLint y build de Next.js aprobados. El navegador local confirmó la redirección
 sin sesión; la comprobación manual autenticada queda disponible para el usuario.
 

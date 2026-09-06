@@ -34,7 +34,7 @@ export interface NavItem {
 export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
   admin: [
     { href: "/intranet", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { href: "/intranet/comandas", label: "Comandas", icon: ClipboardList, badge: 5 },
+    { href: "/intranet/comandas", label: "Comandas", icon: ClipboardList },
     { href: "/intranet/seguimiento", label: "Seguimiento", icon: Package },
     { href: "/intranet/inventario", label: "Inventario", icon: Archive },
     { href: "/intranet/reportes", label: "Reportes", icon: BarChart3 },

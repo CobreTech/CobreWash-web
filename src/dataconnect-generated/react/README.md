@@ -28,6 +28,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetVehiculos*](#getvehiculos)
   - [*GetMisSalidasVehiculo*](#getmissalidasvehiculo)
   - [*GetComandasPaginadas*](#getcomandaspaginadas)
+  - [*GetComandasActivasCount*](#getcomandasactivascount)
   - [*GetComandaDetalle*](#getcomandadetalle)
   - [*GetCatalogosComanda*](#getcatalogoscomanda)
   - [*DiagnosticoComandas*](#diagnosticocomandas)
@@ -57,6 +58,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*CrearTipoServicio*](#creartiposervicio)
   - [*AsociarFlujoComandaPendiente*](#asociarflujocomandapendiente)
   - [*ConfigurarEtapaProduccion*](#configuraretapaproduccion)
+  - [*CompletarEtapaComanda*](#completaretapacomanda)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `example`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -1062,7 +1064,7 @@ The `GetComandasPaginadas` Query has an optional argument of type `GetComandasPa
 export interface GetComandasPaginadasVariables {
   limit?: number | null;
   offset?: number | null;
-  estado?: ComandaEstado | null;
+  estados?: ComandaEstado[] | null;
   cliente?: string | null;
   fechaDesde?: TimestampString | null;
   fechaHasta?: TimestampString | null;
@@ -1157,7 +1159,7 @@ export default function GetComandasPaginadasComponent() {
   const getComandasPaginadasVars: GetComandasPaginadasVariables = {
     limit: ..., // optional
     offset: ..., // optional
-    estado: ..., // optional
+    estados: ..., // optional
     cliente: ..., // optional
     fechaDesde: ..., // optional
     fechaHasta: ..., // optional
@@ -1167,7 +1169,7 @@ export default function GetComandasPaginadasComponent() {
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useGetComandasPaginadas(getComandasPaginadasVars);
   // Variables can be defined inline as well.
-  const query = useGetComandasPaginadas({ limit: ..., offset: ..., estado: ..., cliente: ..., fechaDesde: ..., fechaHasta: ..., });
+  const query = useGetComandasPaginadas({ limit: ..., offset: ..., estados: ..., cliente: ..., fechaDesde: ..., fechaHasta: ..., });
   // Since all variables are optional for this Query, you can omit the `GetComandasPaginadasVariables` argument.
   // (as long as you don't want to provide any `options`!)
   const query = useGetComandasPaginadas();
@@ -1206,6 +1208,81 @@ export default function GetComandasPaginadasComponent() {
     console.log(query.data.finalizadas);
     console.log(query.data.entregadas);
     console.log(query.data.anuladas);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetComandasActivasCount
+You can execute the `GetComandasActivasCount` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetComandasActivasCount(dc: DataConnect, options?: useDataConnectQueryOptions<GetComandasActivasCountData>): UseDataConnectQueryResult<GetComandasActivasCountData, undefined>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetComandasActivasCount(options?: useDataConnectQueryOptions<GetComandasActivasCountData>): UseDataConnectQueryResult<GetComandasActivasCountData, undefined>;
+```
+
+### Variables
+The `GetComandasActivasCount` Query has no variables.
+### Return Type
+Recall that calling the `GetComandasActivasCount` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetComandasActivasCount` Query is of type `GetComandasActivasCountData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetComandasActivasCountData {
+  pendientes: ({
+    _count: number;
+  })[];
+  enProceso: ({
+    _count: number;
+  })[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetComandasActivasCount`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig } from '@dataconnect/generated';
+import { useGetComandasActivasCount } from '@dataconnect/generated/react'
+
+export default function GetComandasActivasCountComponent() {
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetComandasActivasCount();
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetComandasActivasCount(dataConnect);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetComandasActivasCount(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetComandasActivasCount(dataConnect, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.pendientes);
+    console.log(query.data.enProceso);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -4082,6 +4159,110 @@ export default function ConfigurarEtapaProduccionComponent() {
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
     console.log(mutation.data.etapaProduccion_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CompletarEtapaComanda
+You can execute the `CompletarEtapaComanda` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCompletarEtapaComanda(options?: useDataConnectMutationOptions<CompletarEtapaComandaData, FirebaseError, CompletarEtapaComandaVariables>): UseDataConnectMutationResult<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCompletarEtapaComanda(dc: DataConnect, options?: useDataConnectMutationOptions<CompletarEtapaComandaData, FirebaseError, CompletarEtapaComandaVariables>): UseDataConnectMutationResult<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+```
+
+### Variables
+The `CompletarEtapaComanda` Mutation requires an argument of type `CompletarEtapaComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CompletarEtapaComandaVariables {
+  comandaId: UUIDString;
+  etapaId: UUIDString;
+  orden: number;
+  estadoComanda: ComandaEstado;
+}
+```
+### Return Type
+Recall that calling the `CompletarEtapaComanda` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CompletarEtapaComanda` Mutation is of type `CompletarEtapaComandaData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CompletarEtapaComandaData {
+  comandaEtapa_update?: ComandaEtapa_Key | null;
+  siguiente: number;
+  comanda_update?: Comanda_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CompletarEtapaComanda`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CompletarEtapaComandaVariables } from '@dataconnect/generated';
+import { useCompletarEtapaComanda } from '@dataconnect/generated/react'
+
+export default function CompletarEtapaComandaComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCompletarEtapaComanda();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCompletarEtapaComanda(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCompletarEtapaComanda(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCompletarEtapaComanda(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCompletarEtapaComanda` Mutation requires an argument of type `CompletarEtapaComandaVariables`:
+  const completarEtapaComandaVars: CompletarEtapaComandaVariables = {
+    comandaId: ...,
+    etapaId: ...,
+    orden: ...,
+    estadoComanda: ...,
+  };
+  mutation.mutate(completarEtapaComandaVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ comandaId: ..., etapaId: ..., orden: ..., estadoComanda: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(completarEtapaComandaVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.comandaEtapa_update);
+    console.log(mutation.data.siguiente);
+    console.log(mutation.data.comanda_update);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

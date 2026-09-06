@@ -242,7 +242,8 @@ query GetComandas(
 query GetComandasPaginadas(
   $limit: Int = 8
   $offset: Int = 0
-  $estado: ComandaEstado
+  $estado: ComandaEstado @retired(reason: "Usar estados para permitir selección múltiple")
+  $estados: [ComandaEstado!]
   $cliente: String
   $fechaDesde: Timestamp
   $fechaHasta: Timestamp
@@ -255,7 +256,7 @@ query GetComandasPaginadas(
   }
   comandas(
     where: {
-      estado: { eq: $estado }
+      estado: { eq: $estado, in: $estados }
       cliente: { nombre: { contains: $cliente } }
       fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
     }
@@ -297,7 +298,7 @@ query GetComandasPaginadas(
   }
   total: comandas(
     where: {
-      estado: { eq: $estado }
+      estado: { eq: $estado, in: $estados }
       cliente: { nombre: { contains: $cliente } }
       fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
     }
@@ -309,6 +310,15 @@ query GetComandasPaginadas(
   finalizadas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
   entregadas: comandas(where: { estado: { eq: ENTREGADA } }) { _count }
   anuladas: comandas(where: { estado: { eq: ANULADA } }) { _count }
+}
+
+query GetComandasActivasCount @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar comandas") }
+  }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
 }
 
 query GetComandaDetalle($id: UUID!) @auth(level: USER) {

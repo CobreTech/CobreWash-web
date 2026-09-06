@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizarEtapas, progresoProduccion, estadoEtapa, type EtapaPersistida } from "./modelo";
+import { etapaActualProduccion, normalizarEtapas, progresoProduccion, estadoEtapa, type EtapaPersistida } from "./modelo";
 
 const etapa = (overrides: Partial<EtapaPersistida> = {}): EtapaPersistida => ({
   etapaId: "lavado", nombreEtapa: "Lavado original", ordenEtapa: 2,
@@ -18,7 +18,8 @@ describe("flujo persistido", () => {
     const etapas = normalizarEtapas([etapa(), etapa({ etapaId: "recepcion", ordenEtapa: 1, estado: "COMPLETADA" })]);
     expect(etapas[0].id).toBe("recepcion");
     expect(progresoProduccion(etapas)).toBe(50);
-    expect(estadoEtapa(etapas)).toBe("En espera");
+    expect(etapaActualProduccion(etapas)?.id).toBe("lavado");
+    expect(estadoEtapa(etapas)).toBe("Lavado original");
   });
   it("no inventa progreso para comandas sin etapas o pendientes", () => {
     expect(progresoProduccion([])).toBe(0);
@@ -26,5 +27,10 @@ describe("flujo persistido", () => {
   });
   it("lee el catálogo solo para asociaciones anteriores sin snapshot", () => {
     expect(normalizarEtapas([etapa({ nombreEtapa: null, ordenEtapa: null })])[0]).toMatchObject({ nombre: "Nuevo nombre", orden: 5 });
+  });
+  it("cierra el flujo cuando todas las etapas están completadas", () => {
+    const etapas = normalizarEtapas([etapa({ estado: "COMPLETADA" })]);
+    expect(etapaActualProduccion(etapas)).toBeNull();
+    expect(estadoEtapa(etapas)).toBe("Flujo completado");
   });
 });

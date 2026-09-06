@@ -47,6 +47,13 @@ import {
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
 const ESTADOS: EstadoComanda[] = ["Pendiente", "En proceso", "Listo", "Entregado", "Anulado"];
 const TABS: ("Todas" | EstadoComanda)[] = ["Todas", ...ESTADOS];
+const ESTADO_DB: Record<EstadoComanda, ComandaEstado> = {
+  Pendiente: ComandaEstado.PENDIENTE,
+  "En proceso": ComandaEstado.EN_PROCESO,
+  Listo: ComandaEstado.FINALIZADA,
+  Entregado: ComandaEstado.ENTREGADA,
+  Anulado: ComandaEstado.ANULADA,
+};
 const PAGE_SIZE = 8;
 const PRENDAS_FORMULARIO = [
   "CHAQUETA",
@@ -161,7 +168,7 @@ const emptyForm: FormState = {
 export default function ComandasPage() {
   const permitido = useRoleGuard(["admin", "recepcionista"]);
 
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Todas");
+  const [estadosSeleccionados, setEstadosSeleccionados] = useState<EstadoComanda[]>([]);
   const [search, setSearch] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
@@ -180,11 +187,6 @@ export default function ComandasPage() {
     const solicitud = ++solicitudActual.current;
     try {
       if (!silencioso) setLoading(true);
-      const estado = activeTab === "Todas" ? undefined :
-        activeTab === "Pendiente" ? ComandaEstado.PENDIENTE :
-        activeTab === "En proceso" ? ComandaEstado.EN_PROCESO :
-        activeTab === "Listo" ? ComandaEstado.FINALIZADA :
-        activeTab === "Entregado" ? ComandaEstado.ENTREGADA : ComandaEstado.ANULADA;
       const [resComandas, resCatalogos] = await Promise.all([
         executeQuery(
           queryRef<GetComandasPaginadasData, GetComandasPaginadasVariables>(
@@ -193,7 +195,7 @@ export default function ComandasPage() {
             {
               limit: PAGE_SIZE,
               offset: (page - 1) * PAGE_SIZE,
-              estado,
+              estados: estadosSeleccionados.length ? estadosSeleccionados.map((estado) => ESTADO_DB[estado]) : undefined,
               cliente: search.trim() || undefined,
               fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
               fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
@@ -212,7 +214,7 @@ export default function ComandasPage() {
     } finally {
       if (solicitud === solicitudActual.current) setLoading(false);
     }
-  }, [activeTab, fechaDesde, fechaHasta, page, search]);
+  }, [estadosSeleccionados, fechaDesde, fechaHasta, page, search]);
 
   useEffect(() => {
     void Promise.resolve().then(() => fetchData());
@@ -296,6 +298,12 @@ export default function ComandasPage() {
   };
   const totalGlobal = Object.values(stateCounts).reduce((sum, count) => sum + count, 0);
   const tabCount = (tab: (typeof TABS)[number]) => tab === "Todas" ? totalGlobal : stateCounts[tab];
+  const alternarEstado = (estado: EstadoComanda) => {
+    setEstadosSeleccionados((actuales) => actuales.includes(estado)
+      ? actuales.filter((actual) => actual !== estado)
+      : [...actuales, estado]);
+    setPage(1);
+  };
 
   const totalFiltrado = filtered.reduce((s, c) => s + valorTotal(c), 0);
 
@@ -579,19 +587,27 @@ export default function ComandasPage() {
       >
         {ESTADOS.map((e, i) => {
           const sc = estadoConfig[e];
+          const seleccionado = estadosSeleccionados.includes(e);
           return (
-            <motion.div
+            <motion.button
               key={e}
+              type="button"
+              aria-pressed={seleccionado}
+              aria-label={`Filtrar por ${e}: ${stateCounts[e]} comandas`}
+              onClick={() => alternarEstado(e)}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 + i * 0.05 }}
-              className="glass-panel rounded-2xl p-4 shadow-sm dark:shadow-none"
+              whileHover={{ y: -3, transition: { duration: 0.18 } }}
+              whileTap={{ scale: 0.97 }}
+              className={`glass-panel relative rounded-2xl p-4 text-left shadow-sm transition-all dark:shadow-none ${seleccionado ? "border-brand-500/60 bg-brand-500/10 ring-2 ring-brand-500/25" : "hover:border-brand-500/30"}`}
             >
+              {seleccionado && <span className="absolute right-3 top-3 grid h-5 w-5 place-items-center rounded-full bg-brand-500 text-white"><Check className="h-3 w-3" /></span>}
               <p className={`text-2xl font-display font-extrabold ${sc.text}`}>
                 {stateCounts[e]}
               </p>
-              <p className="text-stone-500 dark:text-stone-500 text-xs mt-1">{e}</p>
-            </motion.div>
+              <p className={`mt-1 text-xs font-semibold ${seleccionado ? "text-brand-700 dark:text-brand-300" : "text-stone-500 dark:text-stone-500"}`}>{e}</p>
+            </motion.button>
           );
         })}
       </motion.div>
@@ -607,18 +623,22 @@ export default function ComandasPage() {
           {TABS.map((tab) => (
             <button
               key={tab}
-              onClick={() => { setActiveTab(tab); setPage(1); }}
+              aria-pressed={tab === "Todas" ? estadosSeleccionados.length === 0 : estadosSeleccionados.includes(tab)}
+              onClick={() => {
+                if (tab === "Todas") { setEstadosSeleccionados([]); setPage(1); }
+                else alternarEstado(tab);
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === tab
+                (tab === "Todas" ? estadosSeleccionados.length === 0 : estadosSeleccionados.includes(tab))
                   ? "bg-brand-500 text-white shadow-md"
                   : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
               }`}
             >
               {tab}
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                  activeTab === tab ? "bg-white/20" : "bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-500"
-                }`}
+                 className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                   (tab === "Todas" ? estadosSeleccionados.length === 0 : estadosSeleccionados.includes(tab)) ? "bg-white/20" : "bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-500"
+                 }`}
               >
                 {tabCount(tab)}
               </span>

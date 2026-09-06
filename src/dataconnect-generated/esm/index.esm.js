@@ -324,6 +324,18 @@ export function configurarEtapaProduccion(dcOrVars, vars) {
   return executeMutation(configurarEtapaProduccionRef(dcInstance, inputVars));
 }
 
+export const completarEtapaComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CompletarEtapaComanda', inputVars);
+}
+completarEtapaComandaRef.operationName = 'CompletarEtapaComanda';
+
+export function completarEtapaComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(completarEtapaComandaRef(dcInstance, inputVars));
+}
+
 export const getEtapasProduccionRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -465,6 +477,19 @@ export function getComandasPaginadas(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getComandasPaginadasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getComandasActivasCountRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandasActivasCount');
+}
+getComandasActivasCountRef.operationName = 'GetComandasActivasCount';
+
+export function getComandasActivasCount(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getComandasActivasCountRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const getComandaDetalleRef = (dcOrVars, vars) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
+import { auth, dataConnect } from "@/lib/firebase/client";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import { NAV_POR_ROL, type NavItem, type Rol } from "@/lib/roles";
+import { getComandasActivasCount } from "@/src/dataconnect-generated";
 
 const rolLabel: Record<Rol, string> = {
   admin: "Administrador",
@@ -30,6 +31,7 @@ export default function IntranetSidebar() {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [comandasActivas, setComandasActivas] = useState<number | null>(null);
   const usuario = useUsuarioActualContext();
 
   const rol = (usuario?.rol.nombre as Rol) ?? "admin";
@@ -37,6 +39,27 @@ export default function IntranetSidebar() {
 
   const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido ?? ""}`.trim() : "Usuario";
   const inicial = usuario?.nombre?.charAt(0).toUpperCase() ?? "U";
+  const puedeVerComandas = rol === "admin" || rol === "recepcionista";
+
+  const cargarComandasActivas = useCallback(async () => {
+    if (!puedeVerComandas) return;
+    try {
+      const resultado = await getComandasActivasCount(dataConnect, { fetchPolicy: "SERVER_ONLY" });
+      setComandasActivas((resultado.data.pendientes[0]?._count ?? 0) + (resultado.data.enProceso[0]?._count ?? 0));
+    } catch {
+      setComandasActivas(null);
+    }
+  }, [puedeVerComandas]);
+
+  useEffect(() => {
+    void Promise.resolve().then(cargarComandasActivas);
+    const intervalo = window.setInterval(cargarComandasActivas, 10_000);
+    window.addEventListener("focus", cargarComandasActivas);
+    return () => {
+      window.clearInterval(intervalo);
+      window.removeEventListener("focus", cargarComandasActivas);
+    };
+  }, [cargarComandasActivas]);
 
   // Previsualización de la última notificación (mock — aún sin backend).
   const ultimaNotif = {
@@ -108,6 +131,7 @@ export default function IntranetSidebar() {
         {navItems.map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
+          const badge = item.href === "/intranet/comandas" ? comandasActivas : item.badge;
           return (
             <Link
               key={item.href}
@@ -147,14 +171,15 @@ export default function IntranetSidebar() {
                 )}
               </AnimatePresence>
 
-              {(!collapsed || isMobile) && item.badge && (
+              {badge !== null && badge !== undefined && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring" }}
-                  className="relative z-10 bg-brand-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
+                  title={`${badge} comandas pendientes o en proceso`}
+                  className={`z-10 min-w-[20px] rounded-full bg-brand-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white ${collapsed && !isMobile ? "absolute right-1 top-1" : "relative"}`}
                 >
-                  {item.badge}
+                  {badge}
                 </motion.span>
               )}
             </Link>

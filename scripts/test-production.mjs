@@ -9,6 +9,7 @@ const endpoint = "http://" + host + "/v1/projects/demo-production/locations/sout
 const mutation = await readFile("dataconnect/produccion/mutations.gql", "utf8");
 const production = await readFile("dataconnect/example/produccion-mutations.gql", "utf8");
 const queries = await readFile("dataconnect/example/produccion-queries.gql", "utf8");
+const commandQueries = await readFile("dataconnect/example/queries.gql", "utf8");
 const legacy = await readFile("dataconnect/example/mutations.gql", "utf8");
 let count = 0;
 async function execute(query, operationName, variables = {}, user = undefined) {
@@ -20,6 +21,13 @@ async function execute(query, operationName, variables = {}, user = undefined) {
 }
 async function check(name, fn) { await fn(); count++; console.log("OK " + name); }
 const clienteId = "00000000-0000-4000-8000-000000000010";
+const etapaIds = [
+  "00000000-0000-4000-8000-000000000020",
+  "00000000-0000-4000-8000-000000000021",
+  "00000000-0000-4000-8000-000000000022",
+  "00000000-0000-4000-8000-000000000023",
+  "00000000-0000-4000-8000-000000000024",
+];
 const detail = { tipoPrendaId: "00000000-0000-4000-8000-000000000011", tipoServicioId: "00000000-0000-4000-8000-000000000012", cantidad: 2, precioUnitario: 1000, subtotal: 2000 };
 function variables() { const id = randomUUID(); return { id, numeroComanda: "TEST-" + id.slice(0, 8), clienteId, detalles: [{ ...detail }] }; }
 const read = (id) => execute(`query Inspect($id:UUID!) { comanda(id:$id) { id estado valorTotal recepcionistaId
@@ -72,6 +80,16 @@ await check("consulta real paginada y permisos", async () => {
   }
   for (const user of ["test-cliente","test-inactivo","sin-perfil",null]) await assert.rejects(execute(queries,"GetSeguimientoProduccion",{},user));
 });
+await check("filtro múltiple y contador de comandas activas", async () => {
+  const multi = await execute(commandQueries, "GetComandasPaginadas", { limit: 100, offset: 0, estados: ["PENDIENTE", "EN_PROCESO"] }, "test-admin");
+  assert(multi.comandas.every((comanda) => ["PENDIENTE", "EN_PROCESO"].includes(comanda.estado)));
+  assert.equal(multi.total[0]._count, multi.comandas.length);
+  const single = await execute(commandQueries, "GetComandasPaginadas", { limit: 100, offset: 0, estado: "PENDIENTE" }, "test-recepcion");
+  assert(single.comandas.every((comanda) => comanda.estado === "PENDIENTE"));
+  const contador = await execute(commandQueries, "GetComandasActivasCount", {}, "test-admin");
+  assert.equal(contador.pendientes[0]._count + contador.enProceso[0]._count, multi.total[0]._count);
+  for (const user of ["test-operario", "test-cliente", "test-inactivo", "sin-perfil", null]) await assert.rejects(execute(commandQueries, "GetComandasActivasCount", {}, user));
+});
 await check("confirmación de guardado acotada al creador", async () => {
   assert.equal((await execute(queries,"GetMiComandaGuardada",{id:good.id},"test-recepcion")).comanda.id.replaceAll("-", ""),good.id.replaceAll("-", ""));
   assert.equal((await execute(queries,"GetMiComandaGuardada",{id:good.id},"test-admin")).comanda,null);
@@ -88,6 +106,40 @@ await check("asociación de pendientes anteriores sin reiniciar flujos", async (
   assert.equal((await read(v.id)).comandaEtapas_on_comanda.length,5);
   await assert.rejects(execute(production,"AsociarFlujoComandaPendiente",{id:v.id},"test-admin"));
   assert.equal((await read(v.id)).comandaEtapas_on_comanda.length,5);
+});
+await check("avance secuencial autorizado para operario y administración", async () => {
+  const v = variables();
+  await execute(mutation, "CrearComandaConFlujo", v, "test-recepcion");
+  const completar = (orden, user, estadoComanda = orden === 5 ? "ENTREGADA" : orden === 4 ? "FINALIZADA" : "EN_PROCESO") => execute(
+    production,
+    "CompletarEtapaComanda",
+    { comandaId: v.id, etapaId: etapaIds[orden - 1], orden, estadoComanda },
+    user,
+  );
+
+  await assert.rejects(completar(2, "test-operario"));
+  for (const user of ["test-recepcion", "test-cliente", "test-inactivo", "sin-perfil", null]) await assert.rejects(completar(1, user));
+  await assert.rejects(completar(1, "test-admin", "ENTREGADA"));
+
+  await completar(1, "test-operario");
+  let c = await read(v.id);
+  assert.equal(c.estado, "EN_PROCESO");
+  assert.deepEqual(c.comandaEtapas_on_comanda.map((e) => e.estado), ["COMPLETADA", "EN_PROCESO", "PENDIENTE", "PENDIENTE", "PENDIENTE"]);
+  await assert.rejects(completar(1, "test-operario"));
+  await assert.rejects(completar(3, "test-admin"));
+
+  await completar(2, "test-admin");
+  await completar(3, "test-operario");
+  await completar(4, "test-admin");
+  c = await read(v.id);
+  assert.equal(c.estado, "FINALIZADA");
+  assert.equal(c.comandaEtapas_on_comanda[4].estado, "EN_PROCESO");
+  await completar(5, "test-operario");
+  c = await read(v.id);
+  assert.equal(c.estado, "ENTREGADA");
+  assert(c.comandaEtapas_on_comanda.every((e) => e.estado === "COMPLETADA"));
+  assert(c.comandaEtapas_on_comanda.every((e) => !e.fechaCompletado && !e.operarioId));
+  await assert.rejects(completar(5, "test-admin"));
 });
 for (const estado of ["EN_PROCESO","FINALIZADA","ENTREGADA","ANULADA"]) await check("conserva comanda histórica " + estado, async () => {
   const v = variables();

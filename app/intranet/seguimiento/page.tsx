@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, RefreshCw, Search, Settings, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import FlujoProduccion from "@/components/intranet/FlujoProduccion";
 import { dataConnect } from "@/lib/firebase/client";
-import { normalizarEtapas, estadoEtapa } from "@/lib/produccion/modelo";
-import { getSeguimientoProduccion, getEtapasProduccion, configurarEtapaProduccion, asociarFlujoComandaPendiente, type GetSeguimientoProduccionData, type GetEtapasProduccionData } from "@/src/dataconnect-generated";
+import { normalizarEtapas, estadoEtapa, type EtapaVisible } from "@/lib/produccion/modelo";
+import { ComandaEstado, getSeguimientoProduccion, getEtapasProduccion, configurarEtapaProduccion, asociarFlujoComandaPendiente, completarEtapaComanda, type GetSeguimientoProduccionData, type GetEtapasProduccionData } from "@/src/dataconnect-generated";
 
 const PAGE_SIZE = 20;
 type EtapaCatalogo = GetEtapasProduccionData["etapaProduccions"][number];
@@ -16,6 +17,7 @@ export default function SeguimientoPage() {
   const usuario = useUsuarioActualContext();
   const admin = usuario?.rol.nombre === "admin";
   const puedeAsociar = admin || usuario?.rol.nombre === "recepcionista";
+  const puedeCompletar = admin || usuario?.rol.nombre === "operario";
   const [data, setData] = useState<GetSeguimientoProduccionData | null>(null);
   const [catalogo, setCatalogo] = useState<EtapaCatalogo[]>([]);
   const [search, setSearch] = useState("");
@@ -71,6 +73,24 @@ export default function SeguimientoPage() {
     } catch { setError("No se pudo asociar el flujo. Actualiza para comprobar si ya fue asociado."); }
     finally { operacion.current = false; setBusy(null); }
   }
+  async function completar(comandaId: string, etapa: EtapaVisible) {
+    if (operacion.current) return;
+    operacion.current = true; setBusy(comandaId); setError(""); setNotice("");
+    try {
+      await completarEtapaComanda(dataConnect, {
+        comandaId,
+        etapaId: etapa.id,
+        orden: etapa.orden,
+        estadoComanda: etapa.orden === 5
+          ? ComandaEstado.ENTREGADA
+          : etapa.orden === 4 ? ComandaEstado.FINALIZADA : ComandaEstado.EN_PROCESO,
+      });
+      setNotice(`${etapa.nombre} completada correctamente.`); await cargar(true);
+    } catch {
+      setError("No se pudo completar la etapa. Actualiza la vista: otra persona pudo haber avanzado esta comanda.");
+      await cargar(true);
+    } finally { operacion.current = false; setBusy(null); }
+  }
   async function guardarEtapa(event: React.FormEvent) {
     event.preventDefault();
     if (!editar || operacion.current) return;
@@ -85,37 +105,43 @@ export default function SeguimientoPage() {
   const total = data?.total[0]?._count ?? 0;
   const paginas = Math.max(1, Math.ceil(total / PAGE_SIZE));
   return <div className="min-h-screen space-y-6 p-4 text-stone-900 sm:p-6 dark:text-stone-100">
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div><h1 className="text-2xl font-extrabold">Seguimiento de Producción</h1><p className="mt-1 text-sm text-stone-500">{total} comandas pendientes, en proceso o listas para entregar</p></div>
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-4">
+      <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Operaciones</p><h1 className="font-display text-2xl font-extrabold">Seguimiento de Producción</h1><p className="mt-1 text-sm text-stone-500">{total} comandas pendientes, en proceso o listas para entregar</p></div>
       <div className="flex gap-2">
-        {admin && <button onClick={() => setConfiguracion(!configuracion)} className="flex items-center gap-2 rounded-xl border border-stone-200 px-4 py-2 text-sm dark:border-white/10"><Settings className="h-4 w-4" />Configurar etapas</button>}
-        <button onClick={() => void cargar()} disabled={loading} className="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"><RefreshCw className="h-4 w-4" />Actualizar</button>
+        {admin && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => setConfiguracion(!configuracion)} className="flex items-center gap-2 rounded-xl bg-stone-100 px-4 py-2.5 text-sm font-bold text-stone-700 transition-all hover:bg-stone-200 dark:bg-white/5 dark:text-stone-200 dark:hover:bg-white/10"><Settings className="h-4 w-4" />Configurar etapas</motion.button>}
+        <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => void cargar()} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Actualizar</motion.button>
       </div>
-    </div>
-    {error && <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{error}</div>}
-    {notice && <div role="status" className="rounded-xl bg-green-50 p-4 text-sm text-green-700 dark:bg-green-500/10 dark:text-green-300">{notice}</div>}
+    </motion.div>
+    <AnimatePresence mode="popLayout">
+      {error && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{error}</motion.div>}
+      {notice && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role="status" className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300">{notice}</motion.div>}
+    </AnimatePresence>
     {!loading && catalogo.length !== 5 && <p role="alert" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">Falta configurar el catálogo de las cinco etapas de producción. Contacta a administración.</p>}
     {admin && configuracion && <section className="space-y-3 rounded-2xl border border-stone-200 p-5 dark:border-white/10">
       <h2 className="font-bold">Etapas del flujo</h2>
       <p className="text-sm text-stone-500">La secuencia es Recepción, Lavado, Secado, Planchado y Entrega. Puedes ajustar sus nombres, descripciones y tiempos. Las comandas asociadas conservan su configuración.</p>
       {catalogo.map((etapa) => <div key={etapa.id} className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 p-3 dark:bg-white/5"><span className="text-sm">{etapa.orden}. {etapa.nombre}</span><button onClick={() => setEditar({ ...etapa })} className="text-sm font-bold text-brand-600 dark:text-brand-400">Editar</button></div>)}
     </section>}
-    <label className="relative block max-w-md"><span className="sr-only">Buscar comanda o cliente</span><Search className="absolute left-3 top-3 h-4 w-4 text-stone-400" /><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Buscar comanda o cliente..." className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-3 text-sm dark:border-white/10 dark:bg-stone-900" /></label>
+    <label className="relative block max-w-md"><span className="sr-only">Buscar comanda o cliente</span><Search className="absolute left-3 top-3 h-4 w-4 text-stone-400" /><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Buscar comanda o cliente..." className="w-full rounded-2xl border border-stone-200/70 bg-white/70 py-2.5 pl-9 pr-3 text-sm backdrop-blur-sm transition-colors focus:border-brand-500/40 focus:outline-none dark:border-white/5 dark:bg-white/5" /></label>
     {loading ? <div role="status" className="flex justify-center gap-2 py-12"><Loader2 className="h-5 w-5 animate-spin" />Cargando producción...</div> : <div className="space-y-3">
-      {data?.comandas.map((c) => {
+      {data?.comandas.map((c, index) => {
         const etapas = normalizarEtapas(c.comandaEtapas_on_comanda);
-        return <article key={c.id} className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-white/10 dark:bg-stone-900">
+        return <motion.article key={c.id} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} whileHover={{ y: -2 }} className="glass-panel rounded-2xl p-5 transition-colors hover:border-brand-500/30 dark:hover:border-brand-500/20">
           <button onClick={() => setExpanded(expanded === c.id ? null : c.id)} aria-expanded={expanded === c.id} className="flex w-full flex-wrap items-center justify-between gap-3 text-left">
             <span><span className="block font-bold">{c.numeroComanda}</span><span className="text-sm text-stone-500">{c.cliente.nombre} · {c.comandaDetalles_on_comanda.reduce((s, d) => s + d.cantidad, 0)} prendas</span></span>
             <span className="rounded-full bg-brand-500/10 px-3 py-1 text-xs font-bold text-brand-600 dark:text-brand-400">{!etapas.length ? "Sin flujo asociado" : estadoEtapa(etapas)}</span>
           </button>
-          {expanded === c.id && <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-white/5">
-            <p className="text-xs text-stone-500">Ingreso: {new Date(c.fechaRecepcion).toLocaleString("es-CL")}</p>
-            <FlujoProduccion etapas={etapas} />
-            {!etapas.length && c.estado === "PENDIENTE" && puedeAsociar && <button disabled={busy != null || catalogo.length !== 5} onClick={() => void asociar(c.id)} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{busy === c.id ? "Asociando..." : "Asociar flujo de producción"}</button>}
-            {!etapas.length && c.estado !== "PENDIENTE" && <p className="text-xs text-stone-500">Comanda anterior sin registro de etapas. Su estado se conserva.</p>}
-          </div>}
-        </article>;
+          <AnimatePresence initial={false}>
+            {expanded === c.id && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
+              <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-white/5">
+                <p className="text-xs text-stone-500">Ingreso: {new Date(c.fechaRecepcion).toLocaleString("es-CL")}</p>
+                <FlujoProduccion etapas={etapas} puedeCompletar={puedeCompletar} completando={busy === c.id} onCompletar={(etapa) => void completar(c.id, etapa)} />
+                {!etapas.length && c.estado === "PENDIENTE" && puedeAsociar && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} disabled={busy != null || catalogo.length !== 5} onClick={() => void asociar(c.id)} className="rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50">{busy === c.id ? "Asociando..." : "Asociar flujo de producción"}</motion.button>}
+                {!etapas.length && c.estado !== "PENDIENTE" && <p className="text-xs text-stone-500">Comanda anterior sin registro de etapas. Su estado se conserva.</p>}
+              </div>
+            </motion.div>}
+          </AnimatePresence>
+        </motion.article>;
       })}
       {data && data.comandas.length === 0 && <p className="py-12 text-center text-sm text-stone-500">No hay comandas de producción que coincidan con la búsqueda.</p>}
     </div>}

@@ -19,7 +19,11 @@ export function progresoProduccion(etapas: EtapaVisible[]) {
   return Math.round(etapas.filter((e) => e.estado === "COMPLETADA").length / etapas.length * 100);
 }
 
+export function etapaActualProduccion(etapas: EtapaVisible[]) {
+  return etapas.find((e) => e.estado !== "COMPLETADA") ?? null;
+}
+
 export function estadoEtapa(etapas: EtapaVisible[]) {
-  return etapas.find((e) => e.estado === "EN_PROCESO")?.nombre
+  return etapaActualProduccion(etapas)?.nombre
     ?? (etapas.length && etapas.every((e) => e.estado === "COMPLETADA") ? "Flujo completado" : "En espera");
 }

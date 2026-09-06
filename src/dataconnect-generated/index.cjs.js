@@ -379,6 +379,20 @@ exports.configurarEtapaProduccion = function configurarEtapaProduccion(dcOrVars,
 }
 ;
 
+const completarEtapaComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CompletarEtapaComanda', inputVars);
+}
+completarEtapaComandaRef.operationName = 'CompletarEtapaComanda';
+exports.completarEtapaComandaRef = completarEtapaComandaRef;
+
+exports.completarEtapaComanda = function completarEtapaComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(completarEtapaComandaRef(dcInstance, inputVars));
+}
+;
+
 const getEtapasProduccionRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -541,6 +555,21 @@ exports.getComandasPaginadas = function getComandasPaginadas(dcOrVars, varsOrOpt
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getComandasPaginadasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getComandasActivasCountRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandasActivasCount');
+}
+getComandasActivasCountRef.operationName = 'GetComandasActivasCount';
+exports.getComandasActivasCountRef = getComandasActivasCountRef;
+
+exports.getComandasActivasCount = function getComandasActivasCount(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getComandasActivasCountRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

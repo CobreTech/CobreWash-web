@@ -152,6 +152,19 @@ export interface Comanda_Key {
   __typename?: 'Comanda_Key';
 }
 
+export interface CompletarEtapaComandaData {
+  comandaEtapa_update?: ComandaEtapa_Key | null;
+  siguiente: number;
+  comanda_update?: Comanda_Key | null;
+}
+
+export interface CompletarEtapaComandaVariables {
+  comandaId: UUIDString;
+  etapaId: UUIDString;
+  orden: number;
+  estadoComanda: ComandaEstado;
+}
+
 export interface ConfigurarEtapaProduccionData {
   etapaProduccion_update?: EtapaProduccion_Key | null;
 }
@@ -464,6 +477,15 @@ export interface GetComandaPorQrVariables {
   codigoQr: UUIDString;
 }
 
+export interface GetComandasActivasCountData {
+  pendientes: ({
+    _count: number;
+  })[];
+  enProceso: ({
+    _count: number;
+  })[];
+}
+
 export interface GetComandasPaginadasData {
   comandas: ({
     id: UUIDString;
@@ -534,7 +556,7 @@ export interface GetComandasPaginadasData {
 export interface GetComandasPaginadasVariables {
   limit?: number | null;
   offset?: number | null;
-  estado?: ComandaEstado | null;
+  estados?: ComandaEstado[] | null;
   cliente?: string | null;
   fechaDesde?: TimestampString | null;
   fechaHasta?: TimestampString | null;
@@ -1144,6 +1166,18 @@ export const configurarEtapaProduccionRef: ConfigurarEtapaProduccionRef;
 export function configurarEtapaProduccion(vars: ConfigurarEtapaProduccionVariables): MutationPromise<ConfigurarEtapaProduccionData, ConfigurarEtapaProduccionVariables>;
 export function configurarEtapaProduccion(dc: DataConnect, vars: ConfigurarEtapaProduccionVariables): MutationPromise<ConfigurarEtapaProduccionData, ConfigurarEtapaProduccionVariables>;
 
+interface CompletarEtapaComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CompletarEtapaComandaVariables): MutationRef<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CompletarEtapaComandaVariables): MutationRef<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+  operationName: string;
+}
+export const completarEtapaComandaRef: CompletarEtapaComandaRef;
+
+export function completarEtapaComanda(vars: CompletarEtapaComandaVariables): MutationPromise<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+export function completarEtapaComanda(dc: DataConnect, vars: CompletarEtapaComandaVariables): MutationPromise<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+
 interface GetEtapasProduccionRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetEtapasProduccionData, undefined>;
@@ -1275,6 +1309,18 @@ export const getComandasPaginadasRef: GetComandasPaginadasRef;
 
 export function getComandasPaginadas(vars?: GetComandasPaginadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasPaginadasData, GetComandasPaginadasVariables>;
 export function getComandasPaginadas(dc: DataConnect, vars?: GetComandasPaginadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasPaginadasData, GetComandasPaginadasVariables>;
+
+interface GetComandasActivasCountRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetComandasActivasCountData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetComandasActivasCountData, undefined>;
+  operationName: string;
+}
+export const getComandasActivasCountRef: GetComandasActivasCountRef;
+
+export function getComandasActivasCount(options?: ExecuteQueryOptions): QueryPromise<GetComandasActivasCountData, undefined>;
+export function getComandasActivasCount(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetComandasActivasCountData, undefined>;
 
 interface GetComandaDetalleRef {
   /* Allow users to create refs without passing in DataConnect */

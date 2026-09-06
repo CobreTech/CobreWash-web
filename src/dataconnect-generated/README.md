@@ -21,6 +21,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetVehiculos*](#getvehiculos)
   - [*GetMisSalidasVehiculo*](#getmissalidasvehiculo)
   - [*GetComandasPaginadas*](#getcomandaspaginadas)
+  - [*GetComandasActivasCount*](#getcomandasactivascount)
   - [*GetComandaDetalle*](#getcomandadetalle)
   - [*GetCatalogosComanda*](#getcatalogoscomanda)
   - [*DiagnosticoComandas*](#diagnosticocomandas)
@@ -50,6 +51,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*CrearTipoServicio*](#creartiposervicio)
   - [*AsociarFlujoComandaPendiente*](#asociarflujocomandapendiente)
   - [*ConfigurarEtapaProduccion*](#configuraretapaproduccion)
+  - [*CompletarEtapaComanda*](#completaretapacomanda)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `example`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -1271,7 +1273,7 @@ The `GetComandasPaginadas` query has an optional argument of type `GetComandasPa
 export interface GetComandasPaginadasVariables {
   limit?: number | null;
   offset?: number | null;
-  estado?: ComandaEstado | null;
+  estados?: ComandaEstado[] | null;
   cliente?: string | null;
   fechaDesde?: TimestampString | null;
   fechaHasta?: TimestampString | null;
@@ -1359,7 +1361,7 @@ import { connectorConfig, getComandasPaginadas, GetComandasPaginadasVariables } 
 const getComandasPaginadasVars: GetComandasPaginadasVariables = {
   limit: ..., // optional
   offset: ..., // optional
-  estado: ..., // optional
+  estados: ..., // optional
   cliente: ..., // optional
   fechaDesde: ..., // optional
   fechaHasta: ..., // optional
@@ -1369,7 +1371,7 @@ const getComandasPaginadasVars: GetComandasPaginadasVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await getComandasPaginadas(getComandasPaginadasVars);
 // Variables can be defined inline as well.
-const { data } = await getComandasPaginadas({ limit: ..., offset: ..., estado: ..., cliente: ..., fechaDesde: ..., fechaHasta: ..., });
+const { data } = await getComandasPaginadas({ limit: ..., offset: ..., estados: ..., cliente: ..., fechaDesde: ..., fechaHasta: ..., });
 // Since all variables are optional for this query, you can omit the `GetComandasPaginadasVariables` argument.
 const { data } = await getComandasPaginadas();
 
@@ -1408,7 +1410,7 @@ import { connectorConfig, getComandasPaginadasRef, GetComandasPaginadasVariables
 const getComandasPaginadasVars: GetComandasPaginadasVariables = {
   limit: ..., // optional
   offset: ..., // optional
-  estado: ..., // optional
+  estados: ..., // optional
   cliente: ..., // optional
   fechaDesde: ..., // optional
   fechaHasta: ..., // optional
@@ -1417,7 +1419,7 @@ const getComandasPaginadasVars: GetComandasPaginadasVariables = {
 // Call the `getComandasPaginadasRef()` function to get a reference to the query.
 const ref = getComandasPaginadasRef(getComandasPaginadasVars);
 // Variables can be defined inline as well.
-const ref = getComandasPaginadasRef({ limit: ..., offset: ..., estado: ..., cliente: ..., fechaDesde: ..., fechaHasta: ..., });
+const ref = getComandasPaginadasRef({ limit: ..., offset: ..., estados: ..., cliente: ..., fechaDesde: ..., fechaHasta: ..., });
 // Since all variables are optional for this query, you can omit the `GetComandasPaginadasVariables` argument.
 const ref = getComandasPaginadasRef();
 
@@ -1447,6 +1449,106 @@ executeQuery(ref).then((response) => {
   console.log(data.finalizadas);
   console.log(data.entregadas);
   console.log(data.anuladas);
+});
+```
+
+## GetComandasActivasCount
+You can execute the `GetComandasActivasCount` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getComandasActivasCount(options?: ExecuteQueryOptions): QueryPromise<GetComandasActivasCountData, undefined>;
+
+interface GetComandasActivasCountRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetComandasActivasCountData, undefined>;
+}
+export const getComandasActivasCountRef: GetComandasActivasCountRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getComandasActivasCount(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetComandasActivasCountData, undefined>;
+
+interface GetComandasActivasCountRef {
+  ...
+  (dc: DataConnect): QueryRef<GetComandasActivasCountData, undefined>;
+}
+export const getComandasActivasCountRef: GetComandasActivasCountRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getComandasActivasCountRef:
+```typescript
+const name = getComandasActivasCountRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetComandasActivasCount` query has no variables.
+### Return Type
+Recall that executing the `GetComandasActivasCount` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetComandasActivasCountData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetComandasActivasCountData {
+  pendientes: ({
+    _count: number;
+  })[];
+  enProceso: ({
+    _count: number;
+  })[];
+}
+```
+### Using `GetComandasActivasCount`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getComandasActivasCount } from '@dataconnect/generated';
+
+
+// Call the `getComandasActivasCount()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getComandasActivasCount();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getComandasActivasCount(dataConnect);
+
+console.log(data.pendientes);
+console.log(data.enProceso);
+
+// Or, you can use the `Promise` API.
+getComandasActivasCount().then((response) => {
+  const data = response.data;
+  console.log(data.pendientes);
+  console.log(data.enProceso);
+});
+```
+
+### Using `GetComandasActivasCount`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getComandasActivasCountRef } from '@dataconnect/generated';
+
+
+// Call the `getComandasActivasCountRef()` function to get a reference to the query.
+const ref = getComandasActivasCountRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getComandasActivasCountRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.pendientes);
+console.log(data.enProceso);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.pendientes);
+  console.log(data.enProceso);
 });
 ```
 
@@ -4883,5 +4985,133 @@ console.log(data.etapaProduccion_update);
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.etapaProduccion_update);
+});
+```
+
+## CompletarEtapaComanda
+You can execute the `CompletarEtapaComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+completarEtapaComanda(vars: CompletarEtapaComandaVariables): MutationPromise<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+
+interface CompletarEtapaComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CompletarEtapaComandaVariables): MutationRef<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+}
+export const completarEtapaComandaRef: CompletarEtapaComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+completarEtapaComanda(dc: DataConnect, vars: CompletarEtapaComandaVariables): MutationPromise<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+
+interface CompletarEtapaComandaRef {
+  ...
+  (dc: DataConnect, vars: CompletarEtapaComandaVariables): MutationRef<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
+}
+export const completarEtapaComandaRef: CompletarEtapaComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the completarEtapaComandaRef:
+```typescript
+const name = completarEtapaComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CompletarEtapaComanda` mutation requires an argument of type `CompletarEtapaComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CompletarEtapaComandaVariables {
+  comandaId: UUIDString;
+  etapaId: UUIDString;
+  orden: number;
+  estadoComanda: ComandaEstado;
+}
+```
+### Return Type
+Recall that executing the `CompletarEtapaComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CompletarEtapaComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CompletarEtapaComandaData {
+  comandaEtapa_update?: ComandaEtapa_Key | null;
+  siguiente: number;
+  comanda_update?: Comanda_Key | null;
+}
+```
+### Using `CompletarEtapaComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, completarEtapaComanda, CompletarEtapaComandaVariables } from '@dataconnect/generated';
+
+// The `CompletarEtapaComanda` mutation requires an argument of type `CompletarEtapaComandaVariables`:
+const completarEtapaComandaVars: CompletarEtapaComandaVariables = {
+  comandaId: ...,
+  etapaId: ...,
+  orden: ...,
+  estadoComanda: ...,
+};
+
+// Call the `completarEtapaComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await completarEtapaComanda(completarEtapaComandaVars);
+// Variables can be defined inline as well.
+const { data } = await completarEtapaComanda({ comandaId: ..., etapaId: ..., orden: ..., estadoComanda: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await completarEtapaComanda(dataConnect, completarEtapaComandaVars);
+
+console.log(data.comandaEtapa_update);
+console.log(data.siguiente);
+console.log(data.comanda_update);
+
+// Or, you can use the `Promise` API.
+completarEtapaComanda(completarEtapaComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandaEtapa_update);
+  console.log(data.siguiente);
+  console.log(data.comanda_update);
+});
+```
+
+### Using `CompletarEtapaComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, completarEtapaComandaRef, CompletarEtapaComandaVariables } from '@dataconnect/generated';
+
+// The `CompletarEtapaComanda` mutation requires an argument of type `CompletarEtapaComandaVariables`:
+const completarEtapaComandaVars: CompletarEtapaComandaVariables = {
+  comandaId: ...,
+  etapaId: ...,
+  orden: ...,
+  estadoComanda: ...,
+};
+
+// Call the `completarEtapaComandaRef()` function to get a reference to the mutation.
+const ref = completarEtapaComandaRef(completarEtapaComandaVars);
+// Variables can be defined inline as well.
+const ref = completarEtapaComandaRef({ comandaId: ..., etapaId: ..., orden: ..., estadoComanda: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = completarEtapaComandaRef(dataConnect, completarEtapaComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comandaEtapa_update);
+console.log(data.siguiente);
+console.log(data.comanda_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandaEtapa_update);
+  console.log(data.siguiente);
+  console.log(data.comanda_update);
 });
 ```

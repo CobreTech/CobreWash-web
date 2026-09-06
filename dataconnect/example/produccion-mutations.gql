@@ -74,3 +74,48 @@ mutation ConfigurarEtapaProduccion($id: UUID!, $nombre: String!, $descripcion: S
   }
   etapaProduccion_update(id: $id, data: { nombre: $nombre, descripcion: $descripcion, tiempoEstimadoMin: $tiempoEstimadoMin }) @check(expr: "this != null", message: "Etapa no encontrada")
 }
+
+# RF18: admin y operario completan solamente la primera etapa no terminada.
+# El orden también se valida en servidor para impedir saltos o reintentos.
+mutation CompletarEtapaComanda($comandaId: UUID!, $etapaId: UUID!, $orden: Int!, $estadoComanda: ComandaEstado!)
+  @auth(level: USER) @transaction {
+  query @redact @check(
+    expr: "vars.orden >= 1 && vars.orden <= 5 && ((vars.orden < 4 && vars.estadoComanda == 'EN_PROCESO') || (vars.orden == 4 && vars.estadoComanda == 'FINALIZADA') || (vars.orden == 5 && vars.estadoComanda == 'ENTREGADA'))"
+    message: "Transición de producción inválida"
+  ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this in ['admin', 'operario']", message: "Solo administración y operarios pueden reportar avances") }
+    }
+    comanda(id: $comandaId) @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "(vars.orden <= 4 && this in ['PENDIENTE', 'EN_PROCESO']) || (vars.orden == 5 && this == 'FINALIZADA')", message: "La comanda ya no admite este avance")
+      comandaEtapas_on_comanda @check(expr: "this.size() == 5", message: "La comanda no tiene el flujo completo", optional: true) { etapaId }
+    }
+    actual: comandaEtapa(key: { comandaId: $comandaId, etapaId: $etapaId }) @check(expr: "this != null", message: "La etapa no pertenece a la comanda") {
+      ordenEtapa @check(expr: "this == vars.orden", message: "El orden de la etapa no coincide")
+      estado @check(expr: "this in ['PENDIENTE', 'EN_PROCESO']", message: "La etapa ya fue completada")
+    }
+    anterioresIncompletas: comandaEtapas(where: {
+      comandaId: { eq: $comandaId }
+      ordenEtapa: { lt: $orden }
+      estado: { ne: COMPLETADA }
+    }) @check(expr: "this.size() == 0", message: "Primero debes completar las etapas anteriores") { etapaId }
+    posterioresAvanzadas: comandaEtapas(where: {
+      comandaId: { eq: $comandaId }
+      ordenEtapa: { gt: $orden }
+      estado: { ne: PENDIENTE }
+    }) @check(expr: "this.size() == 0", message: "La secuencia de etapas es inconsistente") { etapaId }
+  }
+  comandaEtapa_update(
+    first: { where: { comandaId: { eq: $comandaId }, etapaId: { eq: $etapaId }, estado: { in: [PENDIENTE, EN_PROCESO] } } }
+    data: { estado: COMPLETADA }
+  ) @check(expr: "this != null", message: "La etapa ya fue completada")
+  siguiente: comandaEtapa_updateMany(
+    where: { comandaId: { eq: $comandaId }, ordenEtapa: { eq_expr: "vars.orden + 1" }, estado: { eq: PENDIENTE } }
+    data: { estado: EN_PROCESO }
+  ) @check(expr: "(vars.orden < 5 && this == 1) || (vars.orden == 5 && this == 0)", message: "No se pudo activar la etapa siguiente")
+  comanda_update(
+    id: $comandaId
+    data: { estado: $estadoComanda, actualizadoEn_expr: "request.time" }
+  ) @check(expr: "this != null", message: "No se pudo actualizar la comanda")
+}
