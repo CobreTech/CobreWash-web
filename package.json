@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:production": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-production.mjs\"",
+    "dataconnect:compile:web": "node scripts/prepare-production-test.mjs --sdk && npx -y firebase-tools@latest dataconnect:compile --config scratch/production-test/firebase.json && node scripts/normalize-generated.mjs"
   },
   "dependencies": {
     "@dataconnect/generated": "link:src/dataconnect-generated",
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
+    "firebase-admin": "^14.3.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10"

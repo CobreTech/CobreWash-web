@@ -22,6 +22,9 @@ import {
   type PrendaLinea,
   type Comanda as MockComanda,
 } from "@/lib/mock/comandas";
+import { normalizarEtapas, type EtapaVisible } from "@/lib/produccion/modelo";
+import { guardarComandaConFlujo, editarComandaConDetalles, type CrearComandaConFlujoVariables } from "@/lib/produccion/guardar";
+import { getMiComandaGuardada } from "@/src/dataconnect-generated";
 import { dataConnect } from "@/lib/firebase/client";
 import { formatChileanPhone, formatRut, getChileanPhoneType, isValidChileanPhone, isValidRut } from "@/lib/validators";
 import { executeMutation, executeQuery, mutationRef, queryRef } from "firebase/data-connect";
@@ -29,22 +32,25 @@ import {
   TipoCliente, 
   ComandaEstado,
   getCatalogosComanda,
-  crearComanda,
-  agregarComandaDetalle,
-  editarComanda,
-  eliminarDetallesComanda,
   anularComanda,
   entregarComanda,
   crearTipoPrenda,
   crearTipoServicio,
-  type GetComandasData,
-  type GetComandasVariables,
+  type GetComandasPaginadasData,
+  type GetComandasPaginadasVariables,
   type GetCatalogosComandaData
 } from "@/src/dataconnect-generated";
 
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
 const ESTADOS: EstadoComanda[] = ["Pendiente", "En proceso", "Listo", "Entregado", "Anulado"];
 const TABS: ("Todas" | EstadoComanda)[] = ["Todas", ...ESTADOS];
+const ESTADO_DB: Record<EstadoComanda, ComandaEstado> = {
+  Pendiente: ComandaEstado.PENDIENTE,
+  "En proceso": ComandaEstado.EN_PROCESO,
+  Listo: ComandaEstado.FINALIZADA,
+  Entregado: ComandaEstado.ENTREGADA,
+  Anulado: ComandaEstado.ANULADA,
+};
 const PAGE_SIZE = 8;
 const PRENDAS_FORMULARIO = [
   "CHAQUETA",
@@ -102,6 +108,7 @@ const valorTotal = (c: Comanda) => c.valorTotal;
 export interface Comanda {
   id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   dbId: string; // UUID interno; nunca se muestra al usuario
+  actualizadoEn: string;
   cliente: string;
   empresa?: string;
   proyecto?: string;
@@ -116,6 +123,7 @@ export interface Comanda {
   fechaRecepcionIso: string;
   fechaEntregaEstimada?: string;
   etapaActual: number | null;
+  etapas: EtapaVisible[];
   estado: EstadoComanda;
   operario?: string;
   recepcionista?: string;
@@ -158,36 +166,34 @@ const emptyForm: FormState = {
 export default function ComandasPage() {
   const permitido = useRoleGuard(["admin", "recepcionista"]);
 
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Todas");
+  const [estadosSeleccionados, setEstadosSeleccionados] = useState<EstadoComanda[]>([]);
   const [search, setSearch] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [page, setPage] = useState(1);
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [data, setData] = useState<GetComandasData | null>(null);
+  const [data, setData] = useState<GetComandasPaginadasData | null>(null);
   const [catData, setCatData] = useState<GetCatalogosComandaData | null>(null);
   const [loading, setLoading] = useState(true);
   const solicitudActual = useRef(0);
+  const creacion = useRef<{ id: string; numero: string } | null>(null);
+  const guardando = useRef(false);
+  const envioPendiente = useRef<CrearComandaConFlujoVariables | null>(null);
 
   const fetchData = useCallback(async (silencioso = false) => {
     const solicitud = ++solicitudActual.current;
     try {
       if (!silencioso) setLoading(true);
-      const estado = activeTab === "Todas" ? undefined :
-        activeTab === "Pendiente" ? ComandaEstado.PENDIENTE :
-        activeTab === "En proceso" ? ComandaEstado.EN_PROCESO :
-        activeTab === "Listo" ? ComandaEstado.FINALIZADA :
-        activeTab === "Entregado" ? ComandaEstado.ENTREGADA : ComandaEstado.ANULADA;
       const [resComandas, resCatalogos] = await Promise.all([
         executeQuery(
-          queryRef<GetComandasData, GetComandasVariables>(
+          queryRef<GetComandasPaginadasData, GetComandasPaginadasVariables>(
             dataConnect,
             "GetComandasPaginadas",
             {
               limit: PAGE_SIZE,
               offset: (page - 1) * PAGE_SIZE,
-              estado,
+              estados: estadosSeleccionados.length ? estadosSeleccionados.map((estado) => ESTADO_DB[estado]) : undefined,
               cliente: search.trim() || undefined,
               fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
               fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
@@ -206,7 +212,7 @@ export default function ComandasPage() {
     } finally {
       if (solicitud === solicitudActual.current) setLoading(false);
     }
-  }, [activeTab, fechaDesde, fechaHasta, page, search]);
+  }, [estadosSeleccionados, fechaDesde, fechaHasta, page, search]);
 
   useEffect(() => {
     void Promise.resolve().then(() => fetchData());
@@ -231,6 +237,7 @@ export default function ComandasPage() {
     return (data?.comandas || []).map((c) => ({
       id: c.numeroComanda,
       dbId: c.id,
+      actualizadoEn: c.actualizadoEn,
       cliente: c.cliente.nombre,
       empresa: c.empresa || undefined,
       proyecto: c.proyecto || undefined,
@@ -252,7 +259,8 @@ export default function ComandasPage() {
       fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL"),
       fechaRecepcionIso: new Date(c.fechaRecepcion).toISOString().slice(0, 10),
       fechaEntregaEstimada: c.fechaEntregaEstimada ? new Date(c.fechaEntregaEstimada).toLocaleDateString("es-CL") : undefined,
-      etapaActual: c.estado === ComandaEstado.EN_PROCESO ? 1 : null,
+      etapaActual: null,
+      etapas: normalizarEtapas(c.comandaEtapas_on_comanda),
       estado: (c.estado === ComandaEstado.PENDIENTE ? "Pendiente" :
                c.estado === ComandaEstado.EN_PROCESO ? "En proceso" :
                c.estado === ComandaEstado.FINALIZADA ? "Listo" :
@@ -263,7 +271,7 @@ export default function ComandasPage() {
   }, [data]);
 
   const [detalle, setDetalle] = useState<Comanda | null>(null);
-  const [form, setForm] = useState<{ mode: "crear" } | { mode: "editar"; id: string } | null>(null);
+  const [form, setForm] = useState<{ mode: "crear" } | { mode: "editar"; id: string; version: string } | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [anular, setAnular] = useState<Comanda | null>(null);
   const [motivo, setMotivo] = useState("");
@@ -289,6 +297,12 @@ export default function ComandasPage() {
   };
   const totalGlobal = Object.values(stateCounts).reduce((sum, count) => sum + count, 0);
   const tabCount = (tab: (typeof TABS)[number]) => tab === "Todas" ? totalGlobal : stateCounts[tab];
+  const alternarEstado = (estado: EstadoComanda) => {
+    setEstadosSeleccionados((actuales) => actuales.includes(estado)
+      ? actuales.filter((actual) => actual !== estado)
+      : [...actuales, estado]);
+    setPage(1);
+  };
 
   const totalFiltrado = filtered.reduce((s, c) => s + valorTotal(c), 0);
 
@@ -322,6 +336,8 @@ export default function ComandasPage() {
       }],
     });
     setNuevoCliente((catData?.clientes.length ?? 0) === 0);
+    creacion.current = { id: crypto.randomUUID(), numero: generarNumeroComanda() };
+    envioPendiente.current = null;
     setForm({ mode: "crear" });
   };
   const openEditar = (c: Comanda) => {
@@ -345,10 +361,11 @@ export default function ComandasPage() {
       }),
       observaciones: c.observaciones || "",
     });
-    setForm({ mode: "editar", id: c.dbId });
+    setForm({ mode: "editar", id: c.dbId, version: c.actualizadoEn });
   };
 
   const guardar = async () => {
+    if (guardando.current) return;
     const detalleLimpio = formData.detalle.filter((d) => d.tipoPrenda.trim());
     if (!formData.cliente.trim() || detalleLimpio.length === 0) {
       alert("Selecciona un cliente y agrega al menos una prenda.");
@@ -367,8 +384,20 @@ export default function ComandasPage() {
       return;
     }
 
+    guardando.current = true;
     setIsSubmitting(true);
     try {
+      if (form?.mode === "crear" && envioPendiente.current) {
+        const anterior = await getMiComandaGuardada(dataConnect, { id: envioPendiente.current.id }, { fetchPolicy: "SERVER_ONLY" });
+        if (anterior.data.comanda) {
+          envioPendiente.current = null;
+          await refetch(true);
+          setNotice("Comanda creada correctamente.");
+          setForm(null);
+          return;
+        }
+        envioPendiente.current = null;
+      }
       // El formulario puede conservar un catálogo anterior en memoria después
       // de un intento parcial. Forzar lectura de red evita recrear nombres que
       // ya existen y chocan con sus índices únicos.
@@ -410,9 +439,7 @@ export default function ComandasPage() {
       );
 
       if (form?.mode === "crear") {
-        const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
-        const numero = generarNumeroComanda();
-        
+        const identidad = creacion.current ??= { id: crypto.randomUUID(), numero: generarNumeroComanda() };
         let clienteId = formData.clienteId;
 
         if (nuevoCliente) {
@@ -431,62 +458,46 @@ export default function ComandasPage() {
           );
           const clienteCreado = await executeMutation(clienteRef);
           clienteId = clienteCreado.data.cliente_insert.id;
+          setNuevoCliente(false);
+          setFormData((prev) => ({ ...prev, clienteId }));
         }
         
-        if (clienteId) {
-          const res = await crearComanda(dataConnect, {
-            numeroComanda: numero,
-            clienteId,
-            empresa: formData.empresa.trim() || undefined,
-            proyecto: formData.proyecto.trim() || undefined,
-            valorTotal: formTotal,
-            observaciones: formData.observaciones.trim() || undefined,
-          });
-          
-          const newComandaId = res.data.comanda_insert.id;
-          
-          for (const { linea: d, tipoPrendaId, tipoServicioId } of lineasResueltas) {
-              await agregarComandaDetalle(dataConnect, {
-                comandaId: newComandaId,
-                tipoPrendaId,
-                tipoServicioId,
-                cantidad: d.cantidad,
-                detalle: formData.tipoCliente === TipoCliente.HOTEL
-                  ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
-                  : d.detalle.trim() || undefined,
-                precioUnitario: d.precioUnitario,
-                subtotal: d.cantidad * d.precioUnitario
-              });
-          }
-        } else {
-          throw new Error("El cliente seleccionado no existe en el catálogo.");
-        }
+
+        if (!clienteId) throw new Error("El cliente seleccionado no existe en el catálogo.");
+        const variables: CrearComandaConFlujoVariables = {
+          id: identidad.id,
+          numeroComanda: identidad.numero,
+          clienteId,
+          empresa: formData.empresa.trim() || undefined,
+          proyecto: formData.proyecto.trim() || undefined,
+          observaciones: formData.observaciones.trim() || undefined,
+          detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }) => ({
+            tipoPrendaId, tipoServicioId, cantidad: d.cantidad,
+            detalle: formData.tipoCliente === TipoCliente.HOTEL
+              ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
+              : d.detalle.trim() || undefined,
+            precioUnitario: d.precioUnitario, subtotal: d.cantidad * d.precioUnitario,
+          })),
+        };
+        envioPendiente.current = variables;
+        await guardarComandaConFlujo(variables);
+        envioPendiente.current = null;
         } else if (form?.mode === "editar") {
-          const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
-          
-          await editarComanda(dataConnect, {
+          await editarComandaConDetalles({
             id: form.id,
+            version: form.version,
             empresa: formData.empresa.trim() || undefined,
             proyecto: formData.proyecto.trim() || undefined,
-            valorTotal: formTotal,
             observaciones: formData.observaciones.trim() || undefined,
+            detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }) => ({
+              comandaId: form.id,
+              tipoPrendaId, tipoServicioId, cantidad: d.cantidad,
+              detalle: formData.tipoCliente === TipoCliente.HOTEL
+                ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
+                : d.detalle.trim() || undefined,
+              precioUnitario: d.precioUnitario, subtotal: d.cantidad * d.precioUnitario,
+            })),
           });
-
-          await eliminarDetallesComanda(dataConnect, { comandaId: form.id });
-
-          for (const { linea: d, tipoPrendaId, tipoServicioId } of lineasResueltas) {
-              await agregarComandaDetalle(dataConnect, {
-                comandaId: form.id,
-                tipoPrendaId,
-                tipoServicioId,
-                cantidad: d.cantidad,
-                detalle: formData.tipoCliente === TipoCliente.HOTEL
-                  ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
-                  : d.detalle.trim() || undefined,
-                precioUnitario: d.precioUnitario,
-                subtotal: d.cantidad * d.precioUnitario
-              });
-          }
         }
         
         await refetch(true);
@@ -494,8 +505,11 @@ export default function ComandasPage() {
       setForm(null);
     } catch (err) {
       console.error(err);
-      alert("Error al guardar la comanda.");
+      alert(form?.mode === "editar"
+        ? "No se pudo confirmar la edición. Revisa la comanda actualizada antes de reintentar; otra persona pudo modificarla o iniciar su producción."
+        : "Error al guardar la comanda.");
     } finally {
+      guardando.current = false;
       setIsSubmitting(false);
     }
   };
@@ -564,19 +578,27 @@ export default function ComandasPage() {
       >
         {ESTADOS.map((e, i) => {
           const sc = estadoConfig[e];
+          const seleccionado = estadosSeleccionados.includes(e);
           return (
-            <motion.div
+            <motion.button
               key={e}
+              type="button"
+              aria-pressed={seleccionado}
+              aria-label={`Filtrar por ${e}: ${stateCounts[e]} comandas`}
+              onClick={() => alternarEstado(e)}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 + i * 0.05 }}
-              className="glass-panel rounded-2xl p-4 shadow-sm dark:shadow-none"
+              whileHover={{ y: -3, transition: { duration: 0.18 } }}
+              whileTap={{ scale: 0.97 }}
+              className={`glass-panel relative rounded-2xl p-4 text-left shadow-sm transition-all dark:shadow-none ${seleccionado ? "border-brand-500/60 bg-brand-500/10 ring-2 ring-brand-500/25" : "hover:border-brand-500/30"}`}
             >
+              {seleccionado && <span className="absolute right-3 top-3 grid h-5 w-5 place-items-center rounded-full bg-brand-500 text-white"><Check className="h-3 w-3" /></span>}
               <p className={`text-2xl font-display font-extrabold ${sc.text}`}>
                 {stateCounts[e]}
               </p>
-              <p className="text-stone-500 dark:text-stone-500 text-xs mt-1">{e}</p>
-            </motion.div>
+              <p className={`mt-1 text-xs font-semibold ${seleccionado ? "text-brand-700 dark:text-brand-300" : "text-stone-500 dark:text-stone-500"}`}>{e}</p>
+            </motion.button>
           );
         })}
       </motion.div>
@@ -592,18 +614,22 @@ export default function ComandasPage() {
           {TABS.map((tab) => (
             <button
               key={tab}
-              onClick={() => { setActiveTab(tab); setPage(1); }}
+              aria-pressed={tab === "Todas" ? estadosSeleccionados.length === 0 : estadosSeleccionados.includes(tab)}
+              onClick={() => {
+                if (tab === "Todas") { setEstadosSeleccionados([]); setPage(1); }
+                else alternarEstado(tab);
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === tab
+                (tab === "Todas" ? estadosSeleccionados.length === 0 : estadosSeleccionados.includes(tab))
                   ? "bg-brand-500 text-white shadow-md"
                   : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
               }`}
             >
               {tab}
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                  activeTab === tab ? "bg-white/20" : "bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-500"
-                }`}
+                 className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                   (tab === "Todas" ? estadosSeleccionados.length === 0 : estadosSeleccionados.includes(tab)) ? "bg-white/20" : "bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-500"
+                 }`}
               >
                 {tabCount(tab)}
               </span>
@@ -754,7 +780,7 @@ export default function ComandasPage() {
       <AnimatePresence>
         {detalle && (
           <ComandaDetalle
-            comanda={detalle as unknown as MockComanda}
+            comanda={(comandas.find((c) => c.dbId === detalle.dbId) ?? detalle) as unknown as MockComanda}
             onClose={() => setDetalle(null)}
             onEditar={(c) => {
               const original = comandas.find((item) => item.id === c.id);

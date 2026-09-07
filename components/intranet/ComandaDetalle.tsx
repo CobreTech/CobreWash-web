@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import QrCode from "@/components/intranet/QrCode";
+import FlujoProduccion from "@/components/intranet/FlujoProduccion";
 import {
   ETAPAS,
   estadoConfig,
@@ -154,37 +155,6 @@ export default function ComandaDetalle({
               </div>
             </div>
 
-            {/* Progress */}
-            {comanda.estado !== "Anulado" && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-600 mb-2">
-                  Producción · {progreso(comanda)}%
-                </p>
-                <div className="flex items-center gap-1">
-                  {ETAPAS.map((etapa, i) => {
-                    const done = etapaIdx !== null && (etapaIdx > i || comanda.estado === "Entregado");
-                    const active = etapaIdx === i && comanda.estado === "En proceso";
-                    return (
-                      <div key={etapa} className="flex-1 text-center">
-                        <div
-                          className={`h-1.5 rounded-full ${
-                            done ? "bg-green-500" : active ? "bg-brand-500 animate-pulse" : "bg-stone-200 dark:bg-stone-700"
-                          }`}
-                        />
-                        <span
-                          className={`block mt-1 text-[9px] font-semibold ${
-                            active ? "text-brand-600 dark:text-brand-400" : done ? "text-stone-600 dark:text-stone-300" : "text-stone-400 dark:text-stone-600"
-                          }`}
-                        >
-                          {etapa}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {comanda.motivoAnulacion && (
               <div className="text-xs bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 rounded-xl p-3">
                 <span className="font-bold">Anulada:</span> {comanda.motivoAnulacion}
@@ -215,6 +185,32 @@ export default function ComandaDetalle({
             </div>
           </div>
         </div>
+
+        {/* Progress — ocupa todo el ancho para mantener legibles las cinco etapas. */}
+        {comanda.estado !== "Anulado" && comanda.etapas !== undefined && (
+          <div className="mt-6"><FlujoProduccion etapas={comanda.etapas} /></div>
+        )}
+        {comanda.estado !== "Anulado" && comanda.etapas === undefined && (
+          <div className="mt-6">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-600">
+              Producción · {progreso(comanda)}%
+            </p>
+            <div className="flex items-center gap-1">
+              {ETAPAS.map((etapa, i) => {
+                const done = etapaIdx !== null && (etapaIdx > i || comanda.estado === "Entregado");
+                const active = etapaIdx === i && comanda.estado === "En proceso";
+                return (
+                  <div key={etapa} className="flex-1 text-center">
+                    <div className={`h-1.5 rounded-full ${done ? "bg-green-500" : active ? "animate-pulse bg-brand-500" : "bg-stone-200 dark:bg-stone-700"}`} />
+                    <span className={`mt-1 block text-[9px] font-semibold ${active ? "text-brand-600 dark:text-brand-400" : done ? "text-stone-600 dark:text-stone-300" : "text-stone-400 dark:text-stone-600"}`}>
+                      {etapa}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-stone-100 dark:border-white/5">

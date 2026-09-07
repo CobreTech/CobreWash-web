@@ -242,12 +242,13 @@ query GetComandas(
 query GetComandasPaginadas(
   $limit: Int = 8
   $offset: Int = 0
-  $estado: ComandaEstado
+  $estado: ComandaEstado @retired(reason: "Usar estados para permitir selección múltiple")
+  $estados: [ComandaEstado!]
   $cliente: String
   $fechaDesde: Timestamp
   $fechaHasta: Timestamp
 ) @auth(level: USER) {
-  yo: usuario(id_expr: "auth.uid") @redact {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para listar comandas")
@@ -255,7 +256,7 @@ query GetComandasPaginadas(
   }
   comandas(
     where: {
-      estado: { eq: $estado }
+      estado: { eq: $estado, in: $estados }
       cliente: { nombre: { contains: $cliente } }
       fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
     }
@@ -265,6 +266,7 @@ query GetComandasPaginadas(
   ) {
     id
     numeroComanda
+    actualizadoEn
     codigoQr
     estado
     valorTotal
@@ -282,6 +284,13 @@ query GetComandasPaginadas(
       tipoCliente
       direccion
     }
+
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      fechaInicio fechaCompletado
+      operario { id nombre apellido }
+      etapa { nombre orden descripcion tiempoEstimadoMin }
+    }
     comandaDetalles_on_comanda {
       cantidad
       detalle
@@ -292,7 +301,7 @@ query GetComandasPaginadas(
   }
   total: comandas(
     where: {
-      estado: { eq: $estado }
+      estado: { eq: $estado, in: $estados }
       cliente: { nombre: { contains: $cliente } }
       fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
     }
@@ -306,7 +315,20 @@ query GetComandasPaginadas(
   anuladas: comandas(where: { estado: { eq: ANULADA } }) { _count }
 }
 
+query GetComandasActivasCount @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar comandas") }
+  }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
+}
+
 query GetComandaDetalle($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar comandas") }
+  }
   comanda(id: $id) {
     id
     numeroComanda
@@ -325,6 +347,13 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
       email
       tipoCliente
       direccion
+    }
+
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      fechaInicio fechaCompletado
+      operario { id nombre apellido }
+      etapa { nombre orden descripcion tiempoEstimadoMin }
     }
     comandaDetalles_on_comanda {
       id
@@ -356,6 +385,10 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
 }
 
 query GetCatalogosComanda @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar clientes") }
+  }
   tipoServicios(where: { activo: { eq: true } }) {
     id
     nombre

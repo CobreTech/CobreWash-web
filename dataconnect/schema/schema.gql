@@ -163,6 +163,11 @@ type ComandaNotificacion @table(name: "comanda_notificacion") {
 type ComandaEtapa @table(name: "comanda_etapa", key: ["comanda", "etapa"]) {
   comanda: Comanda!
   etapa: EtapaProduccion!
+  # Copia de la configuración al asociar el flujo. Nullable para datos previos.
+  nombreEtapa: String @col(dataType: "varchar(40)")
+  ordenEtapa: Int
+  descripcionEtapa: String @col(dataType: "varchar(200)")
+  tiempoEstimadoMin: Int
   operario: Usuario
   estado: EtapaEstado! @default(value: PENDIENTE)
   alertaRetraso: Boolean! @default(value: false)

@@ -211,6 +211,34 @@ exports.agregarFotoInspeccionVehiculo = function agregarFotoInspeccionVehiculo(d
 }
 ;
 
+const crearClienteComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearClienteComanda', inputVars);
+}
+crearClienteComandaRef.operationName = 'CrearClienteComanda';
+exports.crearClienteComandaRef = crearClienteComandaRef;
+
+exports.crearClienteComanda = function crearClienteComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearClienteComandaRef(dcInstance, inputVars));
+}
+;
+
+const editarFichaClienteRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EditarFichaCliente', inputVars);
+}
+editarFichaClienteRef.operationName = 'EditarFichaCliente';
+exports.editarFichaClienteRef = editarFichaClienteRef;
+
+exports.editarFichaCliente = function editarFichaCliente(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(editarFichaClienteRef(dcInstance, inputVars));
+}
+;
+
 const crearComandaRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -323,6 +351,93 @@ exports.crearTipoServicio = function crearTipoServicio(dcOrVars, vars) {
 }
 ;
 
+const asociarFlujoComandaPendienteRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AsociarFlujoComandaPendiente', inputVars);
+}
+asociarFlujoComandaPendienteRef.operationName = 'AsociarFlujoComandaPendiente';
+exports.asociarFlujoComandaPendienteRef = asociarFlujoComandaPendienteRef;
+
+exports.asociarFlujoComandaPendiente = function asociarFlujoComandaPendiente(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(asociarFlujoComandaPendienteRef(dcInstance, inputVars));
+}
+;
+
+const configurarEtapaProduccionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ConfigurarEtapaProduccion', inputVars);
+}
+configurarEtapaProduccionRef.operationName = 'ConfigurarEtapaProduccion';
+exports.configurarEtapaProduccionRef = configurarEtapaProduccionRef;
+
+exports.configurarEtapaProduccion = function configurarEtapaProduccion(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(configurarEtapaProduccionRef(dcInstance, inputVars));
+}
+;
+
+const completarEtapaComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CompletarEtapaComanda', inputVars);
+}
+completarEtapaComandaRef.operationName = 'CompletarEtapaComanda';
+exports.completarEtapaComandaRef = completarEtapaComandaRef;
+
+exports.completarEtapaComanda = function completarEtapaComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(completarEtapaComandaRef(dcInstance, inputVars));
+}
+;
+
+const getEtapasProduccionRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetEtapasProduccion');
+}
+getEtapasProduccionRef.operationName = 'GetEtapasProduccion';
+exports.getEtapasProduccionRef = getEtapasProduccionRef;
+
+exports.getEtapasProduccion = function getEtapasProduccion(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getEtapasProduccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getSeguimientoProduccionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSeguimientoProduccion', inputVars);
+}
+getSeguimientoProduccionRef.operationName = 'GetSeguimientoProduccion';
+exports.getSeguimientoProduccionRef = getSeguimientoProduccionRef;
+
+exports.getSeguimientoProduccion = function getSeguimientoProduccion(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getSeguimientoProduccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getMiComandaGuardadaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMiComandaGuardada', inputVars);
+}
+getMiComandaGuardadaRef.operationName = 'GetMiComandaGuardada';
+exports.getMiComandaGuardadaRef = getMiComandaGuardadaRef;
+
+exports.getMiComandaGuardada = function getMiComandaGuardada(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getMiComandaGuardadaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const getRolesRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -332,7 +447,7 @@ getRolesRef.operationName = 'GetRoles';
 exports.getRolesRef = getRolesRef;
 
 exports.getRoles = function getRoles(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getRolesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -347,7 +462,7 @@ getMiPerfilRef.operationName = 'GetMiPerfil';
 exports.getMiPerfilRef = getMiPerfilRef;
 
 exports.getMiPerfil = function getMiPerfil(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getMiPerfilRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -362,7 +477,7 @@ getUsuariosRef.operationName = 'GetUsuarios';
 exports.getUsuariosRef = getUsuariosRef;
 
 exports.getUsuarios = function getUsuarios(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getUsuariosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -377,7 +492,7 @@ getComandaPorQrRef.operationName = 'GetComandaPorQr';
 exports.getComandaPorQrRef = getComandaPorQrRef;
 
 exports.getComandaPorQr = function getComandaPorQr(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getComandaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -392,7 +507,7 @@ getInsumoPorQrRef.operationName = 'GetInsumoPorQr';
 exports.getInsumoPorQrRef = getInsumoPorQrRef;
 
 exports.getInsumoPorQr = function getInsumoPorQr(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getInsumoPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -407,7 +522,7 @@ getVehiculosRef.operationName = 'GetVehiculos';
 exports.getVehiculosRef = getVehiculosRef;
 
 exports.getVehiculos = function getVehiculos(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -422,24 +537,39 @@ getMisSalidasVehiculoRef.operationName = 'GetMisSalidasVehiculo';
 exports.getMisSalidasVehiculoRef = getMisSalidasVehiculoRef;
 
 exports.getMisSalidasVehiculo = function getMisSalidasVehiculo(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getMisSalidasVehiculoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
-const getComandasRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, false);
+const getComandasPaginadasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetComandas', inputVars);
+  return queryRef(dcInstance, 'GetComandasPaginadas', inputVars);
 }
-getComandasRef.operationName = 'GetComandas';
-exports.getComandasRef = getComandasRef;
+getComandasPaginadasRef.operationName = 'GetComandasPaginadas';
+exports.getComandasPaginadasRef = getComandasPaginadasRef;
 
-exports.getComandas = function getComandas(dcOrVars, varsOrOptions, options) {
-  
+exports.getComandasPaginadas = function getComandasPaginadas(dcOrVars, varsOrOptions, options) {
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
-  return executeQuery(getComandasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+  return executeQuery(getComandasPaginadasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getComandasActivasCountRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandasActivasCount');
+}
+getComandasActivasCountRef.operationName = 'GetComandasActivasCount';
+exports.getComandasActivasCountRef = getComandasActivasCountRef;
+
+exports.getComandasActivasCount = function getComandasActivasCount(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getComandasActivasCountRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
@@ -452,7 +582,7 @@ getComandaDetalleRef.operationName = 'GetComandaDetalle';
 exports.getComandaDetalleRef = getComandaDetalleRef;
 
 exports.getComandaDetalle = function getComandaDetalle(dcOrVars, varsOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getComandaDetalleRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -467,8 +597,38 @@ getCatalogosComandaRef.operationName = 'GetCatalogosComanda';
 exports.getCatalogosComandaRef = getCatalogosComandaRef;
 
 exports.getCatalogosComanda = function getCatalogosComanda(dcOrOptions, options) {
-  
+
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getCatalogosComandaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const diagnosticoComandasRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'DiagnosticoComandas');
+}
+diagnosticoComandasRef.operationName = 'DiagnosticoComandas';
+exports.diagnosticoComandasRef = diagnosticoComandasRef;
+
+exports.diagnosticoComandas = function diagnosticoComandas(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(diagnosticoComandasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getFichasClientesRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetFichasClientes');
+}
+getFichasClientesRef.operationName = 'GetFichasClientes';
+exports.getFichasClientesRef = getFichasClientesRef;
+
+exports.getFichasClientes = function getFichasClientes(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getFichasClientesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

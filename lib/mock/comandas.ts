@@ -7,6 +7,8 @@
  * recepción → lavado → secado → planchado → entrega.
  */
 
+import type { EtapaVisible } from "@/lib/produccion/modelo";
+
 export const ETAPAS = ["Recepción", "Lavado", "Secado", "Planchado", "Entrega"] as const;
 export type Etapa = (typeof ETAPAS)[number];
 
@@ -21,6 +23,7 @@ export interface PrendaLinea {
 }
 
 export interface Comanda {
+  etapas?: EtapaVisible[];
   id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   cliente: string;
   empresa?: string;

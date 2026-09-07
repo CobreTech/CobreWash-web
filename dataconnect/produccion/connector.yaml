@@ -1,0 +1,3 @@
+connectorId: produccion
+# Los inputs de lote @allow aún no están soportados por el generador de SDK.
+# La web usa mutationRef tipado en lib/produccion/guardar.ts.

@@ -1,337 +1,161 @@
 "use client";
-
-import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  Package,
-  Clock,
-  CheckCircle2,
-  RefreshCw,
-  AlertTriangle,
-  ArrowRight,
-  UserCog,
-  X,
-  Loader2,
-  ChevronRight,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Loader2, RefreshCw, Search, Settings, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
-import {
-  COMANDAS,
-  ETAPAS,
-  progreso,
-  estaEstancada,
-  UMBRAL_ESTANCADA,
-  OPERARIO_DEMO,
-  type Comanda,
-} from "@/lib/mock/comandas";
+import FlujoProduccion from "@/components/intranet/FlujoProduccion";
+import { dataConnect } from "@/lib/firebase/client";
+import { normalizarEtapas, estadoEtapa, type EtapaVisible } from "@/lib/produccion/modelo";
+import { ComandaEstado, getSeguimientoProduccion, getEtapasProduccion, configurarEtapaProduccion, asociarFlujoComandaPendiente, completarEtapaComanda, type GetSeguimientoProduccionData, type GetEtapasProduccionData } from "@/src/dataconnect-generated";
 
-const OPERARIOS = ["Carlos Herrera", "Diego Rojas", "Fernanda Muñoz", "Sin asignar"];
-
-const activa = (c: Comanda) => c.estado === "En proceso" || c.estado === "Pendiente";
-
+const PAGE_SIZE = 20;
+type EtapaCatalogo = GetEtapasProduccionData["etapaProduccions"][number];
+const inputStyle = "mt-1 w-full rounded-lg border border-stone-300 bg-transparent p-2 dark:border-white/20";
 export default function SeguimientoPage() {
   const permitido = useRoleGuard(["admin", "recepcionista", "operario"]);
   const usuario = useUsuarioActualContext();
-  const esOperario = usuario?.rol.nombre === "operario";
-
-  const [comandas, setComandas] = useState<Comanda[]>(COMANDAS);
+  const admin = usuario?.rol.nombre === "admin";
+  const puedeAsociar = admin || usuario?.rol.nombre === "recepcionista";
+  const puedeCompletar = admin || usuario?.rol.nombre === "operario";
+  const [data, setData] = useState<GetSeguimientoProduccionData | null>(null);
+  const [catalogo, setCatalogo] = useState<EtapaCatalogo[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [reasignar, setReasignar] = useState<Comanda | null>(null);
-
-  // Operario: solo sus comandas asignadas y activas. Admin: todas las activas.
-  const visibles = useMemo(() => {
-    const base = comandas.filter(activa);
-    const scoped = esOperario ? base.filter((c) => c.operario === OPERARIO_DEMO) : base;
-    const term = search.toLowerCase();
-    return scoped.filter(
-      (c) => c.id.toLowerCase().includes(term) || c.cliente.toLowerCase().includes(term),
-    );
-  }, [comandas, esOperario, search]);
-
-  const estancadas = useMemo(
-    () => comandas.filter((c) => activa(c) && estaEstancada(c) && (!esOperario || c.operario === OPERARIO_DEMO)),
-    [comandas, esOperario],
-  );
-
-  // Panel de estado global (solo admin): conteo por etapa.
-  const porEtapa = useMemo(
-    () =>
-      ETAPAS.map((etapa, i) => ({
-        etapa,
-        count: comandas.filter((c) => c.estado === "En proceso" && c.etapaActual === i).length,
-      })),
-    [comandas],
-  );
-
-  if (!permitido) {
-    return (
-      <div className="flex h-full items-center justify-center py-24">
-        <Loader2 className="w-6 h-6 text-brand-500 animate-spin" />
-      </div>
-    );
+  const [busy, setBusy] = useState<string | null>(null);
+  const [configuracion, setConfiguracion] = useState(false);
+  const [editar, setEditar] = useState<EtapaCatalogo | null>(null);
+  const solicitud = useRef(0);
+  const operacion = useRef(false);
+  const cargar = useCallback(async (silencioso = false) => {
+    if (!permitido) return;
+    const id = ++solicitud.current;
+    if (!silencioso) setLoading(true);
+    try {
+      const [res, etapas] = await Promise.all([
+        getSeguimientoProduccion(dataConnect, { limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE, buscar: search.trim() }, { fetchPolicy: "SERVER_ONLY" }),
+        getEtapasProduccion(dataConnect, { fetchPolicy: "SERVER_ONLY" }),
+      ]);
+      if (id !== solicitud.current) return;
+      setData(res.data);
+      setCatalogo(etapas.data.etapaProduccions);
+      setError("");
+      const paginas = Math.max(1, Math.ceil((res.data.total[0]?._count ?? 0) / PAGE_SIZE));
+      if (page > paginas) setPage(paginas);
+    } catch {
+      if (id === solicitud.current) setError("No se pudo cargar producción. Intenta actualizar nuevamente.");
+    } finally {
+      if (id === solicitud.current) setLoading(false);
+    }
+  }, [permitido, page, search]);
+  useEffect(() => {
+    const contador = solicitud;
+    const timer = window.setTimeout(() => void cargar(), 250);
+    const refrescar = () => { if (document.visibilityState === "visible") void cargar(true); };
+    const interval = window.setInterval(refrescar, 10000);
+    window.addEventListener("focus", refrescar);
+    return () => {
+      ++contador.current;
+      window.clearTimeout(timer); window.clearInterval(interval);
+      window.removeEventListener("focus", refrescar);
+    };
+  }, [cargar]);
+  async function asociar(id: string) {
+    if (operacion.current) return;
+    operacion.current = true; setBusy(id); setNotice("");
+    try {
+      await asociarFlujoComandaPendiente(dataConnect, { id });
+      setNotice("Flujo asociado correctamente."); await cargar(true);
+    } catch { setError("No se pudo asociar el flujo. Actualiza para comprobar si ya fue asociado."); }
+    finally { operacion.current = false; setBusy(null); }
   }
-
-  const avanzarEtapa = (c: Comanda) => {
-    setComandas((prev) =>
-      prev.map((x) => {
-        if (x.id !== c.id) return x;
-        if (x.estado === "Pendiente") return { ...x, estado: "En proceso", etapaActual: 0, horasEnEtapa: 0 };
-        const idx = x.etapaActual ?? 0;
-        if (idx >= ETAPAS.length - 1) return { ...x, estado: "Entregado", etapaActual: 5, horasEnEtapa: 0 };
-        return { ...x, etapaActual: idx + 1, horasEnEtapa: 0 };
-      }),
-    );
-  };
-
-  const aplicarReasignacion = (nuevo: string) => {
-    if (!reasignar) return;
-    setComandas((prev) =>
-      prev.map((x) => (x.id === reasignar.id ? { ...x, operario: nuevo === "Sin asignar" ? undefined : nuevo } : x)),
-    );
-    setReasignar(null);
-  };
-
-  const labelAvance = (c: Comanda) => {
-    if (c.estado === "Pendiente") return `Iniciar ${ETAPAS[0]}`;
-    const idx = c.etapaActual ?? 0;
-    if (idx >= ETAPAS.length - 1) return "Marcar entregado";
-    return `Avanzar a ${ETAPAS[idx + 1]}`;
-  };
-
-  return (
-    <div className="min-h-screen text-stone-900 dark:text-stone-100 p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-extrabold text-stone-900 dark:text-white">
-            {esOperario ? "Mis Tareas" : "Seguimiento de Producción"}
-          </h1>
-          <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">
-            {esOperario
-              ? `${visibles.length} comandas asignadas a ti`
-              : `${visibles.length} comandas activas en producción`}
-          </p>
-        </div>
-        <button className="flex items-center gap-2 bg-white dark:bg-stone-800 border border-stone-200 dark:border-white/10 text-stone-600 dark:text-stone-300 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-100 dark:hover:bg-stone-700 transition-all self-start sm:self-auto shadow-sm dark:shadow-none cursor-pointer">
-          <RefreshCw className="w-4 h-4" />
-          Actualizar
-        </button>
-      </motion.div>
-
-      {/* Panel de estado global (solo admin) */}
-      {!esOperario && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-stone-600 mb-4">
-            Estado global de producción
-          </p>
-          <div className="flex items-center gap-1 sm:gap-2">
-            {porEtapa.map((e, i) => (
-              <div key={e.etapa} className="flex items-center gap-1 sm:gap-2 flex-1">
-                <div className="flex-1 bg-stone-50 dark:bg-white/5 rounded-xl p-3 text-center">
-                  <p className="text-2xl font-display font-extrabold text-brand-600 dark:text-brand-400">{e.count}</p>
-                  <p className="text-[10px] text-stone-500 dark:text-stone-500 mt-0.5">{e.etapa}</p>
-                </div>
-                {i < porEtapa.length - 1 && <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-700 shrink-0" />}
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Alertas por etapa estancada */}
-      {estancadas.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.12 }}
-          className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4"
-        >
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <p className="text-amber-800 dark:text-amber-300 text-sm font-bold">
-                {estancadas.length} comanda{estancadas.length > 1 ? "s" : ""} estancada{estancadas.length > 1 ? "s" : ""} (más de {UMBRAL_ESTANCADA}h en la misma etapa)
-              </p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {estancadas.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setExpanded(c.id)}
-                    className="text-[11px] font-bold bg-white dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 px-2.5 py-1 rounded-full hover:bg-amber-100 dark:hover:bg-amber-500/25 transition-colors cursor-pointer"
-                  >
-                    {c.id} · {ETAPAS[c.etapaActual ?? 0]} · {c.horasEnEtapa}h
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Search */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative max-w-sm">
-        <input
-          type="text"
-          placeholder="Buscar comanda o cliente..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2.5 glass-panel rounded-xl text-sm text-stone-700 dark:text-stone-200 placeholder-stone-400 dark:placeholder-stone-600 focus:outline-none focus:border-brand-500/50 transition-colors shadow-sm dark:shadow-none"
-        />
-        <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
-      </motion.div>
-
-      {/* Orders */}
-      <div className="space-y-3">
-        <AnimatePresence>
-          {visibles.map((c, i) => {
-            const pct = progreso(c);
-            const isOpen = expanded === c.id;
-            const etapaActualNombre = c.estado === "Pendiente" ? "En espera" : ETAPAS[c.etapaActual ?? 0];
-            const stuck = estaEstancada(c);
-
-            return (
-              <motion.div
-                key={c.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ delay: i * 0.05 }}
-                className={`bg-white dark:bg-stone-900 border rounded-2xl overflow-hidden transition-colors shadow-sm dark:shadow-none ${
-                  stuck ? "border-amber-300 dark:border-amber-500/30" : "border-stone-200 dark:border-white/5 hover:border-brand-300 dark:hover:border-brand-500/15"
-                }`}
-              >
-                <button onClick={() => setExpanded(isOpen ? null : c.id)} className="w-full flex items-center gap-4 p-5 text-left cursor-pointer">
-                  <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-500/10 flex items-center justify-center shrink-0">
-                    <Package className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-stone-900 dark:text-white font-bold text-sm">{c.id}</span>
-                      <span className="text-stone-400 dark:text-stone-600 text-xs">·</span>
-                      <span className="text-stone-500 dark:text-stone-400 text-xs">{c.servicio}</span>
-                      <span className="text-[10px] bg-brand-100 dark:bg-brand-500/10 text-brand-700 dark:text-brand-400 border border-brand-300 dark:border-brand-500/20 px-2 py-0.5 rounded-full font-bold">
-                        {etapaActualNombre}
-                      </span>
-                      {stuck && (
-                        <span className="text-[10px] bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> {c.horasEnEtapa}h
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-stone-400 dark:text-stone-500 text-xs mt-0.5">{c.cliente} · {c.detalle.reduce((s, d) => s + d.cantidad, 0)} prendas{!esOperario && c.operario ? ` · ${c.operario}` : ""}</p>
-                  </div>
-                  <div className="hidden sm:flex flex-col items-end gap-1.5 shrink-0">
-                    <span className="text-brand-600 dark:text-brand-400 font-bold text-sm">{pct}%</span>
-                    <div className="w-24 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
-                      <motion.div className="h-full bg-gradient-brand rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.2 + i * 0.05 }} />
-                    </div>
-                  </div>
-                </button>
-
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-                      <div className="px-5 pb-5 border-t border-stone-100 dark:border-white/5">
-                        {/* 5-stage timeline */}
-                        <div className="space-y-4 relative pl-6 py-4 before:absolute before:left-2.5 before:top-6 before:bottom-6 before:w-px before:bg-stone-200 dark:before:bg-stone-700">
-                          {ETAPAS.map((etapa, si) => {
-                            const idx = c.etapaActual ?? -1;
-                            const done = c.estado === "Entregado" || idx > si;
-                            const active = c.estado === "En proceso" && idx === si;
-                            return (
-                              <div key={etapa} className="relative flex justify-between items-center">
-                                <div className={`absolute -left-6 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${active ? "bg-brand-500 border-brand-500 scale-110" : done ? "bg-green-500 border-green-500" : "bg-white dark:bg-stone-900 border-stone-300 dark:border-stone-600"}`}>
-                                  {done && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                                  {active && <div className="w-2 h-2 rounded-full bg-white animate-ping absolute" />}
-                                </div>
-                                <p className={`text-sm font-semibold ${active ? "text-brand-600 dark:text-brand-400" : done ? "text-stone-700 dark:text-stone-200" : "text-stone-400 dark:text-stone-600"}`}>
-                                  {etapa}
-                                </p>
-                                {active && <span className="text-[10px] font-bold bg-brand-100 dark:bg-brand-500/15 text-brand-700 dark:text-brand-400 px-2 py-0.5 rounded-full">En curso</span>}
-                                {done && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-wrap gap-2 pt-3 border-t border-stone-100 dark:border-white/5">
-                          {esOperario ? (
-                            /* Operario: marcar avance de etapa */
-                            <button
-                              onClick={() => avanzarEtapa(c)}
-                              className="flex items-center gap-2 bg-gradient-brand text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg transition-all cursor-pointer"
-                            >
-                              <ArrowRight className="w-4 h-4" />
-                              {labelAvance(c)}
-                            </button>
-                          ) : (
-                            /* Admin: reasignar comanda */
-                            <button
-                              onClick={() => setReasignar(c)}
-                              className="flex items-center gap-2 bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-200 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-200 dark:hover:bg-white/10 transition-all cursor-pointer"
-                            >
-                              <UserCog className="w-4 h-4" />
-                              Reasignar {c.operario ? `(${c.operario})` : ""}
-                            </button>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-stone-400 dark:text-stone-600 px-2">
-                            <Clock className="w-3.5 h-3.5" /> Ingreso: {c.fechaRecepcion}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-
-        {visibles.length === 0 && (
-          <div className="text-center py-16 text-stone-400 dark:text-stone-600 text-sm">
-            {esOperario ? "No tienes comandas asignadas por ahora." : "No hay comandas activas."}
-          </div>
-        )}
+  async function completar(comandaId: string, etapa: EtapaVisible) {
+    if (operacion.current) return;
+    operacion.current = true; setBusy(comandaId); setError(""); setNotice("");
+    try {
+      await completarEtapaComanda(dataConnect, {
+        comandaId,
+        etapaId: etapa.id,
+        orden: etapa.orden,
+        estadoComanda: etapa.orden === 5
+          ? ComandaEstado.ENTREGADA
+          : etapa.orden === 4 ? ComandaEstado.FINALIZADA : ComandaEstado.EN_PROCESO,
+      });
+      setNotice(`${etapa.nombre} completada correctamente.`); await cargar(true);
+    } catch {
+      setError("No se pudo completar la etapa. Actualiza la vista: otra persona pudo haber avanzado esta comanda.");
+      await cargar(true);
+    } finally { operacion.current = false; setBusy(null); }
+  }
+  async function guardarEtapa(event: React.FormEvent) {
+    event.preventDefault();
+    if (!editar || operacion.current) return;
+    operacion.current = true; setBusy(editar.id); setNotice("");
+    try {
+      await configurarEtapaProduccion(dataConnect, { id: editar.id, nombre: editar.nombre.trim(), descripcion: editar.descripcion?.trim() || null, tiempoEstimadoMin: editar.tiempoEstimadoMin ?? null });
+      setEditar(null); setNotice("Configuración guardada. Se aplicará a los nuevos flujos."); await cargar(true);
+    } catch { setError("No se pudo guardar la etapa. Revisa que el nombre no esté repetido y el tiempo sea positivo."); }
+    finally { operacion.current = false; setBusy(null); }
+  }
+  if (!permitido) return <div className="flex justify-center py-24"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  const total = data?.total[0]?._count ?? 0;
+  const paginas = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  return <div className="min-h-screen space-y-6 p-4 text-stone-900 sm:p-6 dark:text-stone-100">
+    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-4">
+      <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Operaciones</p><h1 className="font-display text-2xl font-extrabold">Seguimiento de Producción</h1><p className="mt-1 text-sm text-stone-500">{total} comandas pendientes, en proceso o listas para entregar</p></div>
+      <div className="flex gap-2">
+        {admin && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => setConfiguracion(!configuracion)} className="flex items-center gap-2 rounded-xl bg-stone-100 px-4 py-2.5 text-sm font-bold text-stone-700 transition-all hover:bg-stone-200 dark:bg-white/5 dark:text-stone-200 dark:hover:bg-white/10"><Settings className="h-4 w-4" />Configurar etapas</motion.button>}
+        <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => void cargar()} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Actualizar</motion.button>
       </div>
-
-      {/* Reasignar modal (admin) */}
-      <AnimatePresence>
-        {reasignar && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setReasignar(null)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="glass-panel rounded-3xl p-6 w-full max-w-sm relative z-10">
-              <button onClick={() => setReasignar(null)} className="absolute top-4 right-4 p-2 rounded-xl text-stone-400 hover:bg-stone-100 dark:hover:bg-white/5 cursor-pointer"><X className="w-5 h-5" /></button>
-              <h3 className="font-extrabold text-stone-900 dark:text-white mb-1">Reasignar {reasignar.id}</h3>
-              <p className="text-xs text-stone-500 mb-4">Selecciona el operario responsable de esta comanda.</p>
-              <div className="space-y-2">
-                {OPERARIOS.map((op) => (
-                  <button
-                    key={op}
-                    onClick={() => aplicarReasignacion(op)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
-                      (reasignar.operario ?? "Sin asignar") === op
-                        ? "bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/30"
-                        : "bg-stone-50 dark:bg-white/5 text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    {op}
-                    {(reasignar.operario ?? "Sin asignar") === op && <CheckCircle2 className="w-4 h-4" />}
-                  </button>
-                ))}
+    </motion.div>
+    <AnimatePresence mode="popLayout">
+      {error && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{error}</motion.div>}
+      {notice && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role="status" className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-300">{notice}</motion.div>}
+    </AnimatePresence>
+    {!loading && catalogo.length !== 5 && <p role="alert" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">Falta configurar el catálogo de las cinco etapas de producción. Contacta a administración.</p>}
+    {admin && configuracion && <section className="space-y-3 rounded-2xl border border-stone-200 p-5 dark:border-white/10">
+      <h2 className="font-bold">Etapas del flujo</h2>
+      <p className="text-sm text-stone-500">La secuencia es Recepción, Lavado, Secado, Planchado y Entrega. Puedes ajustar sus nombres, descripciones y tiempos. Las comandas asociadas conservan su configuración.</p>
+      {catalogo.map((etapa) => <div key={etapa.id} className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 p-3 dark:bg-white/5"><span className="text-sm">{etapa.orden}. {etapa.nombre}</span><button onClick={() => setEditar({ ...etapa })} className="text-sm font-bold text-brand-600 dark:text-brand-400">Editar</button></div>)}
+    </section>}
+    <label className="relative block max-w-md"><span className="sr-only">Buscar comanda o cliente</span><Search className="absolute left-3 top-3 h-4 w-4 text-stone-400" /><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Buscar comanda o cliente..." className="w-full rounded-2xl border border-stone-200/70 bg-white/70 py-2.5 pl-9 pr-3 text-sm backdrop-blur-sm transition-colors focus:border-brand-500/40 focus:outline-none dark:border-white/5 dark:bg-white/5" /></label>
+    {loading ? <div role="status" className="flex justify-center gap-2 py-12"><Loader2 className="h-5 w-5 animate-spin" />Cargando producción...</div> : <div className="space-y-3">
+      {data?.comandas.map((c, index) => {
+        const etapas = normalizarEtapas(c.comandaEtapas_on_comanda);
+        return <motion.article key={c.id} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} whileHover={{ y: -2 }} className="glass-panel rounded-2xl p-5 transition-colors hover:border-brand-500/30 dark:hover:border-brand-500/20">
+          <button onClick={() => setExpanded(expanded === c.id ? null : c.id)} aria-expanded={expanded === c.id} className="flex w-full flex-wrap items-center justify-between gap-3 text-left">
+            <span><span className="block font-bold">{c.numeroComanda}</span><span className="text-sm text-stone-500">{c.cliente.nombre} · {c.comandaDetalles_on_comanda.reduce((s, d) => s + d.cantidad, 0)} prendas</span></span>
+            <span className="rounded-full bg-brand-500/10 px-3 py-1 text-xs font-bold text-brand-600 dark:text-brand-400">{!etapas.length ? "Sin flujo asociado" : estadoEtapa(etapas)}</span>
+          </button>
+          <AnimatePresence initial={false}>
+            {expanded === c.id && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
+              <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-white/5">
+                <p className="text-xs text-stone-500">Ingreso: {new Date(c.fechaRecepcion).toLocaleString("es-CL")}</p>
+                <FlujoProduccion etapas={etapas} puedeCompletar={puedeCompletar} completando={busy === c.id} onCompletar={(etapa) => void completar(c.id, etapa)} />
+                {!etapas.length && c.estado === "PENDIENTE" && puedeAsociar && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} disabled={busy != null || catalogo.length !== 5} onClick={() => void asociar(c.id)} className="rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50">{busy === c.id ? "Asociando..." : "Asociar flujo de producción"}</motion.button>}
+                {!etapas.length && c.estado !== "PENDIENTE" && <p className="text-xs text-stone-500">Comanda anterior sin registro de etapas. Su estado se conserva.</p>}
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+            </motion.div>}
+          </AnimatePresence>
+        </motion.article>;
+      })}
+      {data && data.comandas.length === 0 && <p className="py-12 text-center text-sm text-stone-500">No hay comandas de producción que coincidan con la búsqueda.</p>}
+    </div>}
+    <div className="flex items-center justify-between gap-4 text-sm"><span>{total} resultados · Página {page} de {paginas}</span><div className="flex gap-2"><button disabled={loading || page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={loading || page >= paginas} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Siguiente</button></div></div>
+    {editar && admin && <div role="dialog" aria-modal="true" aria-labelledby="titulo-etapa" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <form onSubmit={guardarEtapa} className="relative w-full max-w-md space-y-4 rounded-2xl bg-white p-6 dark:bg-stone-900">
+        <button type="button" disabled={busy != null} onClick={() => setEditar(null)} aria-label="Cerrar configuración" className="absolute right-4 top-4"><X className="h-5 w-5" /></button>
+        <h2 id="titulo-etapa" className="pr-6 font-bold">Configurar etapa {editar.orden}</h2>
+        {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+        <label className="block text-sm">Nombre<input required maxLength={40} value={editar.nombre} onChange={(e) => setEditar({ ...editar, nombre: e.target.value })} className={inputStyle} /></label>
+        <label className="block text-sm">Descripción<textarea maxLength={200} value={editar.descripcion ?? ""} onChange={(e) => setEditar({ ...editar, descripcion: e.target.value })} className={inputStyle} /></label>
+        <label className="block text-sm">Tiempo estimado (minutos, opcional)<input type="number" min={1} step={1} value={editar.tiempoEstimadoMin ?? ""} onChange={(e) => setEditar({ ...editar, tiempoEstimadoMin: e.target.value === "" ? null : Number(e.target.value) })} className={inputStyle} /></label>
+        <button disabled={busy != null || !editar.nombre.trim()} className="rounded-xl bg-brand-500 px-4 py-2 font-bold text-white disabled:opacity-50">{busy ? "Guardando..." : "Guardar configuración"}</button>
+      </form>
+    </div>}
+  </div>;
 }
