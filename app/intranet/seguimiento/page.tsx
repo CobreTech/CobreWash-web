@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, RefreshCw, Search, Settings, X } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, Search, Settings, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import FlujoProduccion from "@/components/intranet/FlujoProduccion";
 import { dataConnect } from "@/lib/firebase/client";
 import { normalizarEtapas, estadoEtapa, type EtapaVisible } from "@/lib/produccion/modelo";
+import { MOTIVOS_INCIDENCIA, registrarIncidenciaMock, type MotivoIncidencia } from "@/lib/mock/incidencias";
 import { ComandaEstado, getSeguimientoProduccion, getEtapasProduccion, configurarEtapaProduccion, asociarFlujoComandaPendiente, completarEtapaComanda, type GetSeguimientoProduccionData, type GetEtapasProduccionData } from "@/src/dataconnect-generated";
 
 const PAGE_SIZE = 20;
@@ -18,6 +19,7 @@ export default function SeguimientoPage() {
   const admin = usuario?.rol.nombre === "admin";
   const puedeAsociar = admin || usuario?.rol.nombre === "recepcionista";
   const puedeCompletar = admin || usuario?.rol.nombre === "operario";
+  const puedeReportarIncidencia = usuario?.rol.nombre === "operario";
   const [data, setData] = useState<GetSeguimientoProduccionData | null>(null);
   const [catalogo, setCatalogo] = useState<EtapaCatalogo[]>([]);
   const [search, setSearch] = useState("");
@@ -29,6 +31,9 @@ export default function SeguimientoPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [configuracion, setConfiguracion] = useState(false);
   const [editar, setEditar] = useState<EtapaCatalogo | null>(null);
+  const [incidencia, setIncidencia] = useState<{ id: string; numero: string; cliente: string } | null>(null);
+  const [motivoIncidencia, setMotivoIncidencia] = useState<MotivoIncidencia>(MOTIVOS_INCIDENCIA[0]);
+  const [descripcionIncidencia, setDescripcionIncidencia] = useState("");
   const solicitud = useRef(0);
   const operacion = useRef(false);
   const cargar = useCallback(async (silencioso = false) => {
@@ -101,6 +106,21 @@ export default function SeguimientoPage() {
     } catch { setError("No se pudo guardar la etapa. Revisa que el nombre no esté repetido y el tiempo sea positivo."); }
     finally { operacion.current = false; setBusy(null); }
   }
+  function guardarIncidencia(event: React.FormEvent) {
+    event.preventDefault();
+    if (!incidencia || !puedeReportarIncidencia) return;
+    const creada = registrarIncidenciaMock({
+      comandaId: incidencia.numero,
+      cliente: incidencia.cliente,
+      motivo: motivoIncidencia,
+      descripcion: descripcionIncidencia.trim() || undefined,
+      registradaPor: usuario ? `${usuario.nombre} ${usuario.apellido ?? ""}`.trim() : "Operario",
+    });
+    setIncidencia(null);
+    setDescripcionIncidencia("");
+    setMotivoIncidencia(MOTIVOS_INCIDENCIA[0]);
+    setNotice(`${creada.id} registrada correctamente en ${creada.comandaId}.`);
+  }
   if (!permitido) return <div className="flex justify-center py-24"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   const total = data?.total[0]?._count ?? 0;
   const paginas = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -136,6 +156,7 @@ export default function SeguimientoPage() {
               <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-white/5">
                 <p className="text-xs text-stone-500">Ingreso: {new Date(c.fechaRecepcion).toLocaleString("es-CL")}</p>
                 <FlujoProduccion etapas={etapas} puedeCompletar={puedeCompletar} completando={busy === c.id} onCompletar={(etapa) => void completar(c.id, etapa)} />
+                {puedeReportarIncidencia && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => setIncidencia({ id: c.id, numero: c.numeroComanda, cliente: c.cliente.nombre })} className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition-colors hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"><AlertTriangle className="h-4 w-4" />Reportar incidencia</motion.button>}
                 {!etapas.length && c.estado === "PENDIENTE" && puedeAsociar && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} disabled={busy != null || catalogo.length !== 5} onClick={() => void asociar(c.id)} className="rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50">{busy === c.id ? "Asociando..." : "Asociar flujo de producción"}</motion.button>}
                 {!etapas.length && c.estado !== "PENDIENTE" && <p className="text-xs text-stone-500">Comanda anterior sin registro de etapas. Su estado se conserva.</p>}
               </div>
@@ -146,6 +167,17 @@ export default function SeguimientoPage() {
       {data && data.comandas.length === 0 && <p className="py-12 text-center text-sm text-stone-500">No hay comandas de producción que coincidan con la búsqueda.</p>}
     </div>}
     <div className="flex items-center justify-between gap-4 text-sm"><span>{total} resultados · Página {page} de {paginas}</span><div className="flex gap-2"><button disabled={loading || page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button disabled={loading || page >= paginas} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Siguiente</button></div></div>
+    {incidencia && puedeReportarIncidencia && <div role="dialog" aria-modal="true" aria-labelledby="titulo-incidencia" className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-sm">
+      <form onSubmit={guardarIncidencia} className="glass-modal relative w-full max-w-lg space-y-5 rounded-3xl bg-white p-6 dark:bg-stone-900">
+        <button type="button" onClick={() => setIncidencia(null)} aria-label="Cerrar incidencia" className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 dark:bg-white/5"><X className="h-4 w-4" /></button>
+        <div className="flex items-start gap-3 pr-12"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400"><AlertTriangle className="h-5 w-5" /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-red-600 dark:text-red-400">RF-SP10 · Nueva incidencia</p><h2 id="titulo-incidencia" className="font-display text-xl font-extrabold">Reportar problema</h2></div></div>
+        <div className="grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm sm:grid-cols-2 dark:bg-white/5"><div><p className="text-xs text-stone-400">Comanda</p><p className="font-bold text-brand-600 dark:text-brand-400">{incidencia.numero}</p></div><div><p className="text-xs text-stone-400">Cliente</p><p className="font-semibold">{incidencia.cliente}</p></div></div>
+        <label className="block text-sm font-semibold">Motivo <span className="text-red-500">*</span><select required value={motivoIncidencia} onChange={(event) => setMotivoIncidencia(event.target.value as MotivoIncidencia)} className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3 py-3 text-sm focus:border-brand-500/50 focus:outline-none dark:border-white/10 dark:bg-stone-950">{MOTIVOS_INCIDENCIA.map((motivo) => <option key={motivo} value={motivo}>{motivo}</option>)}</select></label>
+        <label className="block text-sm font-semibold">Descripción <span className="font-normal text-stone-400">(opcional)</span><textarea value={descripcionIncidencia} onChange={(event) => setDescripcionIncidencia(event.target.value)} maxLength={300} rows={4} placeholder="Describe qué ocurrió, cuántas prendas afecta o qué acción realizaste..." className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-white px-3 py-3 text-sm focus:border-brand-500/50 focus:outline-none dark:border-white/10 dark:bg-stone-950" /><span className="mt-1 block text-right text-[10px] text-stone-400">{descripcionIncidencia.length}/300</span></label>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">La incidencia quedará abierta para seguimiento de administración o recepción.</div>
+        <div className="flex justify-end gap-2"><button type="button" onClick={() => setIncidencia(null)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5">Cancelar</button><button className="rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-bold text-white shadow-premium">Registrar incidencia</button></div>
+      </form>
+    </div>}
     {editar && admin && <div role="dialog" aria-modal="true" aria-labelledby="titulo-etapa" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <form onSubmit={guardarEtapa} className="relative w-full max-w-md space-y-4 rounded-2xl bg-white p-6 dark:bg-stone-900">
         <button type="button" disabled={busy != null} onClick={() => setEditar(null)} aria-label="Cerrar configuración" className="absolute right-4 top-4"><X className="h-5 w-5" /></button>

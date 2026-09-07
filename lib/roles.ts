@@ -8,6 +8,7 @@ import {
   BarChart3,
   Megaphone,
   Contact,
+  ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
     { href: "/intranet", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: "/intranet/comandas", label: "Comandas", icon: ClipboardList },
     { href: "/intranet/seguimiento", label: "Seguimiento", icon: Package },
+    { href: "/intranet/incidencias", label: "Incidencias", icon: ShieldAlert },
     { href: "/intranet/inventario", label: "Inventario", icon: Archive },
     { href: "/intranet/reportes", label: "Reportes", icon: BarChart3 },
     { href: "/intranet/comunicacion", label: "Comunicación", icon: Megaphone },
@@ -45,6 +47,7 @@ export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
   recepcionista: [
     { href: "/intranet/comandas", label: "Comandas", icon: ClipboardList },
     { href: "/intranet/seguimiento", label: "Seguimiento", icon: Package },
+    { href: "/intranet/incidencias", label: "Incidencias", icon: ShieldAlert },
     { href: "/intranet/clientes", label: "Clientes", icon: Contact },
     { href: "/intranet/configuracion", label: "Configuración", icon: Settings },
   ],
@@ -64,6 +67,7 @@ export const ACCESO_POR_RUTA: Record<string, Rol[]> = {
   "/intranet/comandas": ["admin", "recepcionista"],
   "/intranet/clientes": ["admin", "recepcionista"],
   "/intranet/seguimiento": ["admin", "recepcionista", "operario"],
+  "/intranet/incidencias": ["admin", "recepcionista"],
   "/intranet/inventario": ["admin"],
   "/intranet/reportes": ["admin"],
   "/intranet/comunicacion": ["admin", "operario"],
