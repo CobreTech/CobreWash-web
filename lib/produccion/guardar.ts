@@ -21,6 +21,18 @@ export interface CrearComandaConFlujoVariables {
 
 type Resultado = { comanda_insert: { id: string } };
 
+export type EditarComandaConDetallesVariables = Omit<Pick<CrearComandaConFlujoVariables, "id" | "empresa" | "proyecto" | "observaciones" | "detalles">, "detalles"> & {
+  version: string;
+  detalles: (CrearComandaConFlujoVariables["detalles"][number] & { comandaId: string })[];
+};
+
+export async function editarComandaConDetalles(variables: EditarComandaConDetallesVariables) {
+  const dc = getDataConnect(app, { ...connectorConfig, connector: "produccion" });
+  await executeMutation(mutationRef<{ comanda_update: { id: string } }, EditarComandaConDetallesVariables>(
+    dc, "EditarComandaConDetalles", variables,
+  ));
+}
+
 // El generador aún no admite inputs _Data con @allow. Mantener este contrato
 // acotado al input de dataconnect/produccion/mutations.gql.
 export async function guardarComandaConFlujo(variables: CrearComandaConFlujoVariables) {

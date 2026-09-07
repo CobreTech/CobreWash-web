@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { etapaActualProduccion, normalizarEtapas, progresoProduccion, estadoEtapa, type EtapaPersistida } from "./modelo";
+import { etapaActualProduccion, normalizarEtapas, progresoProduccion, estadoEtapa, fechaProduccion, type EtapaPersistida } from "./modelo";
 
 const etapa = (overrides: Partial<EtapaPersistida> = {}): EtapaPersistida => ({
   etapaId: "lavado", nombreEtapa: "Lavado original", ordenEtapa: 2,
@@ -9,6 +9,17 @@ const etapa = (overrides: Partial<EtapaPersistida> = {}): EtapaPersistida => ({
 });
 
 describe("flujo persistido", () => {
+  it("muestra la autoría real y conserva vacíos los datos históricos desconocidos", () => {
+    const registro = normalizarEtapas([etapa({ estado: "COMPLETADA", fechaCompletado: "2026-09-07T15:30:00Z", operario: { id: "op", nombre: "Ana", apellido: "Pérez" } })])[0];
+    expect(registro.responsable).toBe("Ana Pérez");
+    expect(registro.fechaCompletado).toBe("2026-09-07T15:30:00Z");
+    expect(normalizarEtapas([etapa({ estado: "COMPLETADA" })])[0]).toMatchObject({ fechaCompletado: null, responsable: null });
+  });
+  it("presenta la hora de Santiago con sus cambios de horario", () => {
+    expect(fechaProduccion("2026-09-05T15:30:00Z")).toContain("11:30:00");
+    expect(fechaProduccion("2026-09-07T15:30:00Z")).toContain("12:30:00");
+    expect(fechaProduccion(null)).toBe("Sin registro");
+  });
   it("mantiene la configuración original, incluidos valores opcionales vacíos", () => {
     expect(normalizarEtapas([etapa()])[0]).toMatchObject({
       nombre: "Lavado original", orden: 2, descripcion: null, tiempoEstimadoMin: null,

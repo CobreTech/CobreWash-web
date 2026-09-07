@@ -266,6 +266,7 @@ query GetComandasPaginadas(
   ) {
     id
     numeroComanda
+    actualizadoEn
     codigoQr
     estado
     valorTotal
@@ -286,6 +287,8 @@ query GetComandasPaginadas(
 
     comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
       etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      fechaInicio fechaCompletado
+      operario { id nombre apellido }
       etapa { nombre orden descripcion tiempoEstimadoMin }
     }
     comandaDetalles_on_comanda {
@@ -348,6 +351,8 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
 
     comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
       etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      fechaInicio fechaCompletado
+      operario { id nombre apellido }
       etapa { nombre orden descripcion tiempoEstimadoMin }
     }
     comandaDetalles_on_comanda {
@@ -380,6 +385,10 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
 }
 
 query GetCatalogosComanda @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar clientes") }
+  }
   tipoServicios(where: { activo: { eq: true } }) {
     id
     nombre

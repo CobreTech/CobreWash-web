@@ -607,7 +607,7 @@ mutation EntregarComanda(
   $id: UUID!
 ) @auth(level: USER) @transaction {
   query @redact {
-    usuario(id_expr: "auth.uid") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol { nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para entregar comandas") }
     }
@@ -615,16 +615,21 @@ mutation EntregarComanda(
       @check(expr: "this != null", message: "Comanda no encontrada") {
       estado @check(expr: "this == 'FINALIZADA'", message: "Solo se puede entregar una comanda finalizada")
       cliente { email telefono }
+      comandaEtapas_on_comanda @check(expr: "this.size() == 0 || (this.size() == 5 && this.filter(e, e.ordenEtapa < 5 && e.estado == 'COMPLETADA').size() == 4 && this.filter(e, e.ordenEtapa == 5 && e.estado in ['PENDIENTE', 'EN_PROCESO']).size() == 1)", message: "El flujo no está listo para entregar", optional: true) { ordenEtapa estado }
     }
   }
   comanda_update(
-    id: $id
+    first: { where: { id: { eq: $id }, estado: { eq: FINALIZADA } } }
     data: {
       estado: ENTREGADA
       fechaEntregaReal_expr: "request.time"
       actualizadoEn_expr: "request.time"
     }
   ) @check(expr: "this != null", message: "Comanda no encontrada")
+  entrega: comandaEtapa_updateMany(
+    where: { comandaId: { eq: $id }, ordenEtapa: { eq: 5 }, estado: { in: [PENDIENTE, EN_PROCESO] } }
+    data: { estado: COMPLETADA, fechaCompletado_expr: "request.time", operarioId_expr: "auth.uid" }
+  ) @check(expr: "this == (response.query.comanda.comandaEtapas_on_comanda.size() == 0 ? 0 : 1)", message: "La entrega ya fue registrada")
   
   comandaHistorialEstado_insert(data: {
     comanda: { id: $id }

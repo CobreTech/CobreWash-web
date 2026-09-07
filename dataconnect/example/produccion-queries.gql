@@ -7,7 +7,7 @@ query GetEtapasProduccion @auth(level: USER) {
 }
 
 # El operario consulta la cola de producción. La asignación de trabajo es RF23;
-# el responsable que reporta cada avance se registrará en RF24.
+# el responsable que reporta cada avance se consulta como parte de RF24.
 query GetSeguimientoProduccion($limit: Int = 20, $offset: Int = 0, $buscar: String = "") @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
@@ -24,6 +24,8 @@ query GetSeguimientoProduccion($limit: Int = 20, $offset: Int = 0, $buscar: Stri
     comandaDetalles_on_comanda { cantidad tipoPrenda { nombre } tipoServicio { nombre } }
     comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
       etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
+      fechaInicio fechaCompletado
+      operario { id nombre apellido }
       etapa { nombre orden descripcion tiempoEstimadoMin }
     }
   }

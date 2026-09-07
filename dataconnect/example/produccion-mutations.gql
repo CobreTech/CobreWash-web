@@ -89,9 +89,12 @@ mutation CompletarEtapaComanda($comandaId: UUID!, $etapaId: UUID!, $orden: Int!,
     }
     comanda(id: $comandaId) @check(expr: "this != null", message: "Comanda no encontrada") {
       estado @check(expr: "(vars.orden <= 4 && this in ['PENDIENTE', 'EN_PROCESO']) || (vars.orden == 5 && this == 'FINALIZADA')", message: "La comanda ya no admite este avance")
+      fechaEntregaReal
+      cliente { email }
       comandaEtapas_on_comanda @check(expr: "this.size() == 5", message: "La comanda no tiene el flujo completo", optional: true) { etapaId }
     }
     actual: comandaEtapa(key: { comandaId: $comandaId, etapaId: $etapaId }) @check(expr: "this != null", message: "La etapa no pertenece a la comanda") {
+      nombreEtapa
       ordenEtapa @check(expr: "this == vars.orden", message: "El orden de la etapa no coincide")
       estado @check(expr: "this in ['PENDIENTE', 'EN_PROCESO']", message: "La etapa ya fue completada")
     }
@@ -108,14 +111,33 @@ mutation CompletarEtapaComanda($comandaId: UUID!, $etapaId: UUID!, $orden: Int!,
   }
   comandaEtapa_update(
     first: { where: { comandaId: { eq: $comandaId }, etapaId: { eq: $etapaId }, estado: { in: [PENDIENTE, EN_PROCESO] } } }
-    data: { estado: COMPLETADA }
+    data: { estado: COMPLETADA, fechaCompletado_expr: "request.time", operarioId_expr: "auth.uid" }
   ) @check(expr: "this != null", message: "La etapa ya fue completada")
   siguiente: comandaEtapa_updateMany(
     where: { comandaId: { eq: $comandaId }, ordenEtapa: { eq_expr: "vars.orden + 1" }, estado: { eq: PENDIENTE } }
-    data: { estado: EN_PROCESO }
+    data: { estado: EN_PROCESO, fechaInicio_expr: "request.time" }
   ) @check(expr: "(vars.orden < 5 && this == 1) || (vars.orden == 5 && this == 0)", message: "No se pudo activar la etapa siguiente")
   comanda_update(
     id: $comandaId
-    data: { estado: $estadoComanda, actualizadoEn_expr: "request.time" }
+    data: {
+      estado: $estadoComanda
+      actualizadoEn_expr: "request.time"
+      fechaEntregaReal_expr: "vars.orden == 5 ? request.time : response.query.comanda.fechaEntregaReal"
+    }
   ) @check(expr: "this != null", message: "No se pudo actualizar la comanda")
+  comandaHistorialEstado_insert(data: {
+    comandaId: $comandaId
+    usuarioId_expr: "auth.uid"
+    estadoNuevo: $estadoComanda
+    motivo_expr: "'Etapa completada: ' + response.query.actual.nombreEtapa"
+  })
+  notificacion: _execute(
+    sql: """
+      INSERT INTO public.comanda_notificacion (id, comanda_id, destinatario, mensaje, leida, fecha)
+      SELECT gen_random_uuid(), c.id, cl.email, 'Su comanda fue entregada correctamente', false, CURRENT_TIMESTAMP
+      FROM public.comanda c JOIN public.cliente cl ON cl.id = c.cliente_id
+      WHERE c.id = $1::uuid AND $2::integer = 5
+    """
+    params: [$comandaId, $orden]
+  )
 }

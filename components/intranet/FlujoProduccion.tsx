@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Check, CheckCircle2, Loader2 } from "lucide-react";
-import { etapaActualProduccion, progresoProduccion, type EtapaVisible } from "@/lib/produccion/modelo";
+import { etapaActualProduccion, progresoProduccion, fechaProduccion, type EtapaVisible } from "@/lib/produccion/modelo";
 
 type Props = {
   etapas: EtapaVisible[];
@@ -63,6 +63,27 @@ export default function FlujoProduccion({ etapas, puedeCompletar = false, comple
           );
         })}
       </ol>
+      <div className="mt-4 border-t border-stone-200/70 pt-4 dark:border-white/10">
+        <h3 className="text-xs font-bold text-stone-700 dark:text-stone-200">Registro de avances</h3>
+        <p className="mt-1 text-[11px] text-stone-500">Fecha y hora de Chile · Usuario que completó cada etapa</p>
+        <ol className="mt-3 space-y-3">
+          {etapas.map((etapa) => (
+            <li key={etapa.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 text-xs">
+              <span className="font-semibold">{etapa.orden}. {etapa.nombre}</span>
+              <div className="text-stone-500 sm:text-right">
+                {etapa.estado === "COMPLETADA" ? <>
+                  <p>{etapa.fechaCompletado
+                    ? <time dateTime={etapa.fechaCompletado}>{fechaProduccion(etapa.fechaCompletado)}</time>
+                    : "Fecha sin registro"}</p>
+                  <p className="mt-0.5">{etapa.responsable || "Responsable sin registro"}</p>
+                </> : etapa.fechaInicio
+                  ? <p>En proceso desde <time dateTime={etapa.fechaInicio}>{fechaProduccion(etapa.fechaInicio)}</time></p>
+                  : <p>Pendiente de completar</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
       {puedeCompletar && actual && onCompletar && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200/70 pt-4 dark:border-white/10">
           <div>

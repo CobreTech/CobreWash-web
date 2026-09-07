@@ -23,7 +23,7 @@ import {
   type Comanda as MockComanda,
 } from "@/lib/mock/comandas";
 import { normalizarEtapas, type EtapaVisible } from "@/lib/produccion/modelo";
-import { guardarComandaConFlujo, type CrearComandaConFlujoVariables } from "@/lib/produccion/guardar";
+import { guardarComandaConFlujo, editarComandaConDetalles, type CrearComandaConFlujoVariables } from "@/lib/produccion/guardar";
 import { getMiComandaGuardada } from "@/src/dataconnect-generated";
 import { dataConnect } from "@/lib/firebase/client";
 import { formatChileanPhone, formatRut, getChileanPhoneType, isValidChileanPhone, isValidRut } from "@/lib/validators";
@@ -32,9 +32,6 @@ import {
   TipoCliente, 
   ComandaEstado,
   getCatalogosComanda,
-  agregarComandaDetalle,
-  editarComanda,
-  eliminarDetallesComanda,
   anularComanda,
   entregarComanda,
   crearTipoPrenda,
@@ -111,6 +108,7 @@ const valorTotal = (c: Comanda) => c.valorTotal;
 export interface Comanda {
   id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   dbId: string; // UUID interno; nunca se muestra al usuario
+  actualizadoEn: string;
   cliente: string;
   empresa?: string;
   proyecto?: string;
@@ -239,6 +237,7 @@ export default function ComandasPage() {
     return (data?.comandas || []).map((c) => ({
       id: c.numeroComanda,
       dbId: c.id,
+      actualizadoEn: c.actualizadoEn,
       cliente: c.cliente.nombre,
       empresa: c.empresa || undefined,
       proyecto: c.proyecto || undefined,
@@ -272,7 +271,7 @@ export default function ComandasPage() {
   }, [data]);
 
   const [detalle, setDetalle] = useState<Comanda | null>(null);
-  const [form, setForm] = useState<{ mode: "crear" } | { mode: "editar"; id: string } | null>(null);
+  const [form, setForm] = useState<{ mode: "crear" } | { mode: "editar"; id: string; version: string } | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyForm);
   const [anular, setAnular] = useState<Comanda | null>(null);
   const [motivo, setMotivo] = useState("");
@@ -362,7 +361,7 @@ export default function ComandasPage() {
       }),
       observaciones: c.observaciones || "",
     });
-    setForm({ mode: "editar", id: c.dbId });
+    setForm({ mode: "editar", id: c.dbId, version: c.actualizadoEn });
   };
 
   const guardar = async () => {
@@ -484,31 +483,21 @@ export default function ComandasPage() {
         await guardarComandaConFlujo(variables);
         envioPendiente.current = null;
         } else if (form?.mode === "editar") {
-          const formTotal = detalleLimpio.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
-          
-          await editarComanda(dataConnect, {
+          await editarComandaConDetalles({
             id: form.id,
+            version: form.version,
             empresa: formData.empresa.trim() || undefined,
             proyecto: formData.proyecto.trim() || undefined,
-            valorTotal: formTotal,
             observaciones: formData.observaciones.trim() || undefined,
+            detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }) => ({
+              comandaId: form.id,
+              tipoPrendaId, tipoServicioId, cantidad: d.cantidad,
+              detalle: formData.tipoCliente === TipoCliente.HOTEL
+                ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
+                : d.detalle.trim() || undefined,
+              precioUnitario: d.precioUnitario, subtotal: d.cantidad * d.precioUnitario,
+            })),
           });
-
-          await eliminarDetallesComanda(dataConnect, { comandaId: form.id });
-
-          for (const { linea: d, tipoPrendaId, tipoServicioId } of lineasResueltas) {
-              await agregarComandaDetalle(dataConnect, {
-                comandaId: form.id,
-                tipoPrendaId,
-                tipoServicioId,
-                cantidad: d.cantidad,
-                detalle: formData.tipoCliente === TipoCliente.HOTEL
-                  ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
-                  : d.detalle.trim() || undefined,
-                precioUnitario: d.precioUnitario,
-                subtotal: d.cantidad * d.precioUnitario
-              });
-          }
         }
         
         await refetch(true);
@@ -516,7 +505,9 @@ export default function ComandasPage() {
       setForm(null);
     } catch (err) {
       console.error(err);
-      alert("Error al guardar la comanda.");
+      alert(form?.mode === "editar"
+        ? "No se pudo confirmar la edición. Revisa la comanda actualizada antes de reintentar; otra persona pudo modificarla o iniciar su producción."
+        : "Error al guardar la comanda.");
     } finally {
       guardando.current = false;
       setIsSubmitting(false);

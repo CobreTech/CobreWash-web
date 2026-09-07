@@ -89,3 +89,39 @@ mutation CrearComandaConFlujo(
     motivo: "Creación de comanda y asociación de flujo de producción"
   })
 }
+
+# Reemplazo atómico: un fallo conserva cabecera, total y prendas originales.
+# La versión impide guardar encima de cambios que el formulario aún no ha leído.
+mutation EditarComandaConDetalles(
+  $id: UUID!
+  $version: Timestamp!
+  $empresa: String
+  $proyecto: String
+  $observaciones: String
+  $detalles: [ComandaDetalle_Data!]! @allow(fields: "comandaId tipoPrendaId tipoServicioId cantidad detalle precioUnitario subtotal", maxCount: 100)
+) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.detalles.size() > 0 && vars.detalles.all(d, has(d.comandaId) && d.comandaId == vars.id && has(d.tipoPrendaId) && d.tipoPrendaId != null && has(d.tipoServicioId) && d.tipoServicioId != null && has(d.cantidad) && d.cantidad != null && d.cantidad > 0 && has(d.precioUnitario) && d.precioUnitario != null && d.precioUnitario >= 0 && has(d.subtotal) && d.subtotal != null && d.subtotal >= 0 && d.subtotal == double(d.cantidad) * d.precioUnitario)", message: "Las prendas, cantidades y montos son inválidos") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para editar comandas") }
+    }
+    comanda(id: $id) @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this == 'PENDIENTE'", message: "Solo puedes editar comandas pendientes")
+      actualizadoEn @check(expr: "this == vars.version", message: "La comanda cambió. Actualiza antes de editar")
+    }
+    tiposPrenda: tipoPrendas
+      @check(expr: "vars.detalles.all(d, this.exists(p, p.id == d.tipoPrendaId))", message: "Una prenda ya no existe") { id }
+    tiposServicio: tipoServicios
+      @check(expr: "vars.detalles.all(d, this.exists(s, s.id == d.tipoServicioId))", message: "Un servicio ya no existe") { id }
+  }
+  bloqueo: comanda_update(
+    first: { where: { id: { eq: $id }, estado: { eq: PENDIENTE }, actualizadoEn: { eq: $version } } }
+    data: { actualizadoEn_expr: "request.time", empresa: $empresa, proyecto: $proyecto, observaciones: $observaciones }
+  ) @check(expr: "this != null", message: "La comanda cambió o ya no está pendiente. Actualiza antes de editar")
+  comandaDetalle_deleteMany(where: { comandaId: { eq: $id } })
+  comandaDetalle_insertMany(data: $detalles)
+  totales: query @redact {
+    detalles: comandaDetalles(where: { comandaId: { eq: $id } }) { subtotal_sum }
+  }
+  comanda_update(id: $id, data: { valorTotal_expr: "response.totales.detalles[0].subtotal_sum" })
+}

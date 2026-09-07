@@ -156,6 +156,8 @@ export interface CompletarEtapaComandaData {
   comandaEtapa_update?: ComandaEtapa_Key | null;
   siguiente: number;
   comanda_update?: Comanda_Key | null;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+  notificacion?: number | null;
 }
 
 export interface CompletarEtapaComandaVariables {
@@ -342,6 +344,7 @@ export interface EliminarDetallesComandaVariables {
 
 export interface EntregarComandaData {
   comanda_update?: Comanda_Key | null;
+  entrega: number;
   comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
   comandaNotificacion_insert: ComandaNotificacion_Key;
 }
@@ -409,6 +412,13 @@ export interface GetComandaDetalleData {
       descripcionEtapa?: string | null;
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -490,6 +500,7 @@ export interface GetComandasPaginadasData {
   comandas: ({
     id: UUIDString;
     numeroComanda: string;
+    actualizadoEn: TimestampString;
     codigoQr: UUIDString;
     estado: ComandaEstado;
     valorTotal: number;
@@ -514,6 +525,13 @@ export interface GetComandasPaginadasData {
       descripcionEtapa?: string | null;
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -708,6 +726,13 @@ export interface GetSeguimientoProduccionData {
       descripcionEtapa?: string | null;
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;

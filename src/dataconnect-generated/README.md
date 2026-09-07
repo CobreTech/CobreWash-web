@@ -264,6 +264,13 @@ export interface GetSeguimientoProduccionData {
       descripcionEtapa?: string | null;
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -1288,6 +1295,7 @@ export interface GetComandasPaginadasData {
   comandas: ({
     id: UUIDString;
     numeroComanda: string;
+    actualizadoEn: TimestampString;
     codigoQr: UUIDString;
     estado: ComandaEstado;
     valorTotal: number;
@@ -1312,6 +1320,13 @@ export interface GetComandasPaginadasData {
       descripcionEtapa?: string | null;
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -1621,6 +1636,13 @@ export interface GetComandaDetalleData {
       descripcionEtapa?: string | null;
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -4235,6 +4257,7 @@ The `data` property is an object of type `EntregarComandaData`, which is defined
 ```typescript
 export interface EntregarComandaData {
   comanda_update?: Comanda_Key | null;
+  entrega: number;
   comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
   comandaNotificacion_insert: ComandaNotificacion_Key;
 }
@@ -4261,6 +4284,7 @@ const dataConnect = getDataConnect(connectorConfig);
 const { data } = await entregarComanda(dataConnect, entregarComandaVars);
 
 console.log(data.comanda_update);
+console.log(data.entrega);
 console.log(data.comandaHistorialEstado_insert);
 console.log(data.comandaNotificacion_insert);
 
@@ -4268,6 +4292,7 @@ console.log(data.comandaNotificacion_insert);
 entregarComanda(entregarComandaVars).then((response) => {
   const data = response.data;
   console.log(data.comanda_update);
+  console.log(data.entrega);
   console.log(data.comandaHistorialEstado_insert);
   console.log(data.comandaNotificacion_insert);
 });
@@ -4298,6 +4323,7 @@ const ref = entregarComandaRef(dataConnect, entregarComandaVars);
 const { data } = await executeMutation(ref);
 
 console.log(data.comanda_update);
+console.log(data.entrega);
 console.log(data.comandaHistorialEstado_insert);
 console.log(data.comandaNotificacion_insert);
 
@@ -4305,6 +4331,7 @@ console.log(data.comandaNotificacion_insert);
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.comanda_update);
+  console.log(data.entrega);
   console.log(data.comandaHistorialEstado_insert);
   console.log(data.comandaNotificacion_insert);
 });
@@ -5037,6 +5064,8 @@ export interface CompletarEtapaComandaData {
   comandaEtapa_update?: ComandaEtapa_Key | null;
   siguiente: number;
   comanda_update?: Comanda_Key | null;
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+  notificacion?: number | null;
 }
 ```
 ### Using `CompletarEtapaComanda`'s action shortcut function
@@ -5066,6 +5095,8 @@ const { data } = await completarEtapaComanda(dataConnect, completarEtapaComandaV
 console.log(data.comandaEtapa_update);
 console.log(data.siguiente);
 console.log(data.comanda_update);
+console.log(data.comandaHistorialEstado_insert);
+console.log(data.notificacion);
 
 // Or, you can use the `Promise` API.
 completarEtapaComanda(completarEtapaComandaVars).then((response) => {
@@ -5073,6 +5104,8 @@ completarEtapaComanda(completarEtapaComandaVars).then((response) => {
   console.log(data.comandaEtapa_update);
   console.log(data.siguiente);
   console.log(data.comanda_update);
+  console.log(data.comandaHistorialEstado_insert);
+  console.log(data.notificacion);
 });
 ```
 
@@ -5106,6 +5139,8 @@ const { data } = await executeMutation(ref);
 console.log(data.comandaEtapa_update);
 console.log(data.siguiente);
 console.log(data.comanda_update);
+console.log(data.comandaHistorialEstado_insert);
+console.log(data.notificacion);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
@@ -5113,5 +5148,7 @@ executeMutation(ref).then((response) => {
   console.log(data.comandaEtapa_update);
   console.log(data.siguiente);
   console.log(data.comanda_update);
+  console.log(data.comandaHistorialEstado_insert);
+  console.log(data.notificacion);
 });
 ```

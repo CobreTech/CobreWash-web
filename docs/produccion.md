@@ -5,7 +5,7 @@ Una comanda se considera aprobada cuando se guarda correctamente. La web usa
 en una transacción; el total se calcula en el servidor desde las prendas.
 Todas las etapas comienzan pendientes. RF18 permite que administración y operarios
 completen, en orden, Recepción, Lavado, Secado, Planchado y Entrega. RF19 y RF24
-incorporarán las fechas de finalización y el operario que registra cada avance.
+registran la fecha de finalización y el usuario autenticado que reporta cada avance.
 
 El catálogo vive en `EtapaProduccion`. La asociación `ComandaEtapa` conserva
 nombre, orden, descripción y tiempo estimado al crear el flujo. La configuración
@@ -37,6 +37,41 @@ La acción está disponible para perfiles activos `admin` y `operario`. Recepci�
 puede consultar el flujo, pero no reportar avances. La interfaz reutiliza el
 lenguaje visual de Comandas, con las cinco tarjetas horizontales, estados,
 animaciones y botón principal con gradiente.
+
+## RF19 y RF24 · Fecha y autor del avance
+
+`CompletarEtapaComanda` guarda `fechaCompletado` desde `request.time` y
+`operarioId` desde `auth.uid` en la misma transacción que cambia el estado. El
+cliente no puede enviar ni sustituir estos valores. La etapa siguiente recibe
+`fechaInicio` al activarse; no se atribuye un responsable hasta que se completa.
+La primera etapa permanece pendiente hasta su primer reporte, sin inventar una
+fecha de inicio. Cada avance agrega una entrada al historial de la comanda.
+
+`operario` identifica al usuario que reportó el avance, que también puede ser
+administración. No es una asignación de trabajo: RF23 deberá conservar esta
+autoría al reasignar tareas. Los reintentos y avances concurrentes no sobrescriben
+la fecha ni el responsable del reporte confirmado.
+
+El cierre por Seguimiento registra además la fecha real de entrega y la
+notificación persistente. `EntregarComanda`, disponible para administración y
+recepción, completa la quinta etapa con la misma trazabilidad y valida las cuatro
+anteriores. Las comandas históricas finalizadas sin flujo siguen admitiendo
+entrega sin reconstruir etapas.
+
+Seguimiento y el detalle de Comandas muestran fecha, hora y nombre del responsable
+por etapa. Las horas usan `America/Santiago` y respetan el horario de verano. Los
+avances históricos sin fecha o responsable muestran explícitamente la ausencia
+de registro. Esta implementación utiliza columnas existentes y no rellena datos
+históricos. Requiere desplegar los contratos actualizados de Data Connect.
+
+El 7 de septiembre de 2026 se desplegó la primera versión de estos contratos en
+`lavanderia-el-cobre-16fd5`. Firebase confirmó compatibilidad del esquema existente.
+La revisión posterior añadió controles de acceso al catálogo administrativo y una
+edición transaccional de cabecera, prendas y monto con bloqueo optimista; esta
+revisión queda pendiente de despliegue. La validación local aprobó 53 pruebas
+unitarias, 32 escenarios de integración, TypeScript, ESLint y build de producción.
+No se crearon comandas de prueba en la base real; las pruebas de avance,
+autorización, rollback y concurrencia se ejecutaron en el emulador.
 
 ## Indicadores y filtros de comandas
 
@@ -84,9 +119,11 @@ emulador local del puerto 9499. Sus fixtures están en `dataconnect/seed_data.gq
 y no se despliegan. No ejecutar simultáneamente los dos últimos comandos:
 comparten la copia temporal de configuración en `scratch/production-test`.
 
-Validación acumulada: 51 pruebas unitarias, 24 escenarios de integración,
-ESLint y build de Next.js aprobados. El navegador local confirmó la redirección
-sin sesión; la comprobación manual autenticada queda disponible para el usuario.
+La suite incluye 53 pruebas unitarias y 32 escenarios de integración: trazabilidad
+de admin/operario/recepción, rechazo de autor y fecha enviados por el cliente,
+control de acceso al catálogo, edición atómica, rollback, concurrencia, reintentos,
+entrega histórica y lectura de los datos persistidos.
+La comprobación manual autenticada queda disponible para el usuario.
 
 La compilación web genera el SDK de JavaScript sin escribir en el proyecto Android.
 Se conserva la configuración original de Kotlin en `dataconnect/example/connector.yaml`.
@@ -106,3 +143,7 @@ requiere revisión.
 5. Verificar que la comanda anterior conserva su configuración y una nueva toma los cambios.
 6. Como operario, comprobar que se puede consultar producción sin configurar etapas
    ni asociar manualmente comandas.
+7. Completar una etapa como operario y la siguiente como admin: comprobar la hora
+   de Chile y el nombre de cada responsable, incluso después de recargar.
+8. Entregar otra comanda desde recepción: verificar en su detalle la quinta etapa
+   completada, con la persona de recepción como responsable y las anteriores intactas.
