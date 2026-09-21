@@ -284,8 +284,118 @@ for (const estado of ["EN_PROCESO","FINALIZADA","ENTREGADA","ANULADA"]) await ch
   await assert.rejects(execute(production,"AsociarFlujoComandaPendiente",{id:v.id},"test-admin"));
   const c=await read(v.id); assert.equal(c.estado,estado); assert.equal(c.comandaEtapas_on_comanda.length,0);
 });
+await check("incidencias se persisten y solo los roles autorizados las gestionan", async () => {
+  const v = variables();
+  await execute(mutation, "CrearComandaConFlujo", v, "test-recepcion");
+  const creada = await execute(production, "RegistrarIncidenciaComanda", {
+    comandaId: v.id, motivo: "Falla de maquinaria", descripcion: "Prueba de integración",
+  }, "test-operario");
+  const incidenciaId = creada.incidenciaComanda_insert.id;
+  for (const user of ["test-admin", "test-recepcion"]) {
+    const listado = await execute(queries, "GetIncidencias", {}, user);
+    const incidencia = listado.incidenciaComandas.find((item) => item.id.replaceAll("-", "") === incidenciaId.replaceAll("-", ""));
+    assert.equal(incidencia.comanda.numeroComanda, v.numeroComanda);
+    assert.equal(incidencia.reportadaPor.id, "test-operario");
+    assert.equal(incidencia.estado, "ABIERTA");
+  }
+  for (const user of [null, "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(queries, "GetIncidencias", {}, user));
+  }
+  for (const user of [null, "test-admin", "test-recepcion", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(production, "RegistrarIncidenciaComanda", { comandaId: v.id, motivo: "Ilegal" }, user));
+  }
+  await execute(production, "ActualizarEstadoIncidencia", { id: incidenciaId, estado: "RESUELTA" }, "test-recepcion");
+  const resuelta = (await execute(queries, "GetIncidencias", {}, "test-admin")).incidenciaComandas.find((item) => item.id.replaceAll("-", "") === incidenciaId.replaceAll("-", ""));
+  assert.equal(resuelta.estado, "RESUELTA");
+  for (const user of [null, "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(production, "ActualizarEstadoIncidencia", { id: incidenciaId, estado: "ABIERTA" }, user));
+  }
+});
+await check("reasignación conserva responsable vigente e historial de auditoría", async () => {
+  const v = variables();
+  await execute(mutation, "CrearComandaConFlujo", v, "test-recepcion");
+  await execute(production, "ReasignarOperarioEtapa", {
+    comandaId: v.id, etapaId: etapaIds[0], operarioId: "test-operario", motivo: "Inicio de turno",
+  }, "test-admin");
+  const inspect = await execute(`query Assignment($id:UUID!){comanda(id:$id){
+    comandaEtapas_on_comanda(orderBy:[{ordenEtapa:ASC}]){etapaId asignadoA{id nombre}}
+    reasignacionOperarios_on_comanda{etapa{id} operarioAnterior{id} operarioNuevo{id} realizadoPor{id} motivo}
+  }}`, "Assignment", { id: v.id });
+  assert.equal(inspect.comanda.comandaEtapas_on_comanda[0].asignadoA.id, "test-operario");
+  assert.equal(inspect.comanda.reasignacionOperarios_on_comanda.length, 1);
+  assert.equal(inspect.comanda.reasignacionOperarios_on_comanda[0].operarioAnterior, null);
+  assert.equal(inspect.comanda.reasignacionOperarios_on_comanda[0].operarioNuevo.id, "test-operario");
+  assert.equal(inspect.comanda.reasignacionOperarios_on_comanda[0].realizadoPor.id, "test-admin");
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(production, "ReasignarOperarioEtapa", {
+      comandaId: v.id, etapaId: etapaIds[0], operarioId: "test-operario",
+    }, user));
+  }
+  await execute(production, "CompletarEtapaComanda", { comandaId: v.id, etapaId: etapaIds[0], orden: 1, estadoComanda: "EN_PROCESO" }, "test-operario");
+  await assert.rejects(execute(production, "ReasignarOperarioEtapa", {
+    comandaId: v.id, etapaId: etapaIds[0], operarioId: "test-operario",
+  }, "test-admin"));
+});
+await check("panel productivo usa datos reales y es exclusivo de administración", async () => {
+  const panel = await execute(queries, "GetPanelProduccion", { limit: 100 }, "test-admin");
+  assert(panel.comandas.length > 0);
+  assert.equal(panel.pendientes[0]._count + panel.enProceso[0]._count + panel.listas[0]._count, panel.comandas.length);
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(queries, "GetPanelProduccion", {}, user));
+  }
+});
 await check("catálogo incompleto impide creación sin dejar cabecera", async () => {
   await execute(`mutation { etapaProduccion_update(id:"00000000-0000-4000-8000-000000000024",data:{orden:6}) }`);
   const v=variables(); await assert.rejects(execute(mutation,"CrearComandaConFlujo",v,"test-admin")); assert.equal(await read(v.id),null);
+});
+await check("inventario real permite alta y conserva el movimiento inicial", async () => {
+  const nombre = "Detergente integración " + randomUUID().slice(0, 8);
+  const creado = await execute(legacy, "CrearInsumo", {
+    nombre, unidadMedida: "L", stockInicial: 10, stockMinimo: 4,
+  }, "test-admin");
+  const id = creado.insumo_insert.id;
+  const inventario = await execute(commandQueries, "GetInventario", {}, "test-admin");
+  const insumo = inventario.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", ""));
+  assert.equal(insumo.nombre, nombre);
+  assert.equal(insumo.stockActual, 10);
+  const inicial = inventario.movimientoInventarios.find((item) => item.insumo.id.replaceAll("-", "") === id.replaceAll("-", ""));
+  assert.equal(inicial.tipoMovimiento, "ENTRADA");
+  assert.equal(inicial.cantidad, 10);
+  assert.equal(inicial.usuario.id, "test-admin");
+});
+await check("inventario rechaza accesos y valores inválidos", async () => {
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(commandQueries, "GetInventario", {}, user));
+    await assert.rejects(execute(legacy, "CrearInsumo", {
+      nombre: "Ilegal " + randomUUID(), unidadMedida: "kg", stockInicial: 1, stockMinimo: 1,
+    }, user));
+  }
+  await assert.rejects(execute(legacy, "CrearInsumo", {
+    nombre: "Stock negativo " + randomUUID(), unidadMedida: "kg", stockInicial: -1, stockMinimo: 1,
+  }, "test-admin"));
+});
+await check("entradas actualizan stock y registran trazabilidad atómicamente", async () => {
+  const creado = await execute(legacy, "CrearInsumo", {
+    nombre: "Suavizante integración " + randomUUID().slice(0, 8), unidadMedida: "L", stockInicial: 5, stockMinimo: 2,
+  }, "test-admin");
+  const id = creado.insumo_insert.id;
+  await execute(legacy, "RegistrarEntradaInventario", { insumoId: id, cantidad: 3.5, motivo: "Factura 123" }, "test-admin");
+  const inventario = await execute(commandQueries, "GetInventario", {}, "test-admin");
+  const insumo = inventario.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", ""));
+  assert.equal(insumo.stockActual, 8.5);
+  const movimientos = inventario.movimientoInventarios.filter((item) => item.insumo.id.replaceAll("-", "") === id.replaceAll("-", ""));
+  assert.equal(movimientos.length, 2);
+  assert.equal(movimientos[0].motivo, "Factura 123");
+  await Promise.all([
+    execute(legacy, "RegistrarEntradaInventario", { insumoId: id, cantidad: 1, motivo: "Concurrente A" }, "test-admin"),
+    execute(legacy, "RegistrarEntradaInventario", { insumoId: id, cantidad: 2, motivo: "Concurrente B" }, "test-admin"),
+  ]);
+  await assert.rejects(execute(legacy, "RegistrarEntradaInventario", { insumoId: id, cantidad: 0 }, "test-admin"));
+  await execute(legacy, "ActualizarInsumo", {
+    id, nombre: insumo.nombre, unidadMedida: "L", stockMinimo: 2, activo: false,
+  }, "test-admin");
+  await assert.rejects(execute(legacy, "RegistrarEntradaInventario", { insumoId: id, cantidad: 1 }, "test-admin"));
+  const final = await execute(commandQueries, "GetInventario", {}, "test-admin");
+  assert.equal(final.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", "")).stockActual, 11.5);
 });
 console.log(count + " escenarios de integración aprobados.");

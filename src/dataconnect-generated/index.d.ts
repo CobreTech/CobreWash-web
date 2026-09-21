@@ -22,6 +22,12 @@ export enum EstadoVehiculo {
   NO_APTO = "NO_APTO",
 };
 
+export enum IncidenciaEstado {
+  ABIERTA = "ABIERTA",
+  EN_REVISION = "EN_REVISION",
+  RESUELTA = "RESUELTA",
+};
+
 export enum SalidaVehiculoEstado {
   PROGRAMADA = "PROGRAMADA",
   EN_SERVICIO = "EN_SERVICIO",
@@ -34,12 +40,38 @@ export enum TipoCliente {
   PARTICULAR = "PARTICULAR",
 };
 
+export enum TipoMovimiento {
+  ENTRADA = "ENTRADA",
+  SALIDA = "SALIDA",
+};
+
 export enum UnidadCobro {
   PRENDA = "PRENDA",
   KILO = "KILO",
 };
 
 
+
+export interface ActualizarEstadoIncidenciaData {
+  incidenciaComanda_update?: IncidenciaComanda_Key | null;
+}
+
+export interface ActualizarEstadoIncidenciaVariables {
+  id: UUIDString;
+  estado: IncidenciaEstado;
+}
+
+export interface ActualizarInsumoData {
+  insumo_update?: Insumo_Key | null;
+}
+
+export interface ActualizarInsumoVariables {
+  id: UUIDString;
+  nombre: string;
+  unidadMedida: string;
+  stockMinimo: number;
+  activo: boolean;
+}
 
 export interface ActualizarUsuarioData {
   usuario_update?: Usuario_Key | null;
@@ -220,6 +252,18 @@ export interface CrearComandaVariables {
   proyecto?: string | null;
   valorTotal: number;
   observaciones?: string | null;
+}
+
+export interface CrearInsumoData {
+  insumo_insert: Insumo_Key;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+
+export interface CrearInsumoVariables {
+  nombre: string;
+  unidadMedida: string;
+  stockInicial: number;
+  stockMinimo: number;
 }
 
 export interface CrearSalidaVehiculoData {
@@ -612,6 +656,30 @@ export interface GetFichasClientesData {
   } & Cliente_Key)[];
 }
 
+export interface GetIncidenciasData {
+  incidenciaComandas: ({
+    id: UUIDString;
+    motivo: string;
+    descripcion?: string | null;
+    estado: IncidenciaEstado;
+    fecha: TimestampString;
+    actualizadaEn: TimestampString;
+    comanda: {
+      id: UUIDString;
+      numeroComanda: string;
+      estado: ComandaEstado;
+      cliente: {
+        nombre: string;
+      };
+    } & Comanda_Key;
+    reportadaPor: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+  } & IncidenciaComanda_Key)[];
+}
+
 export interface GetInsumoPorQrData {
   insumo?: {
     id: UUIDString;
@@ -626,6 +694,36 @@ export interface GetInsumoPorQrData {
 
 export interface GetInsumoPorQrVariables {
   codigoQr: UUIDString;
+}
+
+export interface GetInventarioData {
+  insumos: ({
+    id: UUIDString;
+    codigoQr: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+    stockMinimo: number;
+    activo: boolean;
+    creadoEn: TimestampString;
+  } & Insumo_Key)[];
+  movimientoInventarios: ({
+    id: UUIDString;
+    tipoMovimiento: TipoMovimiento;
+    cantidad: number;
+    motivo?: string | null;
+    fecha: TimestampString;
+    insumo: {
+      id: UUIDString;
+      nombre: string;
+      unidadMedida: string;
+    } & Insumo_Key;
+    usuario?: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+  } & MovimientoInventario_Key)[];
 }
 
 export interface GetMiComandaGuardadaData {
@@ -693,6 +791,66 @@ export interface GetMisSalidasVehiculoData {
   } & SalidaVehiculo_Key)[];
 }
 
+export interface GetPanelProduccionData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    valorTotal: number;
+    fechaRecepcion: TimestampString;
+    actualizadoEn: TimestampString;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      tipoCliente: TipoCliente;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+    })[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+    incidenciaComandas_on_comanda: ({
+      id: UUIDString;
+      estado: IncidenciaEstado;
+    } & IncidenciaComanda_Key)[];
+  } & Comanda_Key)[];
+  pendientes: ({
+    _count: number;
+  })[];
+  enProceso: ({
+    _count: number;
+  })[];
+  listas: ({
+    _count: number;
+  })[];
+}
+
+export interface GetPanelProduccionVariables {
+  limit?: number | null;
+}
+
 export interface GetRolesData {
   rols: ({
     id: UUIDString;
@@ -733,6 +891,11 @@ export interface GetSeguimientoProduccionData {
         nombre: string;
         apellido?: string | null;
       } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -740,10 +903,40 @@ export interface GetSeguimientoProduccionData {
         tiempoEstimadoMin?: number | null;
       };
     })[];
+    reasignacionOperarios_on_comanda: ({
+      id: UUIDString;
+      fecha: TimestampString;
+      motivo?: string | null;
+      etapa: {
+        id: UUIDString;
+        nombre: string;
+        orden: number;
+      } & EtapaProduccion_Key;
+      operarioAnterior?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      operarioNuevo: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      realizadoPor: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+    } & ReasignacionOperario_Key)[];
   } & Comanda_Key)[];
   total: ({
     _count: number;
   })[];
+  operarios: ({
+    id: string;
+    nombre: string;
+    apellido?: string | null;
+  } & Usuario_Key)[];
 }
 
 export interface GetSeguimientoProduccionVariables {
@@ -780,6 +973,11 @@ export interface GetVehiculosData {
     activo: boolean;
     creadoEn: TimestampString;
   } & Vehiculo_Key)[];
+}
+
+export interface IncidenciaComanda_Key {
+  id: UUIDString;
+  __typename?: 'IncidenciaComanda_Key';
 }
 
 export interface IniciarSalidaVehiculoData {
@@ -820,6 +1018,44 @@ export interface PatronConsumo_Key {
 export interface PrediccionInsumo_Key {
   id: UUIDString;
   __typename?: 'PrediccionInsumo_Key';
+}
+
+export interface ReasignacionOperario_Key {
+  id: UUIDString;
+  __typename?: 'ReasignacionOperario_Key';
+}
+
+export interface ReasignarOperarioEtapaData {
+  comandaEtapa_update?: ComandaEtapa_Key | null;
+  reasignacionOperario_insert: ReasignacionOperario_Key;
+}
+
+export interface ReasignarOperarioEtapaVariables {
+  comandaId: UUIDString;
+  etapaId: UUIDString;
+  operarioId: string;
+  motivo?: string | null;
+}
+
+export interface RegistrarEntradaInventarioData {
+  insumo_update?: Insumo_Key | null;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+
+export interface RegistrarEntradaInventarioVariables {
+  insumoId: UUIDString;
+  cantidad: number;
+  motivo?: string | null;
+}
+
+export interface RegistrarIncidenciaComandaData {
+  incidenciaComanda_insert: IncidenciaComanda_Key;
+}
+
+export interface RegistrarIncidenciaComandaVariables {
+  comandaId: UUIDString;
+  motivo: string;
+  descripcion?: string | null;
 }
 
 export interface RegistrarInspeccionAntesData {
@@ -1167,6 +1403,42 @@ export const crearTipoServicioRef: CrearTipoServicioRef;
 export function crearTipoServicio(vars: CrearTipoServicioVariables): MutationPromise<CrearTipoServicioData, CrearTipoServicioVariables>;
 export function crearTipoServicio(dc: DataConnect, vars: CrearTipoServicioVariables): MutationPromise<CrearTipoServicioData, CrearTipoServicioVariables>;
 
+interface CrearInsumoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearInsumoVariables): MutationRef<CrearInsumoData, CrearInsumoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearInsumoVariables): MutationRef<CrearInsumoData, CrearInsumoVariables>;
+  operationName: string;
+}
+export const crearInsumoRef: CrearInsumoRef;
+
+export function crearInsumo(vars: CrearInsumoVariables): MutationPromise<CrearInsumoData, CrearInsumoVariables>;
+export function crearInsumo(dc: DataConnect, vars: CrearInsumoVariables): MutationPromise<CrearInsumoData, CrearInsumoVariables>;
+
+interface ActualizarInsumoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ActualizarInsumoVariables): MutationRef<ActualizarInsumoData, ActualizarInsumoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ActualizarInsumoVariables): MutationRef<ActualizarInsumoData, ActualizarInsumoVariables>;
+  operationName: string;
+}
+export const actualizarInsumoRef: ActualizarInsumoRef;
+
+export function actualizarInsumo(vars: ActualizarInsumoVariables): MutationPromise<ActualizarInsumoData, ActualizarInsumoVariables>;
+export function actualizarInsumo(dc: DataConnect, vars: ActualizarInsumoVariables): MutationPromise<ActualizarInsumoData, ActualizarInsumoVariables>;
+
+interface RegistrarEntradaInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarEntradaInventarioVariables): MutationRef<RegistrarEntradaInventarioData, RegistrarEntradaInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarEntradaInventarioVariables): MutationRef<RegistrarEntradaInventarioData, RegistrarEntradaInventarioVariables>;
+  operationName: string;
+}
+export const registrarEntradaInventarioRef: RegistrarEntradaInventarioRef;
+
+export function registrarEntradaInventario(vars: RegistrarEntradaInventarioVariables): MutationPromise<RegistrarEntradaInventarioData, RegistrarEntradaInventarioVariables>;
+export function registrarEntradaInventario(dc: DataConnect, vars: RegistrarEntradaInventarioVariables): MutationPromise<RegistrarEntradaInventarioData, RegistrarEntradaInventarioVariables>;
+
 interface AsociarFlujoComandaPendienteRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: AsociarFlujoComandaPendienteVariables): MutationRef<AsociarFlujoComandaPendienteData, AsociarFlujoComandaPendienteVariables>;
@@ -1203,6 +1475,42 @@ export const completarEtapaComandaRef: CompletarEtapaComandaRef;
 export function completarEtapaComanda(vars: CompletarEtapaComandaVariables): MutationPromise<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
 export function completarEtapaComanda(dc: DataConnect, vars: CompletarEtapaComandaVariables): MutationPromise<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
 
+interface RegistrarIncidenciaComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarIncidenciaComandaVariables): MutationRef<RegistrarIncidenciaComandaData, RegistrarIncidenciaComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarIncidenciaComandaVariables): MutationRef<RegistrarIncidenciaComandaData, RegistrarIncidenciaComandaVariables>;
+  operationName: string;
+}
+export const registrarIncidenciaComandaRef: RegistrarIncidenciaComandaRef;
+
+export function registrarIncidenciaComanda(vars: RegistrarIncidenciaComandaVariables): MutationPromise<RegistrarIncidenciaComandaData, RegistrarIncidenciaComandaVariables>;
+export function registrarIncidenciaComanda(dc: DataConnect, vars: RegistrarIncidenciaComandaVariables): MutationPromise<RegistrarIncidenciaComandaData, RegistrarIncidenciaComandaVariables>;
+
+interface ActualizarEstadoIncidenciaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ActualizarEstadoIncidenciaVariables): MutationRef<ActualizarEstadoIncidenciaData, ActualizarEstadoIncidenciaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ActualizarEstadoIncidenciaVariables): MutationRef<ActualizarEstadoIncidenciaData, ActualizarEstadoIncidenciaVariables>;
+  operationName: string;
+}
+export const actualizarEstadoIncidenciaRef: ActualizarEstadoIncidenciaRef;
+
+export function actualizarEstadoIncidencia(vars: ActualizarEstadoIncidenciaVariables): MutationPromise<ActualizarEstadoIncidenciaData, ActualizarEstadoIncidenciaVariables>;
+export function actualizarEstadoIncidencia(dc: DataConnect, vars: ActualizarEstadoIncidenciaVariables): MutationPromise<ActualizarEstadoIncidenciaData, ActualizarEstadoIncidenciaVariables>;
+
+interface ReasignarOperarioEtapaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReasignarOperarioEtapaVariables): MutationRef<ReasignarOperarioEtapaData, ReasignarOperarioEtapaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReasignarOperarioEtapaVariables): MutationRef<ReasignarOperarioEtapaData, ReasignarOperarioEtapaVariables>;
+  operationName: string;
+}
+export const reasignarOperarioEtapaRef: ReasignarOperarioEtapaRef;
+
+export function reasignarOperarioEtapa(vars: ReasignarOperarioEtapaVariables): MutationPromise<ReasignarOperarioEtapaData, ReasignarOperarioEtapaVariables>;
+export function reasignarOperarioEtapa(dc: DataConnect, vars: ReasignarOperarioEtapaVariables): MutationPromise<ReasignarOperarioEtapaData, ReasignarOperarioEtapaVariables>;
+
 interface GetEtapasProduccionRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetEtapasProduccionData, undefined>;
@@ -1226,6 +1534,30 @@ export const getSeguimientoProduccionRef: GetSeguimientoProduccionRef;
 
 export function getSeguimientoProduccion(vars?: GetSeguimientoProduccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoProduccionData, GetSeguimientoProduccionVariables>;
 export function getSeguimientoProduccion(dc: DataConnect, vars?: GetSeguimientoProduccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoProduccionData, GetSeguimientoProduccionVariables>;
+
+interface GetPanelProduccionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetPanelProduccionVariables): QueryRef<GetPanelProduccionData, GetPanelProduccionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetPanelProduccionVariables): QueryRef<GetPanelProduccionData, GetPanelProduccionVariables>;
+  operationName: string;
+}
+export const getPanelProduccionRef: GetPanelProduccionRef;
+
+export function getPanelProduccion(vars?: GetPanelProduccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetPanelProduccionData, GetPanelProduccionVariables>;
+export function getPanelProduccion(dc: DataConnect, vars?: GetPanelProduccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetPanelProduccionData, GetPanelProduccionVariables>;
+
+interface GetIncidenciasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetIncidenciasData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetIncidenciasData, undefined>;
+  operationName: string;
+}
+export const getIncidenciasRef: GetIncidenciasRef;
+
+export function getIncidencias(options?: ExecuteQueryOptions): QueryPromise<GetIncidenciasData, undefined>;
+export function getIncidencias(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetIncidenciasData, undefined>;
 
 interface GetMiComandaGuardadaRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -1298,6 +1630,18 @@ export const getInsumoPorQrRef: GetInsumoPorQrRef;
 
 export function getInsumoPorQr(vars: GetInsumoPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetInsumoPorQrData, GetInsumoPorQrVariables>;
 export function getInsumoPorQr(dc: DataConnect, vars: GetInsumoPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetInsumoPorQrData, GetInsumoPorQrVariables>;
+
+interface GetInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetInventarioData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetInventarioData, undefined>;
+  operationName: string;
+}
+export const getInventarioRef: GetInventarioRef;
+
+export function getInventario(options?: ExecuteQueryOptions): QueryPromise<GetInventarioData, undefined>;
+export function getInventario(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetInventarioData, undefined>;
 
 interface GetVehiculosRef {
   /* Allow users to create refs without passing in DataConnect */

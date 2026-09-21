@@ -56,6 +56,7 @@ export default function FlujoProduccion({ etapas, puedeCompletar = false, comple
                 <span className="mt-1 block text-[9px] font-medium uppercase tracking-wide text-stone-400">
                   {completada ? "Completada" : activa ? "Etapa actual" : "Pendiente"}
                 </span>
+                {!completada && etapa.asignadoA && <span className="mt-1 block truncate text-[9px] font-semibold text-violet-600 dark:text-violet-400">{etapa.asignadoA}</span>}
                 {activa && <motion.span initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} className="absolute inset-x-5 bottom-0 h-0.5 rounded-full bg-brand-500" />}
               </motion.div>
               {index < etapas.length - 1 && <ArrowRight aria-hidden="true" className="mt-9 h-4 w-4 shrink-0 text-stone-300 dark:text-stone-700" />}

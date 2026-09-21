@@ -1,14 +1,14 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, Loader2, RefreshCw, Search, Settings, X } from "lucide-react";
+import { AlertTriangle, History, Loader2, RefreshCw, Search, Settings, UserRoundPen, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import FlujoProduccion from "@/components/intranet/FlujoProduccion";
 import { dataConnect } from "@/lib/firebase/client";
 import { normalizarEtapas, estadoEtapa, type EtapaVisible } from "@/lib/produccion/modelo";
-import { MOTIVOS_INCIDENCIA, registrarIncidenciaMock, type MotivoIncidencia } from "@/lib/mock/incidencias";
-import { ComandaEstado, getSeguimientoProduccion, getEtapasProduccion, configurarEtapaProduccion, asociarFlujoComandaPendiente, completarEtapaComanda, type GetSeguimientoProduccionData, type GetEtapasProduccionData } from "@/src/dataconnect-generated";
+import { MOTIVOS_INCIDENCIA, type MotivoIncidencia } from "@/lib/incidencias";
+import { ComandaEstado, getSeguimientoProduccion, getEtapasProduccion, configurarEtapaProduccion, asociarFlujoComandaPendiente, completarEtapaComanda, registrarIncidenciaComanda, reasignarOperarioEtapa, type GetSeguimientoProduccionData, type GetEtapasProduccionData } from "@/src/dataconnect-generated";
 
 const PAGE_SIZE = 20;
 type EtapaCatalogo = GetEtapasProduccionData["etapaProduccions"][number];
@@ -34,6 +34,7 @@ export default function SeguimientoPage() {
   const [incidencia, setIncidencia] = useState<{ id: string; numero: string; cliente: string } | null>(null);
   const [motivoIncidencia, setMotivoIncidencia] = useState<MotivoIncidencia>(MOTIVOS_INCIDENCIA[0]);
   const [descripcionIncidencia, setDescripcionIncidencia] = useState("");
+  const [reasignacion, setReasignacion] = useState<{ comandaId: string; numero: string; etapaId: string; etapas: EtapaVisible[]; operarioId: string; motivo: string } | null>(null);
   const solicitud = useRef(0);
   const operacion = useRef(false);
   const cargar = useCallback(async (silencioso = false) => {
@@ -106,20 +107,34 @@ export default function SeguimientoPage() {
     } catch { setError("No se pudo guardar la etapa. Revisa que el nombre no esté repetido y el tiempo sea positivo."); }
     finally { operacion.current = false; setBusy(null); }
   }
-  function guardarIncidencia(event: React.FormEvent) {
+  async function guardarIncidencia(event: React.FormEvent) {
     event.preventDefault();
     if (!incidencia || !puedeReportarIncidencia) return;
-    const creada = registrarIncidenciaMock({
-      comandaId: incidencia.numero,
-      cliente: incidencia.cliente,
-      motivo: motivoIncidencia,
-      descripcion: descripcionIncidencia.trim() || undefined,
-      registradaPor: usuario ? `${usuario.nombre} ${usuario.apellido ?? ""}`.trim() : "Operario",
-    });
-    setIncidencia(null);
-    setDescripcionIncidencia("");
-    setMotivoIncidencia(MOTIVOS_INCIDENCIA[0]);
-    setNotice(`${creada.id} registrada correctamente en ${creada.comandaId}.`);
+    if (operacion.current) return;
+    operacion.current = true; setBusy(incidencia.id); setError("");
+    try {
+      await registrarIncidenciaComanda(dataConnect, {
+        comandaId: incidencia.id,
+        motivo: motivoIncidencia,
+        descripcion: descripcionIncidencia.trim() || null,
+      });
+      setIncidencia(null); setDescripcionIncidencia(""); setMotivoIncidencia(MOTIVOS_INCIDENCIA[0]);
+      setNotice(`Incidencia registrada correctamente en ${incidencia.numero}.`);
+    } catch { setError("No se pudo registrar la incidencia. Verifica que la comanda siga activa."); }
+    finally { operacion.current = false; setBusy(null); }
+  }
+  async function guardarReasignacion(event: React.FormEvent) {
+    event.preventDefault();
+    if (!reasignacion || operacion.current || !reasignacion.operarioId) return;
+    operacion.current = true; setBusy(reasignacion.comandaId); setError("");
+    try {
+      await reasignarOperarioEtapa(dataConnect, {
+        comandaId: reasignacion.comandaId, etapaId: reasignacion.etapaId,
+        operarioId: reasignacion.operarioId, motivo: reasignacion.motivo.trim() || null,
+      });
+      setReasignacion(null); setNotice("Operario asignado y cambio registrado en el historial."); await cargar(true);
+    } catch { setError("No se pudo reasignar el operario. La etapa pudo haber sido completada."); }
+    finally { operacion.current = false; setBusy(null); }
   }
   if (!permitido) return <div className="flex justify-center py-24"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   const total = data?.total[0]?._count ?? 0;
@@ -156,6 +171,8 @@ export default function SeguimientoPage() {
               <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-white/5">
                 <p className="text-xs text-stone-500">Ingreso: {new Date(c.fechaRecepcion).toLocaleString("es-CL")}</p>
                 <FlujoProduccion etapas={etapas} puedeCompletar={puedeCompletar} completando={busy === c.id} onCompletar={(etapa) => void completar(c.id, etapa)} />
+                {admin && etapas.some((etapa) => etapa.estado !== "COMPLETADA") && <button onClick={() => setReasignacion({ comandaId: c.id, numero: c.numeroComanda, etapaId: etapas.find((etapa) => etapa.estado !== "COMPLETADA")?.id ?? "", etapas, operarioId: data.operarios[0]?.id ?? "", motivo: "" })} className="flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300"><UserRoundPen className="h-4 w-4" />Asignar operario</button>}
+                {admin && c.reasignacionOperarios_on_comanda.length > 0 && <details className="rounded-xl border border-stone-200 p-3 text-xs dark:border-white/10"><summary className="flex cursor-pointer items-center gap-2 font-bold"><History className="h-4 w-4" />Historial de asignaciones ({c.reasignacionOperarios_on_comanda.length})</summary><div className="mt-3 space-y-2">{c.reasignacionOperarios_on_comanda.map((r) => <p key={r.id} className="text-stone-500"><strong>{r.etapa.nombre}:</strong> {r.operarioAnterior ? `${r.operarioAnterior.nombre} ${r.operarioAnterior.apellido ?? ""}`.trim() : "Sin asignar"} → {`${r.operarioNuevo.nombre} ${r.operarioNuevo.apellido ?? ""}`.trim()} · {new Date(r.fecha).toLocaleString("es-CL")}{r.motivo ? ` · ${r.motivo}` : ""}</p>)}</div></details>}
                 {puedeReportarIncidencia && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => setIncidencia({ id: c.id, numero: c.numeroComanda, cliente: c.cliente.nombre })} className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition-colors hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15"><AlertTriangle className="h-4 w-4" />Reportar incidencia</motion.button>}
                 {!etapas.length && c.estado === "PENDIENTE" && puedeAsociar && <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} disabled={busy != null || catalogo.length !== 5} onClick={() => void asociar(c.id)} className="rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50">{busy === c.id ? "Asociando..." : "Asociar flujo de producción"}</motion.button>}
                 {!etapas.length && c.estado !== "PENDIENTE" && <p className="text-xs text-stone-500">Comanda anterior sin registro de etapas. Su estado se conserva.</p>}
@@ -187,6 +204,16 @@ export default function SeguimientoPage() {
         <label className="block text-sm">Descripción<textarea maxLength={200} value={editar.descripcion ?? ""} onChange={(e) => setEditar({ ...editar, descripcion: e.target.value })} className={inputStyle} /></label>
         <label className="block text-sm">Tiempo estimado (minutos, opcional)<input type="number" min={1} step={1} value={editar.tiempoEstimadoMin ?? ""} onChange={(e) => setEditar({ ...editar, tiempoEstimadoMin: e.target.value === "" ? null : Number(e.target.value) })} className={inputStyle} /></label>
         <button disabled={busy != null || !editar.nombre.trim()} className="rounded-xl bg-brand-500 px-4 py-2 font-bold text-white disabled:opacity-50">{busy ? "Guardando..." : "Guardar configuración"}</button>
+      </form>
+    </div>}
+    {reasignacion && admin && <div role="dialog" aria-modal="true" aria-labelledby="titulo-reasignacion" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <form onSubmit={guardarReasignacion} className="relative w-full max-w-md space-y-4 rounded-2xl bg-white p-6 dark:bg-stone-900">
+        <button type="button" disabled={busy != null} onClick={() => setReasignacion(null)} aria-label="Cerrar reasignación" className="absolute right-4 top-4"><X className="h-5 w-5" /></button>
+        <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600">RF23 · {reasignacion.numero}</p><h2 id="titulo-reasignacion" className="font-display text-xl font-extrabold">Asignar operario</h2></div>
+        <label className="block text-sm font-semibold">Etapa<select required value={reasignacion.etapaId} onChange={(e) => setReasignacion({ ...reasignacion, etapaId: e.target.value })} className={inputStyle}>{reasignacion.etapas.filter((etapa) => etapa.estado !== "COMPLETADA").map((etapa) => <option key={etapa.id} value={etapa.id}>{etapa.orden}. {etapa.nombre}{etapa.asignadoA ? ` · ${etapa.asignadoA}` : ""}</option>)}</select></label>
+        <label className="block text-sm font-semibold">Nuevo operario<select required value={reasignacion.operarioId} onChange={(e) => setReasignacion({ ...reasignacion, operarioId: e.target.value })} className={inputStyle}><option value="">Selecciona un operario</option>{data?.operarios.map((operario) => <option key={operario.id} value={operario.id}>{operario.nombre} {operario.apellido ?? ""}</option>)}</select></label>
+        <label className="block text-sm font-semibold">Motivo <span className="font-normal text-stone-400">(opcional)</span><textarea maxLength={200} rows={3} value={reasignacion.motivo} onChange={(e) => setReasignacion({ ...reasignacion, motivo: e.target.value })} className={inputStyle} /></label>
+        <div className="flex justify-end gap-2"><button type="button" onClick={() => setReasignacion(null)} className="rounded-xl px-4 py-2 text-sm font-bold text-stone-500">Cancelar</button><button disabled={busy != null || !reasignacion.operarioId} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{busy ? "Guardando..." : "Confirmar asignación"}</button></div>
       </form>
     </div>}
   </div>;

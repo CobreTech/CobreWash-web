@@ -14,6 +14,12 @@ export const EstadoVehiculo = {
   NO_APTO: "NO_APTO",
 }
 
+export const IncidenciaEstado = {
+  ABIERTA: "ABIERTA",
+  EN_REVISION: "EN_REVISION",
+  RESUELTA: "RESUELTA",
+}
+
 export const SalidaVehiculoEstado = {
   PROGRAMADA: "PROGRAMADA",
   EN_SERVICIO: "EN_SERVICIO",
@@ -24,6 +30,11 @@ export const SalidaVehiculoEstado = {
 export const TipoCliente = {
   HOTEL: "HOTEL",
   PARTICULAR: "PARTICULAR",
+}
+
+export const TipoMovimiento = {
+  ENTRADA: "ENTRADA",
+  SALIDA: "SALIDA",
 }
 
 export const UnidadCobro = {
@@ -300,6 +311,42 @@ export function crearTipoServicio(dcOrVars, vars) {
   return executeMutation(crearTipoServicioRef(dcInstance, inputVars));
 }
 
+export const crearInsumoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearInsumo', inputVars);
+}
+crearInsumoRef.operationName = 'CrearInsumo';
+
+export function crearInsumo(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearInsumoRef(dcInstance, inputVars));
+}
+
+export const actualizarInsumoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ActualizarInsumo', inputVars);
+}
+actualizarInsumoRef.operationName = 'ActualizarInsumo';
+
+export function actualizarInsumo(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(actualizarInsumoRef(dcInstance, inputVars));
+}
+
+export const registrarEntradaInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarEntradaInventario', inputVars);
+}
+registrarEntradaInventarioRef.operationName = 'RegistrarEntradaInventario';
+
+export function registrarEntradaInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarEntradaInventarioRef(dcInstance, inputVars));
+}
+
 export const asociarFlujoComandaPendienteRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -336,6 +383,42 @@ export function completarEtapaComanda(dcOrVars, vars) {
   return executeMutation(completarEtapaComandaRef(dcInstance, inputVars));
 }
 
+export const registrarIncidenciaComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarIncidenciaComanda', inputVars);
+}
+registrarIncidenciaComandaRef.operationName = 'RegistrarIncidenciaComanda';
+
+export function registrarIncidenciaComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarIncidenciaComandaRef(dcInstance, inputVars));
+}
+
+export const actualizarEstadoIncidenciaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ActualizarEstadoIncidencia', inputVars);
+}
+actualizarEstadoIncidenciaRef.operationName = 'ActualizarEstadoIncidencia';
+
+export function actualizarEstadoIncidencia(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(actualizarEstadoIncidenciaRef(dcInstance, inputVars));
+}
+
+export const reasignarOperarioEtapaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReasignarOperarioEtapa', inputVars);
+}
+reasignarOperarioEtapaRef.operationName = 'ReasignarOperarioEtapa';
+
+export function reasignarOperarioEtapa(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(reasignarOperarioEtapaRef(dcInstance, inputVars));
+}
+
 export const getEtapasProduccionRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -360,6 +443,32 @@ export function getSeguimientoProduccion(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getSeguimientoProduccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getPanelProduccionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetPanelProduccion', inputVars);
+}
+getPanelProduccionRef.operationName = 'GetPanelProduccion';
+
+export function getPanelProduccion(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getPanelProduccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getIncidenciasRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetIncidencias');
+}
+getIncidenciasRef.operationName = 'GetIncidencias';
+
+export function getIncidencias(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getIncidenciasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const getMiComandaGuardadaRef = (dcOrVars, vars) => {
@@ -438,6 +547,19 @@ export function getInsumoPorQr(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getInsumoPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getInventarioRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInventario');
+}
+getInventarioRef.operationName = 'GetInventario';
+
+export function getInventario(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const getVehiculosRef = (dc) => {

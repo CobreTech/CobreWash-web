@@ -26,7 +26,15 @@ query GetSeguimientoProduccion($limit: Int = 20, $offset: Int = 0, $buscar: Stri
       etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
       fechaInicio fechaCompletado
       operario { id nombre apellido }
+      asignadoA { id nombre apellido }
       etapa { nombre orden descripcion tiempoEstimadoMin }
+    }
+    reasignacionOperarios_on_comanda(orderBy: [{ fecha: DESC }]) {
+      id fecha motivo
+      etapa { id nombre orden }
+      operarioAnterior { id nombre apellido }
+      operarioNuevo { id nombre apellido }
+      realizadoPor { id nombre apellido }
     }
   }
   total: comandas(where: {
@@ -35,6 +43,44 @@ query GetSeguimientoProduccion($limit: Int = 20, $offset: Int = 0, $buscar: Stri
       { _or: [{ numeroComanda: { contains: $buscar } }, { cliente: { nombre: { contains: $buscar } } }] }
     ]
   }) { _count }
+  operarios: usuarios(where: { activo: { eq: true }, rol: { nombre: { eq: "operario" } } }, orderBy: [{ nombre: ASC }]) {
+    id nombre apellido
+  }
+}
+
+# Panel real de administración: estado global y cola completa de producción.
+query GetPanelProduccion($limit: Int = 100) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede ver el panel productivo") }
+  }
+  comandas(where: { estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } }, orderBy: [{ actualizadoEn: DESC }], limit: $limit) {
+    id numeroComanda estado valorTotal fechaRecepcion actualizadoEn
+    cliente { id nombre tipoCliente }
+    comandaDetalles_on_comanda { cantidad }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa tiempoEstimadoMin estado fechaInicio fechaCompletado
+      asignadoA { id nombre apellido }
+      operario { id nombre apellido }
+      etapa { nombre orden tiempoEstimadoMin }
+    }
+    incidenciaComandas_on_comanda(where: { estado: { in: [ABIERTA, EN_REVISION] } }) { id estado }
+  }
+  pendientes: comandas(where: { estado: { eq: PENDIENTE } }) { _count }
+  enProceso: comandas(where: { estado: { eq: EN_PROCESO } }) { _count }
+  listas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
+}
+
+query GetIncidencias @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar incidencias") }
+  }
+  incidenciaComandas(orderBy: [{ fecha: DESC }]) {
+    id motivo descripcion estado fecha actualizadaEn
+    comanda { id numeroComanda estado cliente { nombre } }
+    reportadaPor { id nombre apellido }
+  }
 }
 
 # Confirmación de un guardado cuya respuesta se perdió, acotada a su creador.

@@ -709,3 +709,85 @@ mutation CrearTipoServicio($nombre: String!, $precioBase: Float!) @auth(level: U
   }
   tipoServicio_insert(data: { nombre: $nombre, precioBase: $precioBase, unidadCobro: PRENDA, activo: true })
 }
+
+# ==================== INVENTARIO (SPRINT 05) ====================
+
+mutation CrearInsumo(
+  $nombre: String!
+  $unidadMedida: String!
+  $stockInicial: Float!
+  $stockMinimo: Float!
+) @auth(level: USER) @transaction {
+  query @redact
+    @check(expr: "vars.stockInicial >= 0 && vars.stockMinimo >= 0", message: "Los valores de stock no pueden ser negativos") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden crear insumos") }
+    }
+  }
+  insumo_insert(data: {
+    nombre: $nombre
+    unidadMedida: $unidadMedida
+    stockActual: $stockInicial
+    stockMinimo: $stockMinimo
+    activo: true
+  })
+  movimientoInventario_insert(data: {
+    insumoId_expr: "response.insumo_insert.id"
+    usuarioId_expr: "auth.uid"
+    tipoMovimiento: ENTRADA
+    cantidad: $stockInicial
+    motivo: "Stock inicial"
+  })
+}
+
+mutation ActualizarInsumo(
+  $id: UUID!
+  $nombre: String!
+  $unidadMedida: String!
+  $stockMinimo: Float!
+  $activo: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.stockMinimo >= 0", message: "El stock mínimo no puede ser negativo") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar insumos") }
+    }
+  }
+  insumo_update(
+    id: $id
+    data: {
+      nombre: $nombre
+      unidadMedida: $unidadMedida
+      stockMinimo: $stockMinimo
+      activo: $activo
+    }
+  ) @check(expr: "this != null", message: "Insumo no encontrado")
+}
+
+mutation RegistrarEntradaInventario(
+  $insumoId: UUID!
+  $cantidad: Float!
+  $motivo: String
+) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.cantidad > 0", message: "La cantidad debe ser mayor que cero") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden registrar entradas") }
+    }
+    insumo(id: $insumoId) @check(expr: "this != null", message: "Insumo no encontrado") {
+      activo @check(expr: "this == true", message: "El insumo está inactivo")
+    }
+  }
+  insumo_update(
+    id: $insumoId
+    data: { stockActual_update: { inc: $cantidad } }
+  ) @check(expr: "this != null", message: "Insumo no encontrado")
+  movimientoInventario_insert(data: {
+    insumo: { id: $insumoId }
+    usuarioId_expr: "auth.uid"
+    tipoMovimiento: ENTRADA
+    cantidad: $cantidad
+    motivo: $motivo
+  })
+}

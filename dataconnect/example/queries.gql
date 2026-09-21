@@ -103,6 +103,37 @@ query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
   }
 }
 
+# Catálogo e historial real del inventario. La página administrativa consume
+# esta operación para evitar cifras mock y refresca los KPI después de cada
+# movimiento.
+query GetInventario @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden gestionar inventario")
+    }
+  }
+  insumos(orderBy: [{ nombre: ASC }]) {
+    id
+    codigoQr
+    nombre
+    unidadMedida
+    stockActual
+    stockMinimo
+    activo
+    creadoEn
+  }
+  movimientoInventarios(orderBy: [{ fecha: DESC }], limit: 30) {
+    id
+    tipoMovimiento
+    cantidad
+    motivo
+    fecha
+    insumo { id nombre unidadMedida }
+    usuario { id nombre apellido }
+  }
+}
+
 # Catálogo de vehículos disponible para administración y repartidores.
 query GetVehiculos @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact {

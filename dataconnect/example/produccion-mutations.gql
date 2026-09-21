@@ -141,3 +141,83 @@ mutation CompletarEtapaComanda($comandaId: UUID!, $etapaId: UUID!, $orden: Int!,
     params: [$comandaId, $orden]
   )
 }
+
+mutation RegistrarIncidenciaComanda(
+  $comandaId: UUID!
+  $motivo: String!
+  $descripcion: String
+) @auth(level: USER) @transaction {
+  query @redact @check(
+    expr: "vars.motivo.size() > 0 && vars.motivo.size() <= 100 && (vars.descripcion == null || vars.descripcion.size() <= 300)"
+    message: "Motivo o descripción inválidos"
+  ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'operario'", message: "Solo operarios pueden reportar incidencias") }
+    }
+    comanda(id: $comandaId) @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this in ['PENDIENTE', 'EN_PROCESO', 'FINALIZADA']", message: "La comanda ya está cerrada")
+    }
+  }
+  incidenciaComanda_insert(data: {
+    comanda: { id: $comandaId }
+    reportadaPorId_expr: "auth.uid"
+    motivo: $motivo
+    descripcion: $descripcion
+    estado: ABIERTA
+  })
+}
+
+mutation ActualizarEstadoIncidencia(
+  $id: UUID!
+  $estado: IncidenciaEstado!
+) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para gestionar incidencias") }
+    }
+  }
+  incidenciaComanda_update(
+    id: $id
+    data: { estado: $estado, actualizadaEn_expr: "request.time" }
+  ) @check(expr: "this != null", message: "Incidencia no encontrada")
+}
+
+mutation ReasignarOperarioEtapa(
+  $comandaId: UUID!
+  $etapaId: UUID!
+  $operarioId: String!
+  $motivo: String
+) @auth(level: USER) @transaction {
+  query @redact @check(
+    expr: "vars.motivo == null || vars.motivo.size() <= 200"
+    message: "El motivo es demasiado largo"
+  ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede reasignar operarios") }
+    }
+    nuevo: usuario(id: $operarioId) @check(expr: "this != null", message: "Operario no encontrado") {
+      activo @check(expr: "this == true", message: "El operario está inactivo")
+      rol { nombre @check(expr: "this == 'operario'", message: "El usuario seleccionado no es operario") }
+    }
+    asignacion: comandaEtapa(key: { comandaId: $comandaId, etapaId: $etapaId })
+      @check(expr: "this != null", message: "Etapa no encontrada") {
+      estado @check(expr: "this != 'COMPLETADA'", message: "No se puede reasignar una etapa completada")
+      asignadoAId
+    }
+  }
+  comandaEtapa_update(
+    key: { comandaId: $comandaId, etapaId: $etapaId }
+    data: { asignadoA: { id: $operarioId } }
+  ) @check(expr: "this != null", message: "No se pudo reasignar la etapa")
+  reasignacionOperario_insert(data: {
+    comanda: { id: $comandaId }
+    etapa: { id: $etapaId }
+    operarioAnteriorId_expr: "response.query.asignacion.asignadoAId"
+    operarioNuevo: { id: $operarioId }
+    realizadoPorId_expr: "auth.uid"
+    motivo: $motivo
+  })
+}
