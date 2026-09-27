@@ -40,7 +40,7 @@ export default function IncidenciasPage() {
     if (!silencioso) setLoading(true);
     try {
       const result = await getIncidencias(dataConnect, { fetchPolicy: "SERVER_ONLY" });
-      setIncidencias(result.data.incidenciaComandas);
+      setIncidencias(result.data?.incidenciaComandas ?? []);
       setError("");
     } catch {
       if (!silencioso) setError("No se pudieron cargar las incidencias.");
@@ -63,7 +63,7 @@ export default function IncidenciasPage() {
   const visibles = useMemo(() => {
     const termino = busqueda.trim().toLocaleLowerCase("es-CL");
     return incidencias.filter((item) => (estado === "TODAS" || item.estado === estado)
-      && (!termino || `${item.id} ${item.comanda.numeroComanda} ${item.comanda.cliente.nombre} ${item.motivo}`.toLocaleLowerCase("es-CL").includes(termino)));
+      && (!termino || `${item.id} ${item.comanda?.numeroComanda ?? ""} ${item.comanda?.cliente?.nombre ?? ""} ${item.motivo}`.toLocaleLowerCase("es-CL").includes(termino)));
   }, [busqueda, estado, incidencias]);
 
   const cambiarEstado = async (nuevoEstado: IncidenciaEstado) => {
@@ -121,9 +121,9 @@ export default function IncidenciasPage() {
       <div className="divide-y divide-stone-200/70 dark:divide-white/5">
         {loading ? <div className="flex justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-brand-500" /></div> : visibles.map((item, index) => <motion.article key={item.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="grid gap-3 p-4 transition-colors hover:bg-brand-50/40 lg:grid-cols-[0.65fr_1fr_1.4fr_1fr_0.8fr_44px] lg:items-center lg:gap-4 lg:px-5 dark:hover:bg-brand-500/5">
           <div><span className="text-[10px] font-bold uppercase text-stone-400 lg:hidden">Incidencia</span><p className="font-bold">INC-{item.id.slice(0, 8)}</p></div>
-          <div><span className="text-[10px] font-bold uppercase text-stone-400 lg:hidden">Comanda</span><p className="font-semibold text-brand-600 dark:text-brand-400">{item.comanda.numeroComanda}</p></div>
-          <div className="min-w-0"><p className="truncate text-sm font-semibold">{item.comanda.cliente.nombre}</p><p className="truncate text-xs text-stone-500">{item.motivo}</p></div>
-          <div><p className="text-xs font-semibold">{new Date(item.fecha).toLocaleDateString("es-CL")}</p><p className="text-xs text-stone-500">{new Date(item.fecha).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · {[item.reportadaPor.nombre, item.reportadaPor.apellido].filter(Boolean).join(" ")}</p></div>
+          <div><span className="text-[10px] font-bold uppercase text-stone-400 lg:hidden">Comanda</span><p className="font-semibold text-brand-600 dark:text-brand-400">{item.comanda?.numeroComanda}</p></div>
+          <div className="min-w-0"><p className="truncate text-sm font-semibold">{item.comanda?.cliente?.nombre}</p><p className="truncate text-xs text-stone-500">{item.motivo}</p></div>
+          <div><p className="text-xs font-semibold">{new Date(item.fecha).toLocaleDateString("es-CL")}</p><p className="text-xs text-stone-500">{new Date(item.fecha).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} · {[item.reportadaPor?.nombre, item.reportadaPor?.apellido].filter(Boolean).join(" ")}</p></div>
           <div><EstadoBadge estado={item.estado} /></div>
           <button onClick={() => setSeleccionada(item)} aria-label={`Ver ${item.id}`} className="grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 transition-colors hover:bg-brand-500 hover:text-white dark:bg-white/5"><Eye className="h-4 w-4" /></button>
         </motion.article>)}
@@ -135,9 +135,9 @@ export default function IncidenciasPage() {
       {seleccionada && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-labelledby="incidencia-titulo" className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-sm">
         <motion.section initial={{ opacity: 0, scale: 0.96, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="glass-modal relative w-full max-w-lg rounded-3xl bg-white p-6 dark:bg-stone-900">
           <button onClick={() => setSeleccionada(null)} aria-label="Cerrar detalle" className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 dark:bg-white/5"><X className="h-4 w-4" /></button>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">INC-{seleccionada.id.slice(0, 8)} · {seleccionada.comanda.numeroComanda}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">INC-{seleccionada.id.slice(0, 8)} · {seleccionada.comanda?.numeroComanda}</p>
           <h2 id="incidencia-titulo" className="mt-1 pr-12 font-display text-2xl font-extrabold">{seleccionada.motivo}</h2>
-          <div className="mt-5 grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm sm:grid-cols-2 dark:bg-white/5"><div><p className="text-xs text-stone-400">Cliente</p><p className="font-semibold">{seleccionada.comanda.cliente.nombre}</p></div><div><p className="text-xs text-stone-400">Reportada por</p><p className="font-semibold">{[seleccionada.reportadaPor.nombre, seleccionada.reportadaPor.apellido].filter(Boolean).join(" ")}</p></div></div>
+          <div className="mt-5 grid gap-3 rounded-2xl bg-stone-50 p-4 text-sm sm:grid-cols-2 dark:bg-white/5"><div><p className="text-xs text-stone-400">Cliente</p><p className="font-semibold">{seleccionada.comanda?.cliente?.nombre}</p></div><div><p className="text-xs text-stone-400">Reportada por</p><p className="font-semibold">{[seleccionada.reportadaPor?.nombre, seleccionada.reportadaPor?.apellido].filter(Boolean).join(" ")}</p></div></div>
           <div className="mt-4"><p className="text-xs font-bold uppercase tracking-wider text-stone-400">Descripción</p><p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-300">{seleccionada.descripcion || "Sin descripción adicional."}</p></div>
           <div className="mt-6"><p className="mb-2 text-xs font-bold uppercase tracking-wider text-stone-400">Actualizar seguimiento</p><div className="grid gap-2 sm:grid-cols-3">{Object.values(IncidenciaEstado).map((opcion) => <button key={opcion} disabled={saving} onClick={() => void cambiarEstado(opcion)} className={`rounded-xl border px-3 py-2 text-xs font-bold transition-all disabled:opacity-50 ${seleccionada.estado === opcion ? ESTADO_STYLE[opcion] : "border-stone-200 text-stone-500 hover:border-brand-300 dark:border-white/10"}`}>{ESTADO_LABEL[opcion]}</button>)}</div></div>
         </motion.section>
