@@ -55,6 +55,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*CrearInsumo*](#crearinsumo)
   - [*ActualizarInsumo*](#actualizarinsumo)
   - [*RegistrarEntradaInventario*](#registrarentradainventario)
+  - [*RegistrarSalidaInventario*](#registrarsalidainventario)
   - [*AsociarFlujoComandaPendiente*](#asociarflujocomandapendiente)
   - [*ConfigurarEtapaProduccion*](#configuraretapaproduccion)
   - [*CompletarEtapaComanda*](#completaretapacomanda)
@@ -5593,6 +5594,126 @@ const ref = registrarEntradaInventarioRef({ insumoId: ..., cantidad: ..., motivo
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = registrarEntradaInventarioRef(dataConnect, registrarEntradaInventarioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.insumo_update);
+console.log(data.movimientoInventario_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.insumo_update);
+  console.log(data.movimientoInventario_insert);
+});
+```
+
+## RegistrarSalidaInventario
+You can execute the `RegistrarSalidaInventario` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+registrarSalidaInventario(vars: RegistrarSalidaInventarioVariables): MutationPromise<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+
+interface RegistrarSalidaInventarioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarSalidaInventarioVariables): MutationRef<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+}
+export const registrarSalidaInventarioRef: RegistrarSalidaInventarioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+registrarSalidaInventario(dc: DataConnect, vars: RegistrarSalidaInventarioVariables): MutationPromise<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+
+interface RegistrarSalidaInventarioRef {
+  ...
+  (dc: DataConnect, vars: RegistrarSalidaInventarioVariables): MutationRef<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+}
+export const registrarSalidaInventarioRef: RegistrarSalidaInventarioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the registrarSalidaInventarioRef:
+```typescript
+const name = registrarSalidaInventarioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `RegistrarSalidaInventario` mutation requires an argument of type `RegistrarSalidaInventarioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface RegistrarSalidaInventarioVariables {
+  insumoId: UUIDString;
+  cantidad: number;
+  motivo?: string | null;
+}
+```
+### Return Type
+Recall that executing the `RegistrarSalidaInventario` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `RegistrarSalidaInventarioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface RegistrarSalidaInventarioData {
+  insumo_update?: Insumo_Key | null;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+```
+### Using `RegistrarSalidaInventario`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, registrarSalidaInventario, RegistrarSalidaInventarioVariables } from '@dataconnect/generated';
+
+// The `RegistrarSalidaInventario` mutation requires an argument of type `RegistrarSalidaInventarioVariables`:
+const registrarSalidaInventarioVars: RegistrarSalidaInventarioVariables = {
+  insumoId: ...,
+  cantidad: ...,
+  motivo: ..., // optional
+};
+
+// Call the `registrarSalidaInventario()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await registrarSalidaInventario(registrarSalidaInventarioVars);
+// Variables can be defined inline as well.
+const { data } = await registrarSalidaInventario({ insumoId: ..., cantidad: ..., motivo: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await registrarSalidaInventario(dataConnect, registrarSalidaInventarioVars);
+
+console.log(data.insumo_update);
+console.log(data.movimientoInventario_insert);
+
+// Or, you can use the `Promise` API.
+registrarSalidaInventario(registrarSalidaInventarioVars).then((response) => {
+  const data = response.data;
+  console.log(data.insumo_update);
+  console.log(data.movimientoInventario_insert);
+});
+```
+
+### Using `RegistrarSalidaInventario`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, registrarSalidaInventarioRef, RegistrarSalidaInventarioVariables } from '@dataconnect/generated';
+
+// The `RegistrarSalidaInventario` mutation requires an argument of type `RegistrarSalidaInventarioVariables`:
+const registrarSalidaInventarioVars: RegistrarSalidaInventarioVariables = {
+  insumoId: ...,
+  cantidad: ...,
+  motivo: ..., // optional
+};
+
+// Call the `registrarSalidaInventarioRef()` function to get a reference to the mutation.
+const ref = registrarSalidaInventarioRef(registrarSalidaInventarioVars);
+// Variables can be defined inline as well.
+const ref = registrarSalidaInventarioRef({ insumoId: ..., cantidad: ..., motivo: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = registrarSalidaInventarioRef(dataConnect, registrarSalidaInventarioVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

@@ -1,4 +1,4 @@
-import { registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, connectorConfig } from '../../esm/index.esm.js';
+import { registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, registrarSalidaInventarioRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, connectorConfig } from '../../esm/index.esm.js';
 import { validateArgs, CallerSdkTypeEnum } from 'firebase/data-connect';
 import { useDataConnectQuery, useDataConnectMutation, validateReactArgs } from '@tanstack-query-firebase/react/data-connect';
 
@@ -198,6 +198,14 @@ export function useRegistrarEntradaInventario(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
     return registrarEntradaInventarioRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useRegistrarSalidaInventario(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return registrarSalidaInventarioRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }

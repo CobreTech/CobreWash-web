@@ -1,4 +1,4 @@
-const { registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, connectorConfig } = require('../index.cjs.js');
+const { registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, registrarSalidaInventarioRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, connectorConfig } = require('../index.cjs.js');
 const { validateArgs, CallerSdkTypeEnum } = require('firebase/data-connect');
 const { useDataConnectQuery, useDataConnectMutation, validateReactArgs } = require('@tanstack-query-firebase/react/data-connect');
 
@@ -198,6 +198,14 @@ exports.useRegistrarEntradaInventario = function useRegistrarEntradaInventario(d
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
     return registrarEntradaInventarioRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useRegistrarSalidaInventario = function useRegistrarSalidaInventario(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return registrarSalidaInventarioRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }

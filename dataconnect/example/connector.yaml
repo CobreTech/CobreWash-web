@@ -6,6 +6,9 @@ generate:
       packageJsonDir: ..\..
       react: true
       angular: false
+      clientCache:
+        maxAge: 5s
+        storage: memory
   kotlinSdk:
     - outputDir: ..\..\..\CobreWash-App\shared\dataconnect-generated
       package: "com.elcobre.lavanderiaelcobre.dataconnect"

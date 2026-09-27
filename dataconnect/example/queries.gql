@@ -106,7 +106,7 @@ query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
 # Catálogo e historial real del inventario. La página administrativa consume
 # esta operación para evitar cifras mock y refresca los KPI después de cada
 # movimiento.
-query GetInventario @auth(level: USER) {
+query GetInventario @auth(level: USER) @refresh(every: { seconds: 10 }) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
@@ -123,7 +123,7 @@ query GetInventario @auth(level: USER) {
     activo
     creadoEn
   }
-  movimientoInventarios(orderBy: [{ fecha: DESC }], limit: 30) {
+  movimientoInventarios(orderBy: [{ fecha: DESC }], limit: 500) {
     id
     tipoMovimiento
     cantidad

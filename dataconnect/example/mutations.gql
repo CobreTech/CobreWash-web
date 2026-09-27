@@ -791,3 +791,34 @@ mutation RegistrarEntradaInventario(
     motivo: $motivo
   })
 }
+
+# Descuenta consumo de forma atómica. La lectura, validación del disponible,
+# actualización y bitácora ocurren dentro de la misma transacción para impedir
+# que dos salidas concurrentes dejen el stock bajo cero.
+mutation RegistrarSalidaInventario(
+  $insumoId: UUID!
+  $cantidad: Float!
+  $motivo: String
+) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.cantidad > 0", message: "La cantidad debe ser mayor que cero") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden registrar salidas") }
+    }
+    insumo(id: $insumoId) @check(expr: "this != null", message: "Insumo no encontrado") {
+      activo @check(expr: "this == true", message: "El insumo está inactivo")
+      stockActual @check(expr: "this >= vars.cantidad", message: "Stock insuficiente para registrar la salida")
+    }
+  }
+  insumo_update(
+    id: $insumoId
+    data: { stockActual_update: { dec: $cantidad } }
+  ) @check(expr: "this != null", message: "Insumo no encontrado")
+  movimientoInventario_insert(data: {
+    insumo: { id: $insumoId }
+    usuarioId_expr: "auth.uid"
+    tipoMovimiento: SALIDA
+    cantidad: $cantidad
+    motivo: $motivo
+  })
+}

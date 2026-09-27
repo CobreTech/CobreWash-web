@@ -1081,6 +1081,17 @@ export interface RegistrarInspeccionDespuesVariables {
   observaciones?: string | null;
 }
 
+export interface RegistrarSalidaInventarioData {
+  insumo_update?: Insumo_Key | null;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+
+export interface RegistrarSalidaInventarioVariables {
+  insumoId: UUIDString;
+  cantidad: number;
+  motivo?: string | null;
+}
+
 export interface RegistrarseComoClienteData {
   usuario_insert: Usuario_Key;
   cliente_insert: Cliente_Key;
@@ -1438,6 +1449,18 @@ export const registrarEntradaInventarioRef: RegistrarEntradaInventarioRef;
 
 export function registrarEntradaInventario(vars: RegistrarEntradaInventarioVariables): MutationPromise<RegistrarEntradaInventarioData, RegistrarEntradaInventarioVariables>;
 export function registrarEntradaInventario(dc: DataConnect, vars: RegistrarEntradaInventarioVariables): MutationPromise<RegistrarEntradaInventarioData, RegistrarEntradaInventarioVariables>;
+
+interface RegistrarSalidaInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarSalidaInventarioVariables): MutationRef<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarSalidaInventarioVariables): MutationRef<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+  operationName: string;
+}
+export const registrarSalidaInventarioRef: RegistrarSalidaInventarioRef;
+
+export function registrarSalidaInventario(vars: RegistrarSalidaInventarioVariables): MutationPromise<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+export function registrarSalidaInventario(dc: DataConnect, vars: RegistrarSalidaInventarioVariables): MutationPromise<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
 
 interface AsociarFlujoComandaPendienteRef {
   /* Allow users to create refs without passing in DataConnect */

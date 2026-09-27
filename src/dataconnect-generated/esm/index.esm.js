@@ -347,6 +347,18 @@ export function registrarEntradaInventario(dcOrVars, vars) {
   return executeMutation(registrarEntradaInventarioRef(dcInstance, inputVars));
 }
 
+export const registrarSalidaInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarSalidaInventario', inputVars);
+}
+registrarSalidaInventarioRef.operationName = 'RegistrarSalidaInventario';
+
+export function registrarSalidaInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarSalidaInventarioRef(dcInstance, inputVars));
+}
+
 export const asociarFlujoComandaPendienteRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

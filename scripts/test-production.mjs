@@ -398,4 +398,40 @@ await check("entradas actualizan stock y registran trazabilidad atómicamente", 
   const final = await execute(commandQueries, "GetInventario", {}, "test-admin");
   assert.equal(final.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", "")).stockActual, 11.5);
 });
+await check("salidas descuentan stock sin permitir valores negativos", async () => {
+  const creado = await execute(legacy, "CrearInsumo", {
+    nombre: "Desmanchador salida " + randomUUID().slice(0, 8), unidadMedida: "L", stockInicial: 5, stockMinimo: 2,
+  }, "test-admin");
+  const id = creado.insumo_insert.id;
+  await execute(legacy, "RegistrarSalidaInventario", {
+    insumoId: id, cantidad: 2, motivo: "Consumo turno mañana",
+  }, "test-admin");
+  let inventario = await execute(commandQueries, "GetInventario", {}, "test-admin");
+  let insumo = inventario.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", ""));
+  assert.equal(insumo.stockActual, 3);
+  const salida = inventario.movimientoInventarios.find((item) =>
+    item.insumo.id.replaceAll("-", "") === id.replaceAll("-", "") && item.tipoMovimiento === "SALIDA");
+  assert.equal(salida.cantidad, 2);
+  assert.equal(salida.motivo, "Consumo turno mañana");
+  await assert.rejects(execute(legacy, "RegistrarSalidaInventario", {
+    insumoId: id, cantidad: 4, motivo: "Excede disponible",
+  }, "test-admin"));
+  await assert.rejects(execute(legacy, "RegistrarSalidaInventario", {
+    insumoId: id, cantidad: 0, motivo: "Inválida",
+  }, "test-admin"));
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(legacy, "RegistrarSalidaInventario", {
+      insumoId: id, cantidad: 1, motivo: "Sin autorización",
+    }, user));
+  }
+  const concurrentes = await Promise.allSettled([
+    execute(legacy, "RegistrarSalidaInventario", { insumoId: id, cantidad: 2, motivo: "Concurrente A" }, "test-admin"),
+    execute(legacy, "RegistrarSalidaInventario", { insumoId: id, cantidad: 2, motivo: "Concurrente B" }, "test-admin"),
+  ]);
+  assert.equal(concurrentes.filter((resultado) => resultado.status === "fulfilled").length, 1);
+  assert.equal(concurrentes.filter((resultado) => resultado.status === "rejected").length, 1);
+  inventario = await execute(commandQueries, "GetInventario", {}, "test-admin");
+  insumo = inventario.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", ""));
+  assert.equal(insumo.stockActual, 1);
+});
 console.log(count + " escenarios de integración aprobados.");
