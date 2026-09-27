@@ -148,19 +148,52 @@ export default function ComunicacionPage() {
       {/* Publicar modal (solo admin) */}
       <AnimatePresence>
         {nuevo && esAdmin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="titulo-publicar-aviso" className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setNuevo(false)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="glass-panel rounded-3xl p-6 w-full max-w-lg relative z-10">
-              <button onClick={() => setNuevo(false)} className="absolute top-4 right-4 p-2 rounded-xl text-stone-400 hover:bg-stone-100 dark:hover:bg-white/5 cursor-pointer"><X className="w-5 h-5" /></button>
-              <h3 className="text-xl font-extrabold text-stone-900 dark:text-white font-display mb-5">Publicar aviso</h3>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 16 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-panel rounded-3xl p-6 sm:p-7 w-full max-w-lg relative z-10 shadow-2xl border border-stone-200/80 dark:border-white/10"
+            >
+              <button
+                onClick={() => setNuevo(false)}
+                className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-start gap-3.5 mb-6 pr-8">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center shrink-0 text-brand-600 dark:text-brand-400">
+                  <Megaphone className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Comunicación interna</p>
+                  <h3 id="titulo-publicar-aviso" className="font-display text-xl font-extrabold text-stone-900 dark:text-white">Publicar aviso</h3>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Difunde novedades al equipo de la lavandería.</p>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Título</label>
-                  <input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-sm focus:outline-none focus:border-brand-500" />
+                  <input
+                    value={form.titulo}
+                    onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+                    placeholder="Ej: Cambio de turno, mantenimiento o protocolo..."
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200/80 dark:border-white/10 bg-stone-50/70 dark:bg-stone-800/80 text-stone-800 dark:text-stone-200 text-sm focus:outline-none focus:border-brand-500 transition-all placeholder-stone-400"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Contenido</label>
-                  <textarea value={form.contenido} onChange={(e) => setForm({ ...form, contenido: e.target.value })} rows={4} className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-sm focus:outline-none focus:border-brand-500 resize-none" />
+                  <textarea
+                    value={form.contenido}
+                    onChange={(e) => setForm({ ...form, contenido: e.target.value })}
+                    rows={4}
+                    placeholder="Escribe el mensaje detallado para el equipo..."
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200/80 dark:border-white/10 bg-stone-50/70 dark:bg-stone-800/80 text-stone-800 dark:text-stone-200 text-sm focus:outline-none focus:border-brand-500 transition-all resize-none placeholder-stone-400"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Destinatario</label>
@@ -169,13 +202,27 @@ export default function ComunicacionPage() {
                     onChange={(v) => setForm({ ...form, destinatario: v })}
                     ariaLabel="Destinatario"
                     options={[
-                      { value: "Todos", label: "Todos" },
-                      { value: "Operarios", label: "Operarios" },
-                      { value: "Recepción", label: "Recepción" },
+                      { value: "Todos", label: "Todos los equipos" },
+                      { value: "Operarios", label: "Solo Operarios" },
+                      { value: "Recepción", label: "Solo Recepción" },
                     ]}
                   />
                 </div>
-                <button onClick={publicar} className="w-full bg-gradient-brand text-white py-3 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg transition-all cursor-pointer">Publicar</button>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => setNuevo(false)}
+                    className="flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={publicar}
+                    disabled={!form.titulo.trim() || !form.contenido.trim()}
+                    className="flex-1 bg-gradient-brand text-white py-2.5 px-5 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Publicar aviso
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

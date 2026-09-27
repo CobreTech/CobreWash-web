@@ -313,9 +313,236 @@ export default function InventarioPage() {
 
       <section className="glass-panel overflow-hidden rounded-2xl"><div className="flex flex-col gap-4 border-b border-stone-100 px-5 py-4 dark:border-white/5 lg:flex-row lg:items-end lg:justify-between"><div className="flex items-center gap-2"><History className="h-4 w-4 text-brand-500" /><div><h2 className="text-sm font-extrabold">Historial de movimientos</h2><p className="text-xs text-stone-400">Entradas y salidas con trazabilidad completa</p></div></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5"><label className="text-xs font-semibold text-stone-500">Insumo<select value={historialInsumo} onChange={(event) => setHistorialInsumo(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-200 bg-transparent px-2 py-2 text-sm dark:border-white/10"><option value="">Todos</option>{insumos.map((item) => <option key={item.id} value={item.id}>{item.nombre}</option>)}</select></label><label className="text-xs font-semibold text-stone-500">Tipo<select value={historialTipo} onChange={(event) => setHistorialTipo(event.target.value as "TODOS" | TipoMovimiento)} className="mt-1 w-full rounded-lg border border-stone-200 bg-transparent px-2 py-2 text-sm dark:border-white/10"><option value="TODOS">Todos</option><option value={TipoMovimiento.ENTRADA}>Entradas</option><option value={TipoMovimiento.SALIDA}>Salidas</option></select></label><label className="text-xs font-semibold text-stone-500">Desde<input type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={(event) => setFechaDesde(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-200 bg-transparent px-2 py-2 text-sm dark:border-white/10" /></label><label className="text-xs font-semibold text-stone-500">Hasta<input type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(event) => setFechaHasta(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-200 bg-transparent px-2 py-2 text-sm dark:border-white/10" /></label><div className="flex items-end gap-1"><button title="Limpiar filtros" onClick={() => { setHistorialInsumo(""); setHistorialTipo("TODOS"); setFechaDesde(""); setFechaHasta(""); }} className="rounded-lg border border-stone-200 p-2.5 text-stone-500 dark:border-white/10"><SlidersHorizontal className="h-4 w-4" /></button><button onClick={exportarHistorial} disabled={!movimientosFiltrados.length} className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-2.5 text-xs font-bold text-white disabled:opacity-40"><Download className="h-4 w-4" />CSV</button></div></div></div><div className="max-h-[520px] divide-y divide-stone-100 overflow-y-auto dark:divide-white/5">{movimientosFiltrados.map((mov) => <div key={mov.id} className="grid gap-2 px-5 py-3 text-sm sm:grid-cols-[1fr_auto_auto] sm:items-center"><div><p className="font-bold">{mov.insumo.nombre}</p><p className="text-xs text-stone-400">{mov.motivo || "Sin observación"} · {mov.usuario ? `${mov.usuario.nombre} ${mov.usuario.apellido ?? ""}`.trim() : "Sistema"}</p></div><p className={`font-extrabold ${mov.tipoMovimiento === TipoMovimiento.ENTRADA ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{mov.tipoMovimiento === TipoMovimiento.ENTRADA ? "+" : "−"}{mov.cantidad.toLocaleString("es-CL")} {mov.insumo.unidadMedida}</p><time className="text-xs text-stone-400">{new Date(mov.fecha).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}</time></div>)}{!movimientosFiltrados.length && <p className="p-8 text-center text-sm text-stone-400">No hay movimientos para los filtros seleccionados.</p>}</div></section>
 
-      <AnimatePresence>{form && <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-sm"><motion.form initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} onSubmit={guardarInsumo} className="glass-modal relative w-full max-w-lg space-y-5 rounded-3xl bg-white p-6 dark:bg-stone-900"><button type="button" onClick={() => setForm(null)} className="absolute right-5 top-5 rounded-xl bg-stone-100 p-2 text-stone-500 dark:bg-white/5"><X className="h-4 w-4" /></button><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600">Catálogo de inventario</p><h2 className="font-display text-xl font-extrabold">{form.id ? "Editar insumo" : "Registrar insumo"}</h2></div><label className="block text-sm font-semibold">Nombre<input autoFocus required maxLength={80} value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} className="mt-2 w-full rounded-xl border border-stone-200 bg-transparent px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Unidad de medida<input required list="unidades-inventario" maxLength={20} value={form.unidadMedida} onChange={(event) => setForm({ ...form, unidadMedida: event.target.value })} className="mt-2 w-full rounded-xl border border-stone-200 bg-transparent px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10" /><datalist id="unidades-inventario">{UNIDADES.map((unidad) => <option key={unidad} value={unidad} />)}</datalist></label>{!form.id && <label className="block text-sm font-semibold">Stock inicial<input required min="0" step="0.01" inputMode="decimal" value={form.stockInicial} onChange={(event) => setForm({ ...form, stockInicial: event.target.value })} className="mt-2 w-full rounded-xl border border-stone-200 bg-transparent px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10" /></label>}<label className="block text-sm font-semibold">Stock mínimo<input required min="0" step="0.01" inputMode="decimal" value={form.stockMinimo} onChange={(event) => setForm({ ...form, stockMinimo: event.target.value })} className="mt-2 w-full rounded-xl border border-stone-200 bg-transparent px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10" /></label></div>{form.id && <label className="flex items-center gap-3 rounded-xl bg-stone-50 p-3 text-sm font-semibold dark:bg-white/5"><input type="checkbox" checked={form.activo} onChange={(event) => setForm({ ...form, activo: event.target.checked })} className="h-4 w-4 accent-brand-500" />Insumo activo</label>}<div className="flex justify-end gap-2"><button type="button" onClick={() => setForm(null)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500">Cancelar</button><button disabled={saving} className="flex items-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{form.id ? "Guardar cambios" : "Registrar insumo"}</button></div></motion.form></div>}</AnimatePresence>
+      <AnimatePresence>
+        {form && (
+          <div role="dialog" aria-modal="true" aria-labelledby="titulo-insumo" className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !saving && setForm(null)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
+            <motion.form
+              initial={{ scale: 0.95, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 16 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              onSubmit={guardarInsumo}
+              className="glass-panel relative w-full max-w-lg space-y-5 rounded-3xl p-6 sm:p-7 shadow-2xl border border-stone-200/80 dark:border-white/10 z-10 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                type="button"
+                onClick={() => setForm(null)}
+                disabled={saving}
+                className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
 
-      <AnimatePresence>{movimiento && <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/65 p-4 backdrop-blur-sm"><motion.form initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} onSubmit={registrarMovimiento} className="glass-modal relative w-full max-w-lg space-y-5 rounded-3xl bg-white p-6 dark:bg-stone-900"><button type="button" onClick={() => setMovimiento(null)} className="absolute right-5 top-5 rounded-xl bg-stone-100 p-2 text-stone-500 dark:bg-white/5"><X className="h-4 w-4" /></button><div><p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${movimiento.tipo === TipoMovimiento.ENTRADA ? "text-brand-600" : "text-red-600"}`}>Movimiento de inventario</p><h2 className="font-display text-xl font-extrabold">Registrar {movimiento.tipo === TipoMovimiento.ENTRADA ? "entrada" : "salida"} de stock</h2><p className="mt-1 text-sm text-stone-500">El stock y el historial se actualizarán automáticamente.</p></div><label className="block text-sm font-semibold">Insumo<select required value={movimiento.insumoId} onChange={(event) => setMovimiento({ ...movimiento, insumoId: event.target.value })} className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-950">{(movimiento.tipo === TipoMovimiento.SALIDA ? conStock : activos).map((item) => <option key={item.id} value={item.id}>{item.nombre} · {item.stockActual.toLocaleString("es-CL")} {item.unidadMedida}</option>)}</select></label><label className="block text-sm font-semibold">Cantidad<input autoFocus required min="0.01" max={movimiento.tipo === TipoMovimiento.SALIDA ? activos.find((item) => item.id === movimiento.insumoId)?.stockActual : undefined} step="0.01" inputMode="decimal" value={movimiento.cantidad} onChange={(event) => setMovimiento({ ...movimiento, cantidad: event.target.value })} className="mt-2 w-full rounded-xl border border-stone-200 bg-transparent px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10" /></label><label className="block text-sm font-semibold">Motivo / referencia<textarea maxLength={200} rows={3} value={movimiento.motivo} onChange={(event) => setMovimiento({ ...movimiento, motivo: event.target.value })} placeholder={movimiento.tipo === TipoMovimiento.ENTRADA ? "Ej: Compra proveedor, factura 123…" : "Ej: Consumo semanal en producción…"} className="mt-2 w-full resize-none rounded-xl border border-stone-200 bg-transparent px-3 py-2.5 outline-none focus:border-brand-500 dark:border-white/10" /></label><div className="flex justify-end gap-2"><button type="button" onClick={() => setMovimiento(null)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500">Cancelar</button><button disabled={saving || !movimiento.insumoId} className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50 ${movimiento.tipo === TipoMovimiento.ENTRADA ? "bg-gradient-brand" : "bg-red-600"}`}>{saving && <Loader2 className="h-4 w-4 animate-spin" />}Registrar {movimiento.tipo === TipoMovimiento.ENTRADA ? "entrada" : "salida"}</button></div></motion.form></div>}</AnimatePresence>
+              <div className="flex items-start gap-3.5 mb-2 pr-8">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center shrink-0 text-brand-600 dark:text-brand-400">
+                  <Archive className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Catálogo de inventario</p>
+                  <h2 id="titulo-insumo" className="font-display text-xl font-extrabold text-stone-900 dark:text-white">
+                    {form.id ? "Editar insumo" : "Registrar insumo"}
+                  </h2>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Control de existencias y parámetros de alerta.</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Nombre del insumo</label>
+                <input
+                  autoFocus
+                  required
+                  maxLength={80}
+                  value={form.nombre}
+                  onChange={(event) => setForm({ ...form, nombre: event.target.value })}
+                  placeholder="Ej: Detergente Industrial Concentrado"
+                  className="w-full rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Unidad de medida</label>
+                  <input
+                    required
+                    list="unidades-inventario"
+                    maxLength={20}
+                    value={form.unidadMedida}
+                    onChange={(event) => setForm({ ...form, unidadMedida: event.target.value })}
+                    placeholder="Ej: Litros, Kg, Cajas"
+                    className="w-full rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all"
+                  />
+                  <datalist id="unidades-inventario">
+                    {UNIDADES.map((unidad) => <option key={unidad} value={unidad} />)}
+                  </datalist>
+                </div>
+
+                {!form.id && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Stock inicial</label>
+                    <input
+                      required
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={form.stockInicial}
+                      onChange={(event) => setForm({ ...form, stockInicial: event.target.value })}
+                      className="w-full rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Stock mínimo</label>
+                  <input
+                    required
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={form.stockMinimo}
+                    onChange={(event) => setForm({ ...form, stockMinimo: event.target.value })}
+                    className="w-full rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              {form.id && (
+                <label className="flex items-center gap-3 rounded-2xl bg-stone-50/70 p-3.5 text-sm font-semibold dark:bg-white/5 border border-stone-100 dark:border-white/5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.activo}
+                    onChange={(event) => setForm({ ...form, activo: event.target.checked })}
+                    className="h-4 w-4 rounded accent-brand-500"
+                  />
+                  <span>Insumo activo en inventario</span>
+                </label>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setForm(null)}
+                  disabled={saving}
+                  className="flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  disabled={saving}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-bold text-white shadow-premium hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {form.id ? "Guardar cambios" : "Registrar insumo"}
+                </button>
+              </div>
+            </motion.form>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {movimiento && (
+          <div role="dialog" aria-modal="true" aria-labelledby="titulo-movimiento" className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !saving && setMovimiento(null)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
+            <motion.form
+              initial={{ scale: 0.95, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 16 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              onSubmit={registrarMovimiento}
+              className="glass-panel relative w-full max-w-lg space-y-5 rounded-3xl p-6 sm:p-7 shadow-2xl border border-stone-200/80 dark:border-white/10 z-10 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                type="button"
+                onClick={() => setMovimiento(null)}
+                disabled={saving}
+                className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-start gap-3.5 mb-2 pr-8">
+                <div className={`w-12 h-12 rounded-2xl ${movimiento.tipo === TipoMovimiento.ENTRADA ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"} flex items-center justify-center shrink-0`}>
+                  {movimiento.tipo === TipoMovimiento.ENTRADA ? <ArrowDownToLine className="w-6 h-6" /> : <ArrowUpFromLine className="w-6 h-6" />}
+                </div>
+                <div>
+                  <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${movimiento.tipo === TipoMovimiento.ENTRADA ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                    Movimiento de inventario
+                  </p>
+                  <h2 id="titulo-movimiento" className="font-display text-xl font-extrabold text-stone-900 dark:text-white">
+                    Registrar {movimiento.tipo === TipoMovimiento.ENTRADA ? "entrada" : "salida"} de stock
+                  </h2>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">El stock y el historial se actualizarán automáticamente.</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Insumo</label>
+                <select
+                  required
+                  value={movimiento.insumoId}
+                  onChange={(event) => setMovimiento({ ...movimiento, insumoId: event.target.value })}
+                  className="w-full rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 transition-all"
+                >
+                  {(movimiento.tipo === TipoMovimiento.SALIDA ? conStock : activos).map((item) => (
+                    <option key={item.id} value={item.id} className="dark:bg-stone-900">
+                      {item.nombre} · {item.stockActual.toLocaleString("es-CL")} {item.unidadMedida}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Cantidad</label>
+                <input
+                  autoFocus
+                  required
+                  min="0.01"
+                  max={movimiento.tipo === TipoMovimiento.SALIDA ? activos.find((item) => item.id === movimiento.insumoId)?.stockActual : undefined}
+                  step="0.01"
+                  inputMode="decimal"
+                  value={movimiento.cantidad}
+                  onChange={(event) => setMovimiento({ ...movimiento, cantidad: event.target.value })}
+                  placeholder="0.00"
+                  className="w-full rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Motivo / referencia</label>
+                <textarea
+                  maxLength={200}
+                  rows={3}
+                  value={movimiento.motivo}
+                  onChange={(event) => setMovimiento({ ...movimiento, motivo: event.target.value })}
+                  placeholder={movimiento.tipo === TipoMovimiento.ENTRADA ? "Ej: Compra proveedor, factura 123…" : "Ej: Consumo semanal en producción…"}
+                  className="w-full resize-none rounded-xl border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMovimiento(null)}
+                  disabled={saving}
+                  className="flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  disabled={saving || !movimiento.insumoId}
+                  className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-premium hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 ${
+                    movimiento.tipo === TipoMovimiento.ENTRADA ? "bg-gradient-brand" : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Registrar {movimiento.tipo === TipoMovimiento.ENTRADA ? "entrada" : "salida"}
+                </button>
+              </div>
+            </motion.form>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

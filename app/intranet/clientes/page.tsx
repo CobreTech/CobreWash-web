@@ -8,6 +8,7 @@ import { dataConnect } from "@/lib/firebase/client";
 import { formatChileanPhone, formatRut, getChileanPhoneType, isValidChileanPhone, isValidRut } from "@/lib/validators";
 import { ComandaEstado, TipoCliente } from "@/src/dataconnect-generated";
 import { executeMutation, executeQuery, mutationRef, queryRef } from "firebase/data-connect";
+import GlassSelect from "@/components/ui/GlassSelect";
 
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
 
@@ -242,13 +243,36 @@ export default function ClientesPage() {
 
       <AnimatePresence>
         {form && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="titulo-cliente" className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={() => !saving && setForm(null)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-            <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} className="glass-panel relative z-10 w-full max-w-lg rounded-3xl p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <div><h2 className="text-lg font-extrabold text-stone-900 dark:text-white">{form.id ? "Editar cliente" : "Registrar cliente"}</h2><p className="text-xs text-stone-500">Ficha administrativa, sin cuenta de acceso.</p></div>
-                <button onClick={() => setForm(null)} disabled={saving} className="rounded-lg p-2 text-stone-400 hover:bg-stone-500/10"><X className="h-5 w-5" /></button>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-panel relative z-10 w-full max-w-lg rounded-3xl p-6 sm:p-7 shadow-2xl border border-stone-200/80 dark:border-white/10 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setForm(null)}
+                disabled={saving}
+                className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-start gap-3.5 mb-6 pr-8">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center shrink-0 text-brand-600 dark:text-brand-400">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Ficha administrativa</p>
+                  <h2 id="titulo-cliente" className="font-display text-xl font-extrabold text-stone-900 dark:text-white">
+                    {form.id ? "Editar cliente" : "Registrar cliente"}
+                  </h2>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Gestión de datos de facturación y contacto.</p>
+                </div>
               </div>
+
               <div className="space-y-4">
                 <Field label="Nombre o razón social" value={form.nombre} onChange={(nombre) => setForm({ ...form, nombre })} required />
                 <Field
@@ -260,10 +284,49 @@ export default function ClientesPage() {
                   hint={form.rut ? (isValidRut(form.rut) ? "RUT válido" : "Dígito verificador incorrecto") : "Se validará automáticamente"}
                   valid={form.rut ? isValidRut(form.rut) : undefined}
                 />
-                <label className="block space-y-1.5"><span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Tipo de cliente</span><select value={form.tipoCliente} onChange={(e) => setForm({ ...form, tipoCliente: e.target.value as TipoCliente })} className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-white/10 dark:bg-stone-800"><option value={TipoCliente.PARTICULAR}>Particular / Empresa</option><option value={TipoCliente.HOTEL}>Hotel</option></select></label>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label="Teléfono" value={form.telefono} onChange={(telefono) => setForm({ ...form, telefono: formatChileanPhone(telefono) })} placeholder="+56 9 1234 5678" hint={form.telefono ? (getChileanPhoneType(form.telefono) || "Número chileno incompleto") : "Celular o teléfono fijo"} valid={form.telefono ? isValidChileanPhone(form.telefono) : undefined} /><Field label="Correo" type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} /></div>
-                <Field label="Dirección" value={form.direccion} onChange={(direccion) => setForm({ ...form, direccion })} />
-                <button onClick={guardar} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand py-3 text-sm font-bold text-white disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{saving ? "Guardando..." : form.id ? "Guardar cambios" : "Registrar cliente"}</button>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Tipo de cliente</label>
+                  <GlassSelect
+                    value={form.tipoCliente}
+                    onChange={(val) => setForm({ ...form, tipoCliente: val as TipoCliente })}
+                    ariaLabel="Tipo de cliente"
+                    options={[
+                      { value: TipoCliente.PARTICULAR, label: "Particular / Empresa" },
+                      { value: TipoCliente.HOTEL, label: "Hotel" },
+                    ]}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Field
+                    label="Teléfono"
+                    value={form.telefono}
+                    onChange={(telefono) => setForm({ ...form, telefono: formatChileanPhone(telefono) })}
+                    placeholder="+56 9 1234 5678"
+                    hint={form.telefono ? (getChileanPhoneType(form.telefono) || "Número chileno incompleto") : "Celular o teléfono fijo"}
+                    valid={form.telefono ? isValidChileanPhone(form.telefono) : undefined}
+                  />
+                  <Field label="Correo" type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} placeholder="contacto@empresa.cl" />
+                </div>
+                <Field label="Dirección" value={form.direccion} onChange={(direccion) => setForm({ ...form, direccion })} placeholder="Av. Balmaceda 1234, Calama" />
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm(null)}
+                    disabled={saving}
+                    className="flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={guardar}
+                    disabled={saving || !form.nombre.trim()}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-bold text-white shadow-premium hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {saving ? "Guardando..." : form.id ? "Guardar cambios" : "Registrar cliente"}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -278,5 +341,25 @@ function Metric({ value, label, icon, brand }: { value: string | number; label: 
 }
 
 function Field({ label, value, onChange, type = "text", required, placeholder, hint, valid }: { label: string; value: string; onChange: (value: string) => void; type?: string; required?: boolean; placeholder?: string; hint?: string; valid?: boolean }) {
-  return <label className="block space-y-1.5"><span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">{label}{required ? " *" : ""}</span><input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`w-full rounded-xl border bg-stone-50 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:bg-stone-800 ${valid === false ? "border-red-400 dark:border-red-500" : valid === true ? "border-emerald-400 dark:border-emerald-500" : "border-stone-200 dark:border-white/10"}`} />{hint && <span className={`block text-[10px] ${valid === false ? "text-red-500" : valid === true ? "text-emerald-600 dark:text-emerald-400" : "text-stone-400"}`}>{hint}</span>}</label>;
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+        {label}{required ? " *" : ""}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`w-full rounded-xl border bg-stone-50/70 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-brand-500 dark:bg-stone-800/80 dark:text-stone-200 dark:placeholder-stone-500 transition-all ${
+          valid === false ? "border-red-400 dark:border-red-500" : valid === true ? "border-emerald-400 dark:border-emerald-500" : "border-stone-200/80 dark:border-white/10"
+        }`}
+      />
+      {hint && (
+        <span className={`block text-[10px] ${valid === false ? "text-red-500" : valid === true ? "text-emerald-600 dark:text-emerald-400" : "text-stone-400"}`}>
+          {hint}
+        </span>
+      )}
+    </div>
+  );
 }
