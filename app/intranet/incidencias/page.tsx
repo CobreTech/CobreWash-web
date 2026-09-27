@@ -87,7 +87,7 @@ export default function IncidenciasPage() {
   return <div className="min-h-screen space-y-6 p-4 text-stone-900 sm:p-6 dark:text-stone-100">
     <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Control de producción · RF-SP11</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Control de producción</p>
         <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Incidencias de comandas</h1>
         <p className="mt-1 text-sm text-stone-500">Problemas reportados por operarios durante el proceso productivo.</p>
       </div>

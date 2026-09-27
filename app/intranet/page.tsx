@@ -92,7 +92,7 @@ export default function DashboardPage() {
   const total = pendientes + enProceso + listas;
 
   return <div className="min-h-screen space-y-6 p-4 text-stone-900 sm:p-6 dark:text-stone-100">
-    <header className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">RF20–RF22 · Datos reales</p><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Panel de producción</h1><p className="mt-1 text-sm text-stone-500">Vista global actualizada automáticamente cada 10 segundos.</p></div><button onClick={() => void cargar()} className="flex items-center gap-2 rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white"><RefreshCw className="h-4 w-4" />Actualizar ahora</button></header>
+    <header className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">Operaciones · Datos en tiempo real</p><h1 className="font-display text-2xl font-extrabold sm:text-3xl">Panel de producción</h1><p className="mt-1 text-sm text-stone-500">Vista global actualizada automáticamente cada 10 segundos.</p></div><button onClick={() => void cargar()} className="flex items-center gap-2 rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-bold text-white"><RefreshCw className="h-4 w-4" />Actualizar ahora</button></header>
     {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{error}</p>}
 
     <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">{[
