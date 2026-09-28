@@ -56,23 +56,23 @@ export default function ComandaDetalle({
         className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
       />
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        initial={{ scale: 0.95, opacity: 0, y: 16 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        exit={{ scale: 0.95, opacity: 0, y: 16 }}
         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto"
+        className="glass-panel rounded-3xl p-6 sm:p-8 w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl border border-stone-200/80 dark:border-white/10"
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+          className="absolute top-5 right-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors cursor-pointer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-xl bg-brand-100 dark:bg-brand-500/10 flex items-center justify-center shrink-0">
-            <Package className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+        <div className="flex items-center gap-3.5 mb-6 pr-8">
+          <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center shrink-0 text-brand-600 dark:text-brand-400">
+            <Package className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-xl font-extrabold text-stone-900 dark:text-white font-display">

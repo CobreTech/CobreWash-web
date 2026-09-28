@@ -10,14 +10,14 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:production": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-production.mjs\"",
-    "dataconnect:compile:web": "node scripts/prepare-production-test.mjs --sdk && npx -y firebase-tools@latest dataconnect:compile --config scratch/production-test/firebase.json && node scripts/normalize-generated.mjs"
+    "dataconnect:compile:web": "node scripts/prepare-production-test.mjs --sdk && npx -y firebase-tools@latest dataconnect:sdk:generate --config scratch/production-test/firebase.json && node scripts/normalize-generated.mjs"
   },
   "dependencies": {
     "@dataconnect/generated": "link:src/dataconnect-generated",
     "firebase": "^12.15.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
-    "next": "16.2.11",
+    "next": "^16.3.3",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -27,7 +27,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.11",
+    "eslint-config-next": "16.3.3",
     "firebase-admin": "^14.3.0",
     "tailwindcss": "^4",
     "typescript": "^5",

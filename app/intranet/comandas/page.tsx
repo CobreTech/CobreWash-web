@@ -12,6 +12,8 @@ import {
   Trash2,
   Loader2,
   Check,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import ComandaDetalle from "@/components/intranet/ComandaDetalle";
@@ -276,6 +278,10 @@ export default function ComandasPage() {
   const [anular, setAnular] = useState<Comanda | null>(null);
   const [motivo, setMotivo] = useState("");
   const [nuevoCliente, setNuevoCliente] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [anularError, setAnularError] = useState<string | null>(null);
+  const [entregar, setEntregar] = useState<Comanda | null>(null);
+  const [entregarLoading, setEntregarLoading] = useState(false);
 
   const filtered = comandas;
   const totalResultados = data?.total[0]?._count ?? comandas.length;
@@ -368,19 +374,19 @@ export default function ComandasPage() {
     if (guardando.current) return;
     const detalleLimpio = formData.detalle.filter((d) => d.tipoPrenda.trim());
     if (!formData.cliente.trim() || detalleLimpio.length === 0) {
-      alert("Selecciona un cliente y agrega al menos una prenda.");
+      setFormError("Selecciona un cliente y agrega al menos una prenda.");
       return;
     }
     if (nuevoCliente && !isValidRut(formData.rut)) {
-      alert("Ingresa un RUT chileno válido para el cliente.");
+      setFormError("Ingresa un RUT chileno válido para el cliente.");
       return;
     }
     if (nuevoCliente && formData.telefono.trim() && !isValidChileanPhone(formData.telefono)) {
-      alert("Ingresa un celular o teléfono fijo chileno válido.");
+      setFormError("Ingresa un celular o teléfono fijo chileno válido.");
       return;
     }
     if (nuevoCliente && formData.email.trim() && !/^\S+@\S+\.\S+$/.test(formData.email.trim())) {
-      alert("Ingresa un correo válido.");
+      setFormError("Ingresa un correo válido.");
       return;
     }
 
@@ -505,7 +511,7 @@ export default function ComandasPage() {
       setForm(null);
     } catch (err) {
       console.error(err);
-      alert(form?.mode === "editar"
+      setFormError(form?.mode === "editar"
         ? "No se pudo confirmar la edición. Revisa la comanda actualizada antes de reintentar; otra persona pudo modificarla o iniciar su producción."
         : "Error al guardar la comanda.");
     } finally {
@@ -517,6 +523,7 @@ export default function ComandasPage() {
   const confirmarAnular = async () => {
     if (!anular) return;
     setIsSubmitting(true);
+    setAnularError(null);
     try {
       const comandaOriginal = data?.comandas.find(c => c.id === anular.dbId);
       if (comandaOriginal) {
@@ -526,15 +533,32 @@ export default function ComandasPage() {
         });
         await refetch(true);
         setNotice(`Comanda ${anular.id} anulada correctamente.`);
+        setAnular(null);
+        setMotivo("");
+        setDetalle(null);
       }
     } catch (err) {
       console.error(err);
-      alert("Error al anular la comanda.");
+      setAnularError("Error al anular la comanda. Verifica que la comanda siga activa.");
     } finally {
       setIsSubmitting(false);
-      setAnular(null);
-      setMotivo("");
-      setDetalle(null);
+
+    }
+  };
+
+  const confirmarEntregar = async () => {
+    if (!entregar) return;
+    setEntregarLoading(true);
+    try {
+      await entregarComanda(dataConnect, { id: entregar.dbId });
+      await refetch(true);
+      setNotice(`Comanda ${entregar.id} entregada correctamente. Se registró la fecha y el historial.`);
+      setEntregar(null);
+    } catch (error) {
+      console.error(error);
+      setNotice("No se pudo marcar la comanda como entregada.");
+    } finally {
+      setEntregarLoading(false);
     }
   };
 
@@ -724,19 +748,10 @@ export default function ComandasPage() {
                               </button>
                             )}
                             {c.estado === "Listo" ? (
-                            <button onClick={async (e) => {
+                            <button onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm(`¿Marcar la comanda ${c.id} como Entregada?`)) {
-                                try {
-                                  await entregarComanda(dataConnect, { id: c.dbId });
-                                  await refetch(true);
-                                  setNotice(`Comanda ${c.id} entregada correctamente. Se registró la fecha y el historial.`);
-                                } catch (error) {
-                                  console.error(error);
-                                  alert("No se pudo marcar la comanda como entregada.");
-                                }
-                              }
-                            }} className="p-1.5 rounded-lg text-stone-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-500/10 transition-colors" title="Marcar como entregada">
+                              setEntregar(c);
+                            }} className="p-1.5 rounded-lg text-stone-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-500/10 transition-colors cursor-pointer" title="Marcar como entregada">
                               <Check className="w-3.5 h-3.5" />
                             </button>
                           ) : null}
@@ -813,6 +828,13 @@ export default function ComandasPage() {
               <h3 className="text-xl font-extrabold text-stone-900 dark:text-white font-display mb-6">
                 {form.mode === "crear" ? "Nueva Comanda" : "Editar Comanda"}
               </h3>
+
+              {formError && (
+                <div className="mb-4 flex items-center gap-2.5 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+                  <span>{formError}</span>
+                </div>
+              )}
 
               <div className="mb-4 flex items-center justify-between rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-xs dark:border-white/10 dark:bg-stone-800">
                 <span className="font-extrabold uppercase tracking-wider text-stone-500">Formulario de recepción</span>
@@ -970,34 +992,97 @@ export default function ComandasPage() {
       {/* Anular modal */}
       <AnimatePresence>
         {anular && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="titulo-anular" className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setAnular(null)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.95, opacity: 0, y: 16 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              exit={{ scale: 0.95, opacity: 0, y: 16 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="glass-panel rounded-3xl p-6 w-full max-w-md relative z-10"
+              className="glass-panel rounded-3xl p-6 sm:p-7 w-full max-w-md relative z-10 shadow-2xl border border-stone-200/80 dark:border-white/10"
             >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-                  <Ban className="w-5 h-5 text-red-500" />
+              <button onClick={() => setAnular(null)} className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="flex items-start gap-3.5 mb-5 pr-8">
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center shrink-0 text-red-600 dark:text-red-400">
+                  <Ban className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-stone-900 dark:text-white">Anular {anular.id}</h3>
-                  <p className="text-xs text-stone-500">Esta acción marca la comanda como anulada.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-red-600 dark:text-red-400">Acción crítica</p>
+                  <h3 id="titulo-anular" className="font-display text-xl font-extrabold text-stone-900 dark:text-white">Anular {anular.id}</h3>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Esta acción marcará la comanda como anulada permanentemente.</p>
                 </div>
               </div>
-              <textarea
-                value={motivo}
-                onChange={(e) => setMotivo(e.target.value)}
-                placeholder="Motivo de la anulación..."
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-sm focus:outline-none focus:border-red-400 resize-none"
-              />
-              <div className="flex gap-2 mt-4">
-                <button onClick={() => setAnular(null)} className="flex-1 bg-stone-100 dark:bg-white/5 text-stone-700 dark:text-stone-200 py-2.5 rounded-xl font-bold text-sm cursor-pointer">Cancelar</button>
-                <button onClick={confirmarAnular} className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-red-600 transition-colors cursor-pointer">Anular comanda</button>
+
+              {anularError && (
+                <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+                  <span>{anularError}</span>
+                </div>
+              )}
+
+              <div className="space-y-1.5 mb-4">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Motivo de anulación</label>
+                <textarea
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Describe la razón por la que se anula esta comanda..."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 placeholder-stone-400 focus:border-red-500 focus:outline-none dark:border-white/10 dark:bg-stone-800 dark:text-stone-200 dark:placeholder-stone-500"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={() => setAnular(null)} className="flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer">Cancelar</button>
+                <button onClick={confirmarAnular} className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 px-5 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg cursor-pointer">
+                  Anular comanda
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Entregar modal */}
+      <AnimatePresence>
+        {entregar && (
+          <div role="dialog" aria-modal="true" aria-labelledby="titulo-entrega" className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !entregarLoading && setEntregar(null)} className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 16 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="glass-panel rounded-3xl p-6 sm:p-7 w-full max-w-md relative z-10 shadow-2xl border border-stone-200/80 dark:border-white/10"
+            >
+              <button onClick={() => setEntregar(null)} disabled={entregarLoading} className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-white/5 dark:text-stone-400 dark:hover:bg-white/10 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="flex items-start gap-3.5 mb-5 pr-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Entrega de comanda</p>
+                  <h3 id="titulo-entrega" className="font-display text-xl font-extrabold text-stone-900 dark:text-white">Confirmar entrega</h3>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-stone-50/70 p-4 space-y-2 dark:bg-white/5 border border-stone-100 dark:border-white/5 text-sm">
+                <div className="flex justify-between items-center"><span className="text-xs text-stone-400">Comanda</span><span className="font-bold text-brand-600 dark:text-brand-400">{entregar.id}</span></div>
+                <div className="flex justify-between items-center"><span className="text-xs text-stone-400">Cliente</span><span className="font-semibold text-stone-800 dark:text-stone-200">{entregar.cliente}</span></div>
+                <div className="flex justify-between items-center"><span className="text-xs text-stone-400">Prendas</span><span className="font-semibold text-stone-800 dark:text-stone-200">{entregar.detalle.reduce((s, d) => s + d.cantidad, 0)} prendas</span></div>
+                <div className="flex justify-between items-center pt-1 border-t border-stone-200/50 dark:border-white/5"><span className="text-xs text-stone-400 font-bold">Total</span><span className="font-extrabold text-brand-600 dark:text-brand-400">{clp(valorTotal(entregar))}</span></div>
+              </div>
+              <p className="mt-4 text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                Al confirmar, el estado cambiará a <strong>Entregada</strong> y se registrará la fecha y hora exacta en la trazabilidad.
+              </p>
+              <div className="flex gap-2 mt-6">
+                <button onClick={() => setEntregar(null)} disabled={entregarLoading} className="flex-1 rounded-xl px-4 py-2.5 text-sm font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5 transition-colors cursor-pointer">Cancelar</button>
+                <button onClick={confirmarEntregar} disabled={entregarLoading} className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50 cursor-pointer">
+                  {entregarLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Confirmar entrega
+                </button>
               </div>
             </motion.div>
           </div>

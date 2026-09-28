@@ -16,6 +16,7 @@
 
 enum ComandaEstado { PENDIENTE EN_PROCESO FINALIZADA ENTREGADA ANULADA }
 enum EtapaEstado   { PENDIENTE EN_PROCESO COMPLETADA }
+enum IncidenciaEstado { ABIERTA EN_REVISION RESUELTA }
 enum TipoCliente   { HOTEL PARTICULAR }
 enum UnidadCobro   { PRENDA KILO }
 enum TipoMovimiento { ENTRADA SALIDA }
@@ -169,11 +170,38 @@ type ComandaEtapa @table(name: "comanda_etapa", key: ["comanda", "etapa"]) {
   descripcionEtapa: String @col(dataType: "varchar(200)")
   tiempoEstimadoMin: Int
   operario: Usuario
+  asignadoA: Usuario
   estado: EtapaEstado! @default(value: PENDIENTE)
   alertaRetraso: Boolean! @default(value: false)
   fechaInicio: Timestamp
   fechaCompletado: Timestamp
   observaciones: String @col(dataType: "varchar(300)")
+}
+
+# Problemas reportados por producción y su seguimiento administrativo.
+type IncidenciaComanda @table(name: "incidencia_comanda") {
+  id: UUID! @default(expr: "uuidV4()")
+  comanda: Comanda!
+  reportadaPor: Usuario!
+  motivo: String! @col(dataType: "varchar(100)")
+  descripcion: String @col(dataType: "varchar(300)")
+  estado: IncidenciaEstado! @default(value: ABIERTA)
+  fecha: Timestamp! @default(expr: "request.time")
+  actualizadaEn: Timestamp! @default(expr: "request.time")
+}
+
+# Auditoría de asignaciones. Se guarda separada de quien completa la etapa:
+# asignadoA representa la responsabilidad vigente y operario conserva el autor
+# real del avance (RF23/RF24).
+type ReasignacionOperario @table(name: "reasignacion_operario") {
+  id: UUID! @default(expr: "uuidV4()")
+  comanda: Comanda!
+  etapa: EtapaProduccion!
+  operarioAnterior: Usuario
+  operarioNuevo: Usuario!
+  realizadoPor: Usuario!
+  motivo: String @col(dataType: "varchar(200)")
+  fecha: Timestamp! @default(expr: "request.time")
 }
 
 # ====================== MÓDULO 5: GESTIÓN DE INVENTARIO =======================

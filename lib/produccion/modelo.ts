@@ -14,6 +14,8 @@ export function normalizarEtapas(etapas: EtapaPersistida[]) {
     fechaInicio: e.fechaInicio ?? null,
     fechaCompletado: e.fechaCompletado ?? null,
     responsable: e.operario ? [e.operario.nombre, e.operario.apellido].filter(Boolean).join(" ") : null,
+    asignadoA: e.asignadoA ? [e.asignadoA.nombre, e.asignadoA.apellido].filter(Boolean).join(" ") : null,
+    asignadoAId: e.asignadoA?.id ?? null,
   })).sort((a, b) => a.orden - b.orden);
 }
 
