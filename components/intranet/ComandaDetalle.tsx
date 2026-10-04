@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -17,6 +18,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import QrCode from "@/components/intranet/QrCode";
+import { obtenerEnlaceSeguimiento } from "@/lib/seguimiento/qr";
+import { imprimirComprobante } from "@/lib/seguimiento/imprimir";
 import FlujoProduccion from "@/components/intranet/FlujoProduccion";
 import {
   ETAPAS,
@@ -45,6 +48,7 @@ export default function ComandaDetalle({
   const sc = estadoConfig[comanda.estado];
   const total = valorTotal(comanda);
   const etapaIdx = comanda.etapaActual;
+  const qr = obtenerEnlaceSeguimiento(comanda.codigoQr);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -171,7 +175,10 @@ export default function ComandaDetalle({
           {/* Right: QR + meta */}
           <div className="flex sm:flex-col items-center gap-4 shrink-0">
             <div className="flex flex-col items-center gap-1.5">
-              <QrCode value={comanda.id} size={132} className="shadow-premium" />
+              {qr.url ? <>
+                <QrCode value={qr.url} size={160} className="shadow-premium" />
+                <a href={qr.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-brand-600 underline">Ver seguimiento público</a>
+              </> : <p role="alert" className="text-xs text-red-600">{qr.error}</p>}
               <p className="text-[10px] text-stone-400 dark:text-stone-600 font-semibold">Escanear comanda</p>
             </div>
             <div className="text-xs text-stone-500 dark:text-stone-400 space-y-1.5">
@@ -216,7 +223,8 @@ export default function ComandaDetalle({
         <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-stone-100 dark:border-white/5">
           <button
             onClick={() => setComprobante(true)}
-            className="flex items-center gap-2 bg-gradient-brand text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg transition-all cursor-pointer"
+            disabled={!qr.url}
+            className="flex items-center gap-2 bg-gradient-brand text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Receipt className="w-4 h-4" />
             Generar comprobante
@@ -253,8 +261,29 @@ export default function ComandaDetalle({
 /* ─────────────────────────  COMPROBANTE  ───────────────────────── */
 export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClose: () => void }) {
   const total = valorTotal(comanda);
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  const qr = obtenerEnlaceSeguimiento(comanda.codigoQr);
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const [fechaGeneracion] = useState(() => new Intl.DateTimeFormat("es-CL", {
+    timeZone: "America/Santiago", dateStyle: "medium", timeStyle: "medium", hourCycle: "h23",
+  }).format(new Date()));
+  const [preparandoImpresion, setPreparandoImpresion] = useState(false);
+  const [errorImpresion, setErrorImpresion] = useState("");
+
+  const imprimir = async () => {
+    if (!qr.url || preparandoImpresion) return;
+    setPreparandoImpresion(true);
+    setErrorImpresion("");
+    try {
+      // Medir con las fuentes cargadas evita cortar texto o agregar otra hoja.
+      await document.fonts?.ready;
+      if (!ticketRef.current) return;
+      imprimirComprobante(ticketRef.current);
+    } catch {
+      setErrorImpresion("No se pudo preparar la impresión. Vuelve a intentarlo.");
+    } finally { setPreparandoImpresion(false); }
+  };
+  return createPortal(
+    <div className="comprobante-modal fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -267,10 +296,10 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.94, opacity: 0, y: 24 }}
         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-full max-w-sm"
+        className="comprobante-contenedor relative z-10 my-auto w-full max-w-sm"
       >
         {/* Ticket — siempre en blanco, como un comprobante impreso */}
-        <div className="bg-white rounded-2xl overflow-hidden shadow-2xl text-stone-900">
+        <div ref={ticketRef} className="comprobante-ticket bg-white rounded-2xl overflow-hidden shadow-2xl text-stone-900">
           <div className="bg-gradient-brand text-white px-5 py-4 text-center">
             <p className="font-display font-extrabold tracking-tight text-lg leading-none">Lavandería El Cobre</p>
             <p className="text-[11px] text-white/80 mt-1">Comprobante de recepción · Calama, Chile</p>
@@ -283,7 +312,7 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
                 <p className="font-extrabold text-base">{comanda.id}</p>
               </div>
               <div className="text-right">
-                <p className="text-stone-400">Fecha</p>
+                <p className="text-stone-400">Recepción</p>
                 <p className="font-semibold">{comanda.fechaRecepcion}</p>
               </div>
             </div>
@@ -321,22 +350,30 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
             )}
 
             <div className="flex flex-col items-center gap-1 pt-2 border-t border-dashed border-stone-300">
-              <QrCode value={comanda.id} size={110} />
+              {qr.url ? <>
+                <QrCode value={qr.url} size={160} className="comprobante-qr" />
+                <a href={qr.url} className="break-all text-center text-[9px] leading-snug text-stone-600">{qr.url}</a>
+              </> : <p role="alert" className="text-xs text-red-600">{qr.error}</p>}
               <p className="text-[10px] text-stone-400">Escanea para seguir tu pedido</p>
               <p className="text-[10px] text-stone-400 text-center leading-snug mt-1">
                 ¡Gracias por preferirnos! Conserva este comprobante para retirar tus prendas.
+              </p>
+              <p className="mt-2 text-center text-[10px] leading-snug text-stone-500">
+                Generado el {fechaGeneracion}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-2 mt-3">
+        {errorImpresion && <p role="alert" className="comprobante-acciones mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700">{errorImpresion}</p>}
+        <div className="comprobante-acciones flex gap-2 mt-3">
           <button
-            onClick={() => window.print()}
-            className="flex-1 flex items-center justify-center gap-2 bg-white text-stone-700 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-stone-50 transition-all cursor-pointer"
+            onClick={() => void imprimir()}
+            disabled={!qr.url || preparandoImpresion}
+            className="flex-1 flex items-center justify-center gap-2 bg-white text-stone-700 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-stone-50 transition-all cursor-pointer disabled:opacity-50"
           >
             <Printer className="w-4 h-4" />
-            Imprimir
+            {preparandoImpresion ? "Preparando…" : "Imprimir"}
           </button>
           <button
             onClick={onClose}
@@ -347,6 +384,6 @@ export function ComprobanteModal({ comanda, onClose }: { comanda: Comanda; onClo
           </button>
         </div>
       </motion.div>
-    </div>
+    </div>, document.body
   );
 }

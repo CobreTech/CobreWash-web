@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@media print {
+  @page { margin: 0; }
+  html:has(.comprobante-modal), body:has(.comprobante-modal) { min-height: 0 !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: white !important; color: black !important; }
+  body:has(.comprobante-modal) > :not(.comprobante-modal) { display: none !important; }
+  .comprobante-modal { position: static !important; display: block !important; padding: 0 !important; overflow: visible !important; }
+  .comprobante-modal > :not(.comprobante-contenedor), .comprobante-acciones { display: none !important; }
+  .comprobante-modal * { transform: none !important; opacity: 1 !important; box-shadow: none !important; }
+  .comprobante-contenedor { width: 384px; max-width: 100% !important; margin: 0 auto !important; }
+  .comprobante-ticket { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .comprobante-ticket * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .comprobante-qr { break-inside: avoid; }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {

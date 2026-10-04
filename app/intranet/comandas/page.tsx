@@ -34,6 +34,7 @@ import {
   TipoCliente, 
   ComandaEstado,
   getCatalogosComanda,
+  getComandaDetalle,
   anularComanda,
   entregarComanda,
   crearTipoPrenda,
@@ -110,6 +111,7 @@ const valorTotal = (c: Comanda) => c.valorTotal;
 export interface Comanda {
   id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   dbId: string; // UUID interno; nunca se muestra al usuario
+  codigoQr: string;
   actualizadoEn: string;
   cliente: string;
   empresa?: string;
@@ -135,6 +137,31 @@ export interface Comanda {
 }
 
 type FormLinea = PrendaLinea & { detalle: string; recibido: number };
+
+function presentarComanda(c: GetComandasPaginadasData["comandas"][number]): Comanda {
+  return {
+    id: c.numeroComanda, dbId: c.id, codigoQr: c.codigoQr, actualizadoEn: c.actualizadoEn,
+    cliente: c.cliente.nombre, empresa: c.empresa || undefined, proyecto: c.proyecto || undefined,
+    tipoCliente: c.cliente.tipoCliente as TipoCliente,
+    telefono: c.cliente.telefono || "", email: c.cliente.email || "", direccion: c.cliente.direccion || "",
+    servicio: c.comandaDetalles_on_comanda[0]?.tipoServicio.nombre || "Lavado",
+    detalle: c.comandaDetalles_on_comanda.map((d) => ({
+      tipoPrenda: [...PRENDAS_FORMULARIO, ...PRENDAS_HOTEL].find(
+        (nombre) => normalizarCatalogo(nombre) === normalizarCatalogo(d.tipoPrenda.nombre),
+      ) || d.tipoPrenda.nombre,
+      servicio: d.tipoServicio.nombre, cantidad: d.cantidad, precioUnitario: d.precioUnitario, detalle: d.detalle || "",
+    })),
+    valorTotal: c.valorTotal,
+    fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL", { timeZone: "America/Santiago" }),
+    fechaRecepcionIso: new Date(c.fechaRecepcion).toISOString().slice(0, 10),
+    fechaEntregaEstimada: c.fechaEntregaEstimada ? new Date(c.fechaEntregaEstimada).toLocaleDateString("es-CL", { timeZone: "America/Santiago" }) : undefined,
+    etapaActual: null, etapas: normalizarEtapas(c.comandaEtapas_on_comanda),
+    estado: (c.estado === ComandaEstado.PENDIENTE ? "Pendiente" :
+      c.estado === ComandaEstado.EN_PROCESO ? "En proceso" : c.estado === ComandaEstado.FINALIZADA ? "Listo" :
+      c.estado === ComandaEstado.ENTREGADA ? "Entregado" : "Anulado") as EstadoComanda,
+    motivoAnulacion: c.motivoAnulacion || undefined, observaciones: c.observaciones || undefined,
+  };
+}
 type FormState = {
   clienteId: string;
   cliente: string;
@@ -235,42 +262,7 @@ export default function ComandasPage() {
 
   const refetch = fetchData;
 
-  const comandas: Comanda[] = useMemo(() => {
-    return (data?.comandas || []).map((c) => ({
-      id: c.numeroComanda,
-      dbId: c.id,
-      actualizadoEn: c.actualizadoEn,
-      cliente: c.cliente.nombre,
-      empresa: c.empresa || undefined,
-      proyecto: c.proyecto || undefined,
-      tipoCliente: c.cliente.tipoCliente as TipoCliente,
-      telefono: c.cliente.telefono || "",
-      email: c.cliente.email || "",
-      direccion: c.cliente.direccion || "",
-      servicio: c.comandaDetalles_on_comanda[0]?.tipoServicio.nombre || "Lavado",
-      detalle: c.comandaDetalles_on_comanda.map((d) => ({
-        tipoPrenda: [...PRENDAS_FORMULARIO, ...PRENDAS_HOTEL].find(
-          (nombre) => normalizarCatalogo(nombre) === normalizarCatalogo(d.tipoPrenda.nombre),
-        ) || d.tipoPrenda.nombre,
-        servicio: d.tipoServicio.nombre,
-        cantidad: d.cantidad,
-        precioUnitario: d.precioUnitario,
-        detalle: d.detalle || "",
-      })),
-      valorTotal: c.valorTotal,
-      fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL"),
-      fechaRecepcionIso: new Date(c.fechaRecepcion).toISOString().slice(0, 10),
-      fechaEntregaEstimada: c.fechaEntregaEstimada ? new Date(c.fechaEntregaEstimada).toLocaleDateString("es-CL") : undefined,
-      etapaActual: null,
-      etapas: normalizarEtapas(c.comandaEtapas_on_comanda),
-      estado: (c.estado === ComandaEstado.PENDIENTE ? "Pendiente" :
-               c.estado === ComandaEstado.EN_PROCESO ? "En proceso" :
-               c.estado === ComandaEstado.FINALIZADA ? "Listo" :
-               c.estado === ComandaEstado.ENTREGADA ? "Entregado" : "Anulado") as EstadoComanda,
-      motivoAnulacion: c.motivoAnulacion || undefined,
-      observaciones: c.observaciones || undefined,
-    }));
-  }, [data]);
+  const comandas = useMemo(() => (data?.comandas ?? []).map(presentarComanda), [data]);
 
   const [detalle, setDetalle] = useState<Comanda | null>(null);
   const [form, setForm] = useState<{ mode: "crear" } | { mode: "editar"; id: string; version: string } | null>(null);
@@ -392,14 +384,26 @@ export default function ComandasPage() {
 
     guardando.current = true;
     setIsSubmitting(true);
+    // La confirmación se lee por UUID, independientemente de filtros y página.
+    // Un fallo de esta lectura no convierte un INSERT confirmado en fallido.
+    const mostrarCreada = async (id: string) => {
+      envioPendiente.current = null;
+      setForm(null);
+      setNotice("Comanda creada correctamente.");
+      await refetch(true);
+      try {
+        const resultado = await getComandaDetalle(dataConnect, { id }, { fetchPolicy: "SERVER_ONLY" });
+        if (!resultado.data.comanda) throw new Error("Comanda no encontrada");
+        setDetalle(presentarComanda(resultado.data.comanda));
+      } catch {
+        setNotice("Comanda creada. No se pudo cargar su comprobante; vuelve a abrirla desde Comandas.");
+      }
+    };
     try {
       if (form?.mode === "crear" && envioPendiente.current) {
         const anterior = await getMiComandaGuardada(dataConnect, { id: envioPendiente.current.id }, { fetchPolicy: "SERVER_ONLY" });
         if (anterior.data.comanda) {
-          envioPendiente.current = null;
-          await refetch(true);
-          setNotice("Comanda creada correctamente.");
-          setForm(null);
+          await mostrarCreada(anterior.data.comanda.id);
           return;
         }
         envioPendiente.current = null;
@@ -486,8 +490,9 @@ export default function ComandasPage() {
           })),
         };
         envioPendiente.current = variables;
-        await guardarComandaConFlujo(variables);
-        envioPendiente.current = null;
+        const idCreado = await guardarComandaConFlujo(variables);
+        await mostrarCreada(idCreado);
+        return;
         } else if (form?.mode === "editar") {
           await editarComandaConDetalles({
             id: form.id,
@@ -507,7 +512,7 @@ export default function ComandasPage() {
         }
         
         await refetch(true);
-      setNotice(form?.mode === "crear" ? "Comanda creada correctamente." : "Comanda actualizada correctamente.");
+      setNotice("Comanda actualizada correctamente.");
       setForm(null);
     } catch (err) {
       console.error(err);
@@ -525,18 +530,15 @@ export default function ComandasPage() {
     setIsSubmitting(true);
     setAnularError(null);
     try {
-      const comandaOriginal = data?.comandas.find(c => c.id === anular.dbId);
-      if (comandaOriginal) {
-        await anularComanda(dataConnect, {
-          id: comandaOriginal.id,
-          motivoAnulacion: motivo.trim() || "Anulación sin motivo"
-        });
-        await refetch(true);
-        setNotice(`Comanda ${anular.id} anulada correctamente.`);
-        setAnular(null);
-        setMotivo("");
-        setDetalle(null);
-      }
+      await anularComanda(dataConnect, {
+        id: anular.dbId,
+        motivoAnulacion: motivo.trim() || "Anulación sin motivo"
+      });
+      await refetch(true);
+      setNotice(`Comanda ${anular.id} anulada correctamente.`);
+      setAnular(null);
+      setMotivo("");
+      setDetalle(null);
     } catch (err) {
       console.error(err);
       setAnularError("Error al anular la comanda. Verifica que la comanda siga activa.");
@@ -798,13 +800,13 @@ export default function ComandasPage() {
             comanda={(comandas.find((c) => c.dbId === detalle.dbId) ?? detalle) as unknown as MockComanda}
             onClose={() => setDetalle(null)}
             onEditar={(c) => {
-              const original = comandas.find((item) => item.id === c.id);
-              if (original) openEditar(original);
+              const original = comandas.find((item) => item.id === c.id) ?? detalle;
+              openEditar(original);
             }}
             onAnular={(c) => {
               setDetalle(null);
-              const original = comandas.find((item) => item.id === c.id);
-              if (original) setAnular(original);
+              const original = comandas.find((item) => item.id === c.id) ?? detalle;
+              setAnular(original);
             }}
           />
         )}

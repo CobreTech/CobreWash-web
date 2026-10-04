@@ -210,6 +210,22 @@ export interface ConfigurarEtapaProduccionVariables {
   tiempoEstimadoMin?: number | null;
 }
 
+export interface ConfigurarLimitesEtapasData {
+  recepcion?: EtapaProduccion_Key | null;
+  lavado?: EtapaProduccion_Key | null;
+  secado?: EtapaProduccion_Key | null;
+  planchado?: EtapaProduccion_Key | null;
+  entrega?: EtapaProduccion_Key | null;
+}
+
+export interface ConfigurarLimitesEtapasVariables {
+  recepcion: number;
+  lavado: number;
+  secado: number;
+  planchado: number;
+  entrega: number;
+}
+
 export interface CrearClienteAdministradoData {
   usuario_insert: Usuario_Key;
   cliente_insert: Cliente_Key;
@@ -432,6 +448,8 @@ export interface GetCatalogosComandaData {
 export interface GetComandaDetalleData {
   comanda?: {
     id: UUIDString;
+    codigoQr: UUIDString;
+    actualizadoEn: TimestampString;
     numeroComanda: string;
     estado: ComandaEstado;
     valorTotal: number;
@@ -501,6 +519,66 @@ export interface GetComandaDetalleData {
 
 export interface GetComandaDetalleVariables {
   id: UUIDString;
+}
+
+export interface GetComandaOperativaPorQrData {
+  comanda?: {
+    id: UUIDString;
+    codigoQr: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    actualizadoEn: TimestampString;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      tipoCliente: TipoCliente;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      id: UUIDString;
+      cantidad: number;
+      pesoKg?: number | null;
+      detalle?: string | null;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    } & ComandaDetalle_Key)[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        descripcion?: string | null;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+  } & Comanda_Key;
+}
+
+export interface GetComandaOperativaPorQrVariables {
+  codigoQr: UUIDString;
 }
 
 export interface GetComandaPorQrData {
@@ -622,6 +700,37 @@ export interface GetComandasPaginadasVariables {
   cliente?: string | null;
   fechaDesde?: TimestampString | null;
   fechaHasta?: TimestampString | null;
+}
+
+export interface GetComandasParaAlertasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      asignadoA?: {
+        nombre: string;
+        apellido?: string | null;
+      };
+      etapa: {
+        nombre: string;
+        orden: number;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+  } & Comanda_Key)[];
+}
+
+export interface GetComandasParaAlertasVariables {
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetEtapasProduccionData {
@@ -943,6 +1052,66 @@ export interface GetSeguimientoProduccionVariables {
   limit?: number | null;
   offset?: number | null;
   buscar?: string | null;
+}
+
+export interface GetSeguimientoPublicoPorNumeroData {
+  comanda?: {
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  };
+}
+
+export interface GetSeguimientoPublicoPorNumeroVariables {
+  numeroComanda: string;
+}
+
+export interface GetSeguimientoPublicoPorQrData {
+  comanda?: {
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  };
+}
+
+export interface GetSeguimientoPublicoPorQrVariables {
+  codigoQr: UUIDString;
 }
 
 export interface GetUsuariosData {
@@ -1486,6 +1655,18 @@ export const configurarEtapaProduccionRef: ConfigurarEtapaProduccionRef;
 export function configurarEtapaProduccion(vars: ConfigurarEtapaProduccionVariables): MutationPromise<ConfigurarEtapaProduccionData, ConfigurarEtapaProduccionVariables>;
 export function configurarEtapaProduccion(dc: DataConnect, vars: ConfigurarEtapaProduccionVariables): MutationPromise<ConfigurarEtapaProduccionData, ConfigurarEtapaProduccionVariables>;
 
+interface ConfigurarLimitesEtapasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ConfigurarLimitesEtapasVariables): MutationRef<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ConfigurarLimitesEtapasVariables): MutationRef<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+  operationName: string;
+}
+export const configurarLimitesEtapasRef: ConfigurarLimitesEtapasRef;
+
+export function configurarLimitesEtapas(vars: ConfigurarLimitesEtapasVariables): MutationPromise<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+export function configurarLimitesEtapas(dc: DataConnect, vars: ConfigurarLimitesEtapasVariables): MutationPromise<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+
 interface CompletarEtapaComandaRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: CompletarEtapaComandaVariables): MutationRef<CompletarEtapaComandaData, CompletarEtapaComandaVariables>;
@@ -1569,6 +1750,18 @@ export const getPanelProduccionRef: GetPanelProduccionRef;
 
 export function getPanelProduccion(vars?: GetPanelProduccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetPanelProduccionData, GetPanelProduccionVariables>;
 export function getPanelProduccion(dc: DataConnect, vars?: GetPanelProduccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetPanelProduccionData, GetPanelProduccionVariables>;
+
+interface GetComandasParaAlertasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetComandasParaAlertasVariables): QueryRef<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetComandasParaAlertasVariables): QueryRef<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+  operationName: string;
+}
+export const getComandasParaAlertasRef: GetComandasParaAlertasRef;
+
+export function getComandasParaAlertas(vars?: GetComandasParaAlertasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+export function getComandasParaAlertas(dc: DataConnect, vars?: GetComandasParaAlertasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
 
 interface GetIncidenciasRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -1761,3 +1954,39 @@ export const getFichasClientesRef: GetFichasClientesRef;
 
 export function getFichasClientes(options?: ExecuteQueryOptions): QueryPromise<GetFichasClientesData, undefined>;
 export function getFichasClientes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetFichasClientesData, undefined>;
+
+interface GetSeguimientoPublicoPorQrRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetSeguimientoPublicoPorQrVariables): QueryRef<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetSeguimientoPublicoPorQrVariables): QueryRef<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+  operationName: string;
+}
+export const getSeguimientoPublicoPorQrRef: GetSeguimientoPublicoPorQrRef;
+
+export function getSeguimientoPublicoPorQr(vars: GetSeguimientoPublicoPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+export function getSeguimientoPublicoPorQr(dc: DataConnect, vars: GetSeguimientoPublicoPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+
+interface GetSeguimientoPublicoPorNumeroRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetSeguimientoPublicoPorNumeroVariables): QueryRef<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetSeguimientoPublicoPorNumeroVariables): QueryRef<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+  operationName: string;
+}
+export const getSeguimientoPublicoPorNumeroRef: GetSeguimientoPublicoPorNumeroRef;
+
+export function getSeguimientoPublicoPorNumero(vars: GetSeguimientoPublicoPorNumeroVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+export function getSeguimientoPublicoPorNumero(dc: DataConnect, vars: GetSeguimientoPublicoPorNumeroVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+
+interface GetComandaOperativaPorQrRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComandaOperativaPorQrVariables): QueryRef<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetComandaOperativaPorQrVariables): QueryRef<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+  operationName: string;
+}
+export const getComandaOperativaPorQrRef: GetComandaOperativaPorQrRef;
+
+export function getComandaOperativaPorQr(vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+export function getComandaOperativaPorQr(dc: DataConnect, vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;

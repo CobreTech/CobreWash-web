@@ -66,6 +66,13 @@ cp .env.example .env.local
 Luego edita `.env.local` con los valores del **SDK web** de tu proyecto
 (Firebase Console → Configuración del proyecto → Tus apps).
 
+Para emitir QR reales configura `NEXT_PUBLIC_SEGUIMIENTO_BASE_URL` como origen
+HTTPS estable (actualmente `https://lavanderia-elcobre.vercel.app`). También debe
+estar configurado en Vercel antes del build. No se usa el dominio de previews
+como alternativa; una configuración ausente bloquea el comprobante QR.
+El contrato compartido y las instrucciones para Android están en
+[docs/qr-android.md](docs/qr-android.md).
+
 ### 3. Levantar el entorno de desarrollo
 ```bash
 pnpm dev

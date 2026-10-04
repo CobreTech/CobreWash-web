@@ -18,6 +18,8 @@ import { auth, dataConnect } from "@/lib/firebase/client";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import { NAV_POR_ROL, type NavItem, type Rol } from "@/lib/roles";
 import { getComandasActivasCount } from "@/src/dataconnect-generated";
+import { useAlertasRetraso } from "./AlertasRetraso";
+import { formatearDuracion } from "@/lib/produccion/duracion";
 
 const rolLabel: Record<Rol, string> = {
   admin: "Administrador",
@@ -33,6 +35,7 @@ export default function IntranetSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [comandasActivas, setComandasActivas] = useState<number | null>(null);
   const usuario = useUsuarioActualContext();
+  const { alertas, error: errorAlertas } = useAlertasRetraso();
 
   const rol = (usuario?.rol.nombre as Rol) ?? "admin";
   const navItems: NavItem[] = NAV_POR_ROL[rol as Exclude<Rol, "cliente">] ?? NAV_POR_ROL.admin;
@@ -61,12 +64,10 @@ export default function IntranetSidebar() {
     };
   }, [cargarComandasActivas]);
 
-  // Previsualización de la última notificación (mock — aún sin backend).
   const ultimaNotif = {
-    total: 3,
-    titulo: "Nuevo pedido recibido",
-    detalle: "Comanda #ELCOBRE-14r3",
-    tiempo: "hace 3 min",
+    total: alertas.length,
+    titulo: errorAlertas ? "No se pudieron actualizar las alertas" : alertas.length ? "Tiempo de etapa excedido" : "Sin retrasos detectados",
+    detalle: alertas[0] ? `${alertas[0].numeroComanda} · ${alertas[0].etapa} · +${formatearDuracion(alertas[0].excedidoMin)}` : "Revisión automática cada 30 segundos",
   };
 
   const isActive = (item: (typeof navItems)[0]) => {
@@ -189,11 +190,12 @@ export default function IntranetSidebar() {
 
       {/* Notificaciones — tarjeta con previsualización de la última */}
       <AnimatePresence>
-        {(!collapsed || isMobile) && (
+        {rol === "admin" && (!collapsed || isMobile) && (
           <motion.button
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
+            onClick={() => { router.push(alertas[0]?.href ?? "/intranet#alertas-retraso"); setMobileOpen(false); }}
             className="mx-3 mb-1 block text-left relative overflow-hidden rounded-2xl bg-white/60 dark:bg-white/5 border border-stone-200/70 dark:border-white/5 backdrop-blur-sm p-3.5 hover:border-brand-300 dark:hover:border-brand-500/25 transition-colors cursor-pointer"
             style={{ width: "calc(100% - 1.5rem)" }}
           >
@@ -201,19 +203,19 @@ export default function IntranetSidebar() {
               <div className="flex items-center gap-2">
                 <div className="relative w-7 h-7 rounded-lg bg-brand-500/12 grid place-items-center text-brand-600 dark:text-brand-400">
                   <Bell className="w-3.5 h-3.5" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-stone-950" />
+                  {(alertas.length > 0 || errorAlertas) && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-stone-950" />}
                 </div>
-                <span className="text-xs font-bold text-stone-800 dark:text-white">Notificaciones</span>
+                <span className="text-xs font-bold text-stone-800 dark:text-white">Alertas de retraso</span>
               </div>
               <span className="bg-brand-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {ultimaNotif.total}
+                {errorAlertas ? "!" : ultimaNotif.total}
               </span>
             </div>
             <p className="text-[11px] font-semibold text-stone-700 dark:text-stone-200 truncate">
               {ultimaNotif.titulo}
             </p>
             <p className="text-[10px] text-stone-400 dark:text-stone-500 truncate mt-0.5">
-              {ultimaNotif.detalle} · {ultimaNotif.tiempo}
+              {ultimaNotif.detalle}
             </p>
           </motion.button>
         )}
@@ -222,13 +224,14 @@ export default function IntranetSidebar() {
       {/* Bottom Section */}
       <div className="p-3 border-t border-stone-200 dark:border-white/5 space-y-1">
         {/* Acceso rápido a notificaciones cuando la barra está colapsada */}
-        {collapsed && !isMobile && (
+        {rol === "admin" && collapsed && !isMobile && (
           <button
-            title="Notificaciones"
+            title={`Alertas de retraso: ${alertas.length}`}
+            onClick={() => router.push(alertas[0]?.href ?? "/intranet#alertas-retraso")}
             className="relative flex items-center justify-center w-full px-3 py-2.5 rounded-xl text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-white/5 hover:text-stone-900 dark:hover:text-stone-200 transition-all duration-200"
           >
             <Bell className="w-[18px] h-[18px] shrink-0" />
-            <span className="absolute top-1.5 right-3.5 w-2 h-2 bg-brand-500 rounded-full" />
+            {(alertas.length > 0 || errorAlertas) && <span className="absolute top-1.5 right-3.5 w-2 h-2 bg-red-500 rounded-full" />}
           </button>
         )}
 

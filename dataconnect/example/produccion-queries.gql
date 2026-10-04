@@ -71,6 +71,23 @@ query GetPanelProduccion($limit: Int = 100) @auth(level: USER) {
   listas: comandas(where: { estado: { eq: FINALIZADA } }) { _count }
 }
 
+# Cola mínima paginada para detectar retrasos desde cualquier sección de la
+# intranet. No depende de los filtros ni del límite del panel de producción.
+query GetComandasParaAlertas($limit: Int = 100, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar alertas de retraso") }
+  }
+  comandas(where: { estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } }, orderBy: [{ id: ASC }], limit: $limit, offset: $offset) {
+    id numeroComanda estado fechaRecepcion
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa tiempoEstimadoMin estado fechaInicio
+      asignadoA { nombre apellido }
+      etapa { nombre orden tiempoEstimadoMin }
+    }
+  }
+}
+
 query GetIncidencias @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")

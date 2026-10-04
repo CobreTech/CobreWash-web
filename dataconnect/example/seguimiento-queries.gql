@@ -1,0 +1,44 @@
+# Contratos nuevos: no modificar GetComandaPorQr, usado por clientes anteriores.
+query GetSeguimientoPublicoPorQr($codigoQr: UUID!)
+  @auth(level: PUBLIC, insecureReason: "Seguimiento por código impreso: solo estado, fechas, servicios y etapas, sin datos personales") {
+  comanda(first: { where: { codigoQr: { eq: $codigoQr } } }) {
+    numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
+    comandaDetalles_on_comanda { tipoServicio { nombre } }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      nombreEtapa ordenEtapa estado fechaCompletado
+      etapa { nombre orden }
+    }
+  }
+}
+
+query GetSeguimientoPublicoPorNumero($numeroComanda: String!)
+  @auth(level: PUBLIC, insecureReason: "Consulta por número público: solo estado, fechas, servicios y etapas, sin datos personales") {
+  comanda(first: { where: { numeroComanda: { eq: $numeroComanda } } }) {
+    numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
+    comandaDetalles_on_comanda { tipoServicio { nombre } }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      nombreEtapa ordenEtapa estado fechaCompletado
+      etapa { nombre orden }
+    }
+  }
+}
+
+query GetComandaOperativaPorQr($codigoQr: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista', 'operario']", message: "No autorizado para consultar comandas") }
+  }
+  comanda(first: { where: { codigoQr: { eq: $codigoQr } } }) {
+    id codigoQr numeroComanda estado actualizadoEn fechaRecepcion fechaEntregaEstimada fechaEntregaReal
+    cliente { id nombre tipoCliente }
+    comandaDetalles_on_comanda {
+      id cantidad pesoKg detalle tipoPrenda { nombre } tipoServicio { nombre }
+    }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado fechaInicio fechaCompletado
+      operario { id nombre apellido }
+      asignadoA { id nombre apellido }
+      etapa { nombre orden descripcion tiempoEstimadoMin }
+    }
+  }
+}

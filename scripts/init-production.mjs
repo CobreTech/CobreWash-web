@@ -14,6 +14,7 @@ export async function inicializarEtapas(dc, aplicar = false) {
   }
   const etapas = ["Recepción", "Lavado", "Secado", "Planchado", "Entrega"].map((nombre, i) => ({
     id: "00000000-0000-4000-8000-00000000002" + i, nombre, orden: i + 1,
+    tiempoEstimadoMin: [15, 90, 60, 60, 1440][i],
   }));
   console.log("Catálogo inicial: " + etapas.map((e) => e.nombre).join(" → "));
   if (!aplicar) { console.log("Solo diagnóstico. Usar --apply para crear las cinco etapas."); return; }
