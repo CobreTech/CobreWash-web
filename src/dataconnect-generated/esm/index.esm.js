@@ -383,6 +383,18 @@ export function configurarEtapaProduccion(dcOrVars, vars) {
   return executeMutation(configurarEtapaProduccionRef(dcInstance, inputVars));
 }
 
+export const configurarLimitesEtapasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ConfigurarLimitesEtapas', inputVars);
+}
+configurarLimitesEtapasRef.operationName = 'ConfigurarLimitesEtapas';
+
+export function configurarLimitesEtapas(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(configurarLimitesEtapasRef(dcInstance, inputVars));
+}
+
 export const completarEtapaComandaRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -468,6 +480,19 @@ export function getPanelProduccion(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getPanelProduccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getComandasParaAlertasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandasParaAlertas', inputVars);
+}
+getComandasParaAlertasRef.operationName = 'GetComandasParaAlertas';
+
+export function getComandasParaAlertas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getComandasParaAlertasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const getIncidenciasRef = (dc) => {
@@ -676,4 +701,43 @@ export function getFichasClientes(dcOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getFichasClientesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getSeguimientoPublicoPorQrRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSeguimientoPublicoPorQr', inputVars);
+}
+getSeguimientoPublicoPorQrRef.operationName = 'GetSeguimientoPublicoPorQr';
+
+export function getSeguimientoPublicoPorQr(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getSeguimientoPublicoPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getSeguimientoPublicoPorNumeroRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSeguimientoPublicoPorNumero', inputVars);
+}
+getSeguimientoPublicoPorNumeroRef.operationName = 'GetSeguimientoPublicoPorNumero';
+
+export function getSeguimientoPublicoPorNumero(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getSeguimientoPublicoPorNumeroRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getComandaOperativaPorQrRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandaOperativaPorQr', inputVars);
+}
+getComandaOperativaPorQrRef.operationName = 'GetComandaOperativaPorQr';
+
+export function getComandaOperativaPorQr(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getComandaOperativaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }

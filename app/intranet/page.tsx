@@ -6,7 +6,8 @@ import { AlertTriangle, CheckCircle2, Clock3, Loader2, Package, RefreshCw, Searc
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { dataConnect } from "@/lib/firebase/client";
 import { ComandaEstado, getPanelProduccion, type GetPanelProduccionData } from "@/src/dataconnect-generated";
-import { estaEtapaAtrasada, minutosExcedidos } from "@/lib/produccion/alertas";
+import { alertaComanda } from "@/lib/produccion/alertas";
+import { useAlertasRetraso } from "@/components/intranet/AlertasRetraso";
 
 type ComandaPanel = GetPanelProduccionData["comandas"][number];
 type EstadoFiltro = "TODAS" | ComandaEstado;
@@ -21,27 +22,12 @@ function etapaActual(comanda: ComandaPanel) {
 }
 
 function estaAtrasada(comanda: ComandaPanel, ahora: number) {
-  const etapa = etapaActual(comanda);
-  if (!etapa) return false;
-  return estaEtapaAtrasada({
-    estado: etapa.estado, orden: etapa.ordenEtapa ?? etapa.etapa.orden,
-    fechaInicio: etapa.fechaInicio, fechaRecepcion: comanda.fechaRecepcion,
-    tiempoEstimadoMin: etapa.tiempoEstimadoMin ?? etapa.etapa.tiempoEstimadoMin,
-  }, ahora);
-}
-
-function tiempoExcedido(comanda: ComandaPanel, ahora: number) {
-  const etapa = etapaActual(comanda);
-  if (!etapa) return 0;
-  return minutosExcedidos({
-    estado: etapa.estado, orden: etapa.ordenEtapa ?? etapa.etapa.orden,
-    fechaInicio: etapa.fechaInicio, fechaRecepcion: comanda.fechaRecepcion,
-    tiempoEstimadoMin: etapa.tiempoEstimadoMin ?? etapa.etapa.tiempoEstimadoMin,
-  }, ahora);
+  return alertaComanda(comanda, ahora) != null;
 }
 
 export default function DashboardPage() {
   const permitido = useRoleGuard(["admin"]);
+  const { alertas } = useAlertasRetraso();
   const [data, setData] = useState<GetPanelProduccionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -70,7 +56,6 @@ export default function DashboardPage() {
   }, [cargar]);
 
   const comandas = useMemo(() => data?.comandas ?? [], [data]);
-  const atrasadas = comandas.filter((comanda) => estaAtrasada(comanda, ahora));
   const incidencias = comandas.reduce((total, comanda) => total + (comanda.incidenciaComandas_on_comanda?.length ?? 0), 0);
   const etapas = useMemo(() => Array.from(new Set(comandas.map((comanda) => etapaActual(comanda)?.nombreEtapa ?? etapaActual(comanda)?.etapa.nombre).filter(Boolean))) as string[], [comandas]);
   const visibles = useMemo(() => {
@@ -100,10 +85,10 @@ export default function DashboardPage() {
       { label: "Pendientes", value: pendientes, icon: Clock3, tone: "text-amber-600 bg-amber-500/10" },
       { label: "En proceso", value: enProceso, icon: Users, tone: "text-sky-600 bg-sky-500/10" },
       { label: "Listas", value: listas, icon: CheckCircle2, tone: "text-emerald-600 bg-emerald-500/10" },
-      { label: "Con atraso", value: atrasadas.length, icon: AlertTriangle, tone: "text-red-600 bg-red-500/10" },
+      { label: "Con atraso", value: alertas.length, icon: AlertTriangle, tone: "text-red-600 bg-red-500/10" },
     ].map((card, index) => <motion.article key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} className="glass-panel rounded-2xl p-4"><div className="flex items-center justify-between"><div><p className="text-xs text-stone-500">{card.label}</p><p className="mt-1 text-3xl font-extrabold">{card.value}</p></div><span className={`grid h-10 w-10 place-items-center rounded-xl ${card.tone}`}><card.icon className="h-5 w-5" /></span></div></motion.article>)}</section>
 
-    {(atrasadas.length > 0 || incidencias > 0) && <section className="grid gap-3 lg:grid-cols-2">{atrasadas.length > 0 && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-500/20 dark:bg-red-500/10"><div className="flex items-center gap-2 font-bold text-red-700 dark:text-red-300"><AlertTriangle className="h-5 w-5" />Alertas de tiempo excedido</div><div className="mt-3 space-y-2">{atrasadas.slice(0, 5).map((comanda) => <p key={comanda.id} className="text-sm text-red-700/90 dark:text-red-200"><strong>{comanda.numeroComanda}</strong> · {etapaActual(comanda)?.nombreEtapa ?? etapaActual(comanda)?.etapa.nombre} · excedida por {tiempoExcedido(comanda, ahora)} min</p>)}</div></div>}{incidencias > 0 && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10"><div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300"><ShieldAlert className="h-5 w-5" />{incidencias} incidencia{incidencias === 1 ? "" : "s"} abierta{incidencias === 1 ? "" : "s"}</div><p className="mt-2 text-sm text-amber-700/80 dark:text-amber-200">Revisa el módulo de incidencias para realizar seguimiento.</p></div>}</section>}
+    {incidencias > 0 && <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10"><div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300"><ShieldAlert className="h-5 w-5" />{incidencias} incidencia{incidencias === 1 ? "" : "s"} abierta{incidencias === 1 ? "" : "s"}</div><p className="mt-2 text-sm text-amber-700/80 dark:text-amber-200">Revisa el módulo de incidencias para realizar seguimiento.</p></section>}
 
     <section className="glass-panel rounded-2xl p-4"><h2 className="text-sm font-extrabold">Distribución por etapa actual</h2><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{etapas.map((nombre) => { const cantidad = comandas.filter((comanda) => (etapaActual(comanda)?.nombreEtapa ?? etapaActual(comanda)?.etapa.nombre) === nombre).length; const porcentaje = total ? Math.round(cantidad / total * 100) : 0; return <div key={nombre} className="rounded-xl bg-stone-50 p-3 dark:bg-white/5"><div className="flex justify-between text-xs"><span className="font-bold">{nombre}</span><span>{cantidad}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-white/10"><div className="h-full rounded-full bg-brand-500" style={{ width: `${porcentaje}%` }} /></div></div>; })}</div></section>
 

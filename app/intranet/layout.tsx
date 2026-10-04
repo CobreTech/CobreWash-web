@@ -3,6 +3,7 @@ import IntranetTopbar from "@/components/intranet/Topbar";
 import AuthGuard from "@/components/intranet/AuthGuard";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import Script from "next/script";
+import AlertasRetraso, { AlertasRetrasoProvider } from "@/components/intranet/AlertasRetraso";
 
 export const metadata = {
   title: "Intranet | Lavandería El Cobre",
@@ -27,6 +28,7 @@ export default function IntranetLayout({ children }: { children: React.ReactNode
       </Script>
       <ThemeProvider>
         <AuthGuard>
+          <AlertasRetrasoProvider>
           <div className="relative flex h-screen bg-gradient-to-br from-orange-50 via-stone-50 to-amber-50/60 dark:from-stone-950 dark:via-stone-950 dark:to-stone-900 overflow-hidden">
             <div className="pointer-events-none absolute -top-24 right-0 -z-10 w-[28rem] h-[28rem] rounded-full bg-brand-200/50 dark:bg-brand-500/10 blur-3xl" />
             <div className="pointer-events-none absolute bottom-0 left-1/4 -z-10 w-[32rem] h-[32rem] rounded-full bg-copper-200/40 dark:bg-copper-500/10 blur-3xl" />
@@ -35,9 +37,10 @@ export default function IntranetLayout({ children }: { children: React.ReactNode
             <IntranetSidebar />
             <div className="relative z-10 flex-1 flex flex-col overflow-hidden lg:pt-0 pt-14">
               <IntranetTopbar />
-              <main className="flex-1 overflow-y-auto">{children}</main>
+              <main className="flex-1 overflow-y-auto"><AlertasRetraso />{children}</main>
             </div>
           </div>
+          </AlertasRetrasoProvider>
         </AuthGuard>
       </ThemeProvider>
     </>

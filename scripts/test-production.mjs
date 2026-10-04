@@ -10,6 +10,7 @@ const mutation = await readFile("dataconnect/produccion/mutations.gql", "utf8");
 const production = await readFile("dataconnect/example/produccion-mutations.gql", "utf8");
 const queries = await readFile("dataconnect/example/produccion-queries.gql", "utf8");
 const commandQueries = await readFile("dataconnect/example/queries.gql", "utf8");
+const trackingQueries = await readFile("dataconnect/example/seguimiento-queries.gql", "utf8");
 const legacy = await readFile("dataconnect/example/mutations.gql", "utf8");
 let count = 0;
 async function execute(query, operationName, variables = {}, user = undefined) {
@@ -30,7 +31,7 @@ const etapaIds = [
 ];
 const detail = { tipoPrendaId: "00000000-0000-4000-8000-000000000011", tipoServicioId: "00000000-0000-4000-8000-000000000012", cantidad: 2, precioUnitario: 1000, subtotal: 2000 };
 function variables() { const id = randomUUID(); return { id, numeroComanda: "TEST-" + id.slice(0, 8), clienteId, detalles: [{ ...detail }] }; }
-const read = (id) => execute(`query Inspect($id:UUID!) { comanda(id:$id) { id estado valorTotal recepcionistaId fechaEntregaReal actualizadoEn empresa proyecto observaciones
+const read = (id) => execute(`query Inspect($id:UUID!) { comanda(id:$id) { id codigoQr estado valorTotal recepcionistaId fechaEntregaReal actualizadoEn empresa proyecto observaciones
   comandaDetalles_on_comanda { cantidad subtotal }
   comandaEtapas_on_comanda(orderBy:[{ordenEtapa:ASC}]) { etapaId estado nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin fechaInicio fechaCompletado operarioId }
   comandaHistorialEstados_on_comanda { estadoNuevo usuarioId }
@@ -58,12 +59,54 @@ await check("creación atómica con cinco etapas pendientes y total calculado", 
   assert.equal(c.comandaEtapas_on_comanda.length, 5);
   assert.deepEqual(c.comandaEtapas_on_comanda.map((e) => e.nombreEtapa), ["Recepción", "Lavado", "Secado", "Planchado", "Entrega"]);
   assert(c.comandaEtapas_on_comanda.every((e) => e.estado === "PENDIENTE" && !e.fechaInicio && !e.fechaCompletado && !e.operarioId));
+  assert.deepEqual(c.comandaEtapas_on_comanda.map((e) => e.tiempoEstimadoMin), [15, 90, 60, 60, 1440]);
   assert.equal(c.comandaHistorialEstados_on_comanda.length, 1);
   assert.equal(c.comandaHistorialEstados_on_comanda[0].usuarioId, "test-recepcion");
+});
+const codigoQrInicial = (await read(good.id)).codigoQr;
+await check("seguimiento público por QR y número solo devuelve campos permitidos", async () => {
+  const porQr = (await execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: codigoQrInicial }, null)).comanda;
+  const porNumero = (await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda: good.numeroComanda }, null)).comanda;
+  assert.deepEqual(porQr, porNumero);
+  assert.deepEqual(Object.keys(porQr).sort(), ["numeroComanda", "estado", "fechaRecepcion", "fechaEntregaEstimada", "fechaEntregaReal", "actualizadoEn", "comandaDetalles_on_comanda", "comandaEtapas_on_comanda"].sort());
+  assert.equal(porQr.estado, "PENDIENTE");
+  assert.equal(porQr.comandaEtapas_on_comanda.length, 5);
+  assert(porQr.comandaEtapas_on_comanda.every((e) => e.estado === "PENDIENTE"));
+  for (const detalle of porQr.comandaDetalles_on_comanda) assert.deepEqual(Object.keys(detalle), ["tipoServicio"]);
+  for (const etapa of porQr.comandaEtapas_on_comanda) {
+    assert.deepEqual(Object.keys(etapa).sort(), ["nombreEtapa", "ordenEtapa", "estado", "fechaCompletado", "etapa"].sort());
+    assert.deepEqual(Object.keys(etapa.etapa).sort(), ["nombre", "orden"]);
+  }
+  assert.equal((await execute(commandQueries, "GetComandaPorQr", { codigoQr: codigoQrInicial }, null)).comanda.numeroComanda, good.numeroComanda);
+});
+await check("QR operativo valida perfil activo y rol en el servidor", async () => {
+  for (const user of ["test-admin", "test-recepcion", "test-operario"]) {
+    const c = (await execute(trackingQueries, "GetComandaOperativaPorQr", { codigoQr: codigoQrInicial }, user)).comanda;
+    assert.equal(c.id.replaceAll("-", ""), good.id.replaceAll("-", ""));
+    assert(c.cliente.nombre); assert.equal(c.comandaDetalles_on_comanda[0].cantidad, 2);
+    assert.equal(c.comandaEtapas_on_comanda.length, 5);
+  }
+  for (const user of [null, "test-cliente", "test-inactivo", "sin-perfil"]) {
+    await assert.rejects(execute(trackingQueries, "GetComandaOperativaPorQr", { codigoQr: codigoQrInicial }, user));
+  }
+});
+await check("códigos inexistentes no generan resultados ficticios y UUID inválido se rechaza", async () => {
+  assert.equal((await execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: randomUUID() }, null)).comanda, null);
+  assert.equal((await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda: "NO-EXISTE" }, null)).comanda, null);
+  assert.equal((await execute(trackingQueries, "GetComandaOperativaPorQr", { codigoQr: randomUUID() }, "test-operario")).comanda, null);
+  await assert.rejects(execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: "ELCOBRE-14r3" }, null));
+});
+await check("recupera el QR de una comanda guardada aunque los filtros la oculten", async () => {
+  const lista = await execute(commandQueries, "GetComandasPaginadas", { estados: ["ENTREGADA"] }, "test-recepcion");
+  assert(!lista.comandas.some(c => c.id.replaceAll("-", "") === good.id.replaceAll("-", "")));
+  const detalle = (await execute(commandQueries, "GetComandaDetalle", { id: good.id }, "test-recepcion")).comanda;
+  assert.equal(detalle.numeroComanda, good.numeroComanda);
+  assert.equal(detalle.codigoQr, codigoQrInicial);
 });
 await check("un reintento no duplica cabecera, prendas ni flujo", async () => {
   await assert.rejects(execute(mutation, "CrearComandaConFlujo", good, "test-recepcion"));
   const c = await read(good.id); assert.equal(c.comandaEtapas_on_comanda.length, 5); assert.equal(c.comandaDetalles_on_comanda.length, 1);
+  assert.equal(c.codigoQr, codigoQrInicial);
 });
 for (const user of [null, "test-cliente", "test-operario", "test-inactivo", "sin-perfil"]) {
   await check("rechaza creación por " + user, async () => {
@@ -139,8 +182,13 @@ await check("avance secuencial autorizado para operario y administración", asyn
   await assert.rejects(completar(1, "test-admin", "ENTREGADA"));
 
   const inicio = Date.now();
+  const qrAntesDelAvance = (await read(v.id)).codigoQr;
   await completar(1, "test-operario");
   let c = await read(v.id);
+  assert.equal(c.codigoQr, qrAntesDelAvance);
+  const publicoEnProceso = (await execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: c.codigoQr }, null)).comanda;
+  assert.equal(publicoEnProceso.estado, "EN_PROCESO");
+  assert.equal(publicoEnProceso.comandaEtapas_on_comanda.filter(e => e.estado === "COMPLETADA").length, 1);
   assert.equal(c.estado, "EN_PROCESO");
   assert.deepEqual(c.comandaEtapas_on_comanda.map((e) => e.estado), ["COMPLETADA", "EN_PROCESO", "PENDIENTE", "PENDIENTE", "PENDIENTE"]);
   const primera = c.comandaEtapas_on_comanda[0];
@@ -164,9 +212,14 @@ await check("avance secuencial autorizado para operario y administración", asyn
   c = await read(v.id);
   assert.equal(c.estado, "FINALIZADA");
   assert.equal(c.comandaEtapas_on_comanda[4].estado, "EN_PROCESO");
+  assert.equal((await execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: c.codigoQr }, null)).comanda.estado, "FINALIZADA");
   await completar(5, "test-operario");
   c = await read(v.id);
   assert.equal(c.estado, "ENTREGADA");
+  assert.equal(c.codigoQr, qrAntesDelAvance);
+  const publicoEntregado = (await execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: c.codigoQr }, null)).comanda;
+  assert.equal(publicoEntregado.estado, "ENTREGADA");
+  assert.equal(publicoEntregado.comandaEtapas_on_comanda.filter(e => e.estado === "COMPLETADA").length, 5);
   assert(c.comandaEtapas_on_comanda.every((e) => e.estado === "COMPLETADA"));
   assert.deepEqual(c.comandaEtapas_on_comanda.map((e) => e.operarioId), ["test-operario", "test-admin", "test-operario", "test-admin", "test-operario"]);
   assert(c.comandaEtapas_on_comanda.every((e) => Number.isFinite(Date.parse(e.fechaCompletado))));
@@ -175,6 +228,7 @@ await check("avance secuencial autorizado para operario y administración", asyn
   assert.equal(c.comandaNotificacions_on_comanda.length, 1);
   assert.deepEqual(c.comandaEtapas_on_comanda[0], primera);
   const detalle = await execute(commandQueries, "GetComandaDetalle", { id: v.id }, "test-recepcion");
+  assert.equal(detalle.comanda.codigoQr, qrAntesDelAvance);
   assert.equal(detalle.comanda.comandaEtapas_on_comanda[0].operario.nombre, "Operario");
   assert.equal(detalle.comanda.comandaEtapas_on_comanda[0].fechaCompletado, primera.fechaCompletado);
 });
@@ -189,6 +243,7 @@ await check("edición atómica preserva prendas y monto si falla una clave forá
   await execute(mutation, "EditarComandaConDetalles", cambios, "test-recepcion");
   const c = await read(v.id);
   assert.equal(c.valorTotal, 3000);
+  assert.equal(c.codigoQr, anterior.codigoQr);
   assert.equal(c.empresa, "Cambio");
   assert.equal(c.comandaDetalles_on_comanda.length, 1);
   assert.equal(c.comandaDetalles_on_comanda[0].cantidad, 3);
@@ -283,6 +338,8 @@ for (const estado of ["EN_PROCESO","FINALIZADA","ENTREGADA","ANULADA"]) await ch
   await execute(`mutation Old($id:UUID!,$numero:String!,$clienteId:UUID!,$estado:ComandaEstado!){comanda_insert(data:{id:$id,numeroComanda:$numero,clienteId:$clienteId,estado:$estado})}`,"Old",{id:v.id,numero:v.numeroComanda,clienteId,estado});
   await assert.rejects(execute(production,"AsociarFlujoComandaPendiente",{id:v.id},"test-admin"));
   const c=await read(v.id); assert.equal(c.estado,estado); assert.equal(c.comandaEtapas_on_comanda.length,0);
+  const publico = (await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda: v.numeroComanda }, null)).comanda;
+  assert.equal(publico.estado, estado); assert.equal(publico.comandaEtapas_on_comanda.length, 0);
 });
 await check("incidencias se persisten y solo los roles autorizados las gestionan", async () => {
   const v = variables();
@@ -347,6 +404,8 @@ await check("panel productivo usa datos reales y es exclusivo de administración
 await check("catálogo incompleto impide creación sin dejar cabecera", async () => {
   await execute(`mutation { etapaProduccion_update(id:"00000000-0000-4000-8000-000000000024",data:{orden:6}) }`);
   const v=variables(); await assert.rejects(execute(mutation,"CrearComandaConFlujo",v,"test-admin")); assert.equal(await read(v.id),null);
+  await assert.rejects(execute(production, "ConfigurarLimitesEtapas", { recepcion: 15, lavado: 90, secado: 60, planchado: 60, entrega: 1440 }, "test-admin"));
+  await execute(`mutation { etapaProduccion_update(id:"00000000-0000-4000-8000-000000000024",data:{orden:5}) }`);
 });
 await check("inventario real permite alta y conserva el movimiento inicial", async () => {
   const nombre = "Detergente integración " + randomUUID().slice(0, 8);
@@ -433,5 +492,32 @@ await check("salidas descuentan stock sin permitir valores negativos", async () 
   inventario = await execute(commandQueries, "GetInventario", {}, "test-admin");
   insumo = inventario.insumos.find((item) => item.id.replaceAll("-", "") === id.replaceAll("-", ""));
   assert.equal(insumo.stockActual, 1);
+});
+await check("cola de alertas exclusiva de administración activa y paginada", async () => {
+  const primera = await execute(queries, "GetComandasParaAlertas", { limit: 2, offset: 0 }, "test-admin");
+  const segunda = await execute(queries, "GetComandasParaAlertas", { limit: 2, offset: 2 }, "test-admin");
+  assert.equal(primera.comandas.length, 2);
+  assert(segunda.comandas.length > 0);
+  assert(!segunda.comandas.some(c => primera.comandas.some(p => p.id === c.id)));
+  for (const c of [...primera.comandas, ...segunda.comandas]) {
+    assert(["PENDIENTE", "EN_PROCESO", "FINALIZADA"].includes(c.estado));
+    assert(!("cliente" in c));
+  }
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) await assert.rejects(execute(queries, "GetComandasParaAlertas", {}, user));
+});
+await check("límites configurables, permisos, validación y copia estable por comanda", async () => {
+  const anteriores = (await read(good.id)).comandaEtapas_on_comanda.map(e => e.tiempoEstimadoMin);
+  const limites = { recepcion: 20, lavado: 120, secado: 45, planchado: 90, entrega: 2880 };
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) await assert.rejects(execute(production, "ConfigurarLimitesEtapas", limites, user));
+  await execute(production, "ConfigurarLimitesEtapas", limites, "test-admin");
+  const catalogo = () => execute(queries, "GetEtapasProduccion", {}, "test-admin").then(r => r.etapaProduccions.map(e => e.tiempoEstimadoMin));
+  assert.deepEqual(await catalogo(), [20, 120, 45, 90, 2880]);
+  assert.deepEqual((await read(good.id)).comandaEtapas_on_comanda.map(e => e.tiempoEstimadoMin), anteriores);
+  for (const lavado of [0, -1, 43201]) {
+    await assert.rejects(execute(production, "ConfigurarLimitesEtapas", { ...limites, recepcion: 25, lavado }, "test-admin"));
+    assert.deepEqual(await catalogo(), [20, 120, 45, 90, 2880]);
+  }
+  const v = variables(); await execute(mutation, "CrearComandaConFlujo", v, "test-admin");
+  assert.deepEqual((await read(v.id)).comandaEtapas_on_comanda.map(e => e.tiempoEstimadoMin), [20, 120, 45, 90, 2880]);
 });
 console.log(count + " escenarios de integración aprobados.");

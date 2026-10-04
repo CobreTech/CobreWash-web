@@ -22,7 +22,7 @@ mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transactio
       nombreEtapa_expr: "response.query.etapas[0].nombre"
       ordenEtapa_expr: "response.query.etapas[0].orden"
       descripcionEtapa_expr: "response.query.etapas[0].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[0].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[0].tiempoEstimadoMin != null ? response.query.etapas[0].tiempoEstimadoMin : 15"
       estado: PENDIENTE
     }
     {
@@ -31,7 +31,7 @@ mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transactio
       nombreEtapa_expr: "response.query.etapas[1].nombre"
       ordenEtapa_expr: "response.query.etapas[1].orden"
       descripcionEtapa_expr: "response.query.etapas[1].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[1].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[1].tiempoEstimadoMin != null ? response.query.etapas[1].tiempoEstimadoMin : 90"
       estado: PENDIENTE
     }
     {
@@ -40,7 +40,7 @@ mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transactio
       nombreEtapa_expr: "response.query.etapas[2].nombre"
       ordenEtapa_expr: "response.query.etapas[2].orden"
       descripcionEtapa_expr: "response.query.etapas[2].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[2].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[2].tiempoEstimadoMin != null ? response.query.etapas[2].tiempoEstimadoMin : 60"
       estado: PENDIENTE
     }
     {
@@ -49,7 +49,7 @@ mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transactio
       nombreEtapa_expr: "response.query.etapas[3].nombre"
       ordenEtapa_expr: "response.query.etapas[3].orden"
       descripcionEtapa_expr: "response.query.etapas[3].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[3].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[3].tiempoEstimadoMin != null ? response.query.etapas[3].tiempoEstimadoMin : 60"
       estado: PENDIENTE
     }
     {
@@ -58,7 +58,7 @@ mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transactio
       nombreEtapa_expr: "response.query.etapas[4].nombre"
       ordenEtapa_expr: "response.query.etapas[4].orden"
       descripcionEtapa_expr: "response.query.etapas[4].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[4].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[4].tiempoEstimadoMin != null ? response.query.etapas[4].tiempoEstimadoMin : 1440"
       estado: PENDIENTE
     }
   ])
@@ -66,13 +66,34 @@ mutation AsociarFlujoComandaPendiente($id: UUID!) @auth(level: USER) @transactio
 
 mutation ConfigurarEtapaProduccion($id: UUID!, $nombre: String!, $descripcion: String, $tiempoEstimadoMin: Int)
   @auth(level: USER) @transaction {
-  query @redact @check(expr: "vars.nombre.size() > 0 && vars.nombre.size() <= 40 && (vars.tiempoEstimadoMin == null || vars.tiempoEstimadoMin > 0)", message: "Nombre o tiempo estimado inválido") {
+  query @redact @check(expr: "vars.nombre.size() > 0 && vars.nombre.size() <= 40 && (vars.tiempoEstimadoMin == null || (vars.tiempoEstimadoMin > 0 && vars.tiempoEstimadoMin <= 43200))", message: "Nombre o tiempo estimado inválido") {
     usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede configurar etapas") }
     }
   }
   etapaProduccion_update(id: $id, data: { nombre: $nombre, descripcion: $descripcion, tiempoEstimadoMin: $tiempoEstimadoMin }) @check(expr: "this != null", message: "Etapa no encontrada")
+}
+
+# Los cinco límites se guardan juntos; nunca queda una configuración parcial.
+mutation ConfigurarLimitesEtapas($recepcion: Int!, $lavado: Int!, $secado: Int!, $planchado: Int!, $entrega: Int!)
+  @auth(level: USER) @transaction {
+  query @redact @check(
+    expr: "[vars.recepcion, vars.lavado, vars.secado, vars.planchado, vars.entrega].all(t, t > 0 && t <= 43200)"
+    message: "Los límites deben estar entre 1 minuto y 30 días"
+  ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede configurar límites") }
+    }
+    etapaProduccions(orderBy: [{ orden: ASC }], limit: 6)
+      @check(expr: "this.size() == 5 && this[0].orden == 1 && this[1].orden == 2 && this[2].orden == 3 && this[3].orden == 4 && this[4].orden == 5", message: "Falta configurar las cinco etapas") { orden }
+  }
+  recepcion: etapaProduccion_update(first: { where: { orden: { eq: 1 } } }, data: { tiempoEstimadoMin: $recepcion }) @check(expr: "this != null")
+  lavado: etapaProduccion_update(first: { where: { orden: { eq: 2 } } }, data: { tiempoEstimadoMin: $lavado }) @check(expr: "this != null")
+  secado: etapaProduccion_update(first: { where: { orden: { eq: 3 } } }, data: { tiempoEstimadoMin: $secado }) @check(expr: "this != null")
+  planchado: etapaProduccion_update(first: { where: { orden: { eq: 4 } } }, data: { tiempoEstimadoMin: $planchado }) @check(expr: "this != null")
+  entrega: etapaProduccion_update(first: { where: { orden: { eq: 5 } } }, data: { tiempoEstimadoMin: $entrega }) @check(expr: "this != null")
 }
 
 # RF18: admin y operario completan solamente la primera etapa no terminada.

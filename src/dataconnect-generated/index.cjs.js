@@ -448,6 +448,20 @@ exports.configurarEtapaProduccion = function configurarEtapaProduccion(dcOrVars,
 }
 ;
 
+const configurarLimitesEtapasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ConfigurarLimitesEtapas', inputVars);
+}
+configurarLimitesEtapasRef.operationName = 'ConfigurarLimitesEtapas';
+exports.configurarLimitesEtapasRef = configurarLimitesEtapasRef;
+
+exports.configurarLimitesEtapas = function configurarLimitesEtapas(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(configurarLimitesEtapasRef(dcInstance, inputVars));
+}
+;
+
 const completarEtapaComandaRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -546,6 +560,21 @@ exports.getPanelProduccion = function getPanelProduccion(dcOrVars, varsOrOptions
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getPanelProduccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getComandasParaAlertasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandasParaAlertas', inputVars);
+}
+getComandasParaAlertasRef.operationName = 'GetComandasParaAlertas';
+exports.getComandasParaAlertasRef = getComandasParaAlertasRef;
+
+exports.getComandasParaAlertas = function getComandasParaAlertas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getComandasParaAlertasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
@@ -786,5 +815,50 @@ exports.getFichasClientes = function getFichasClientes(dcOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getFichasClientesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getSeguimientoPublicoPorQrRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSeguimientoPublicoPorQr', inputVars);
+}
+getSeguimientoPublicoPorQrRef.operationName = 'GetSeguimientoPublicoPorQr';
+exports.getSeguimientoPublicoPorQrRef = getSeguimientoPublicoPorQrRef;
+
+exports.getSeguimientoPublicoPorQr = function getSeguimientoPublicoPorQr(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getSeguimientoPublicoPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getSeguimientoPublicoPorNumeroRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSeguimientoPublicoPorNumero', inputVars);
+}
+getSeguimientoPublicoPorNumeroRef.operationName = 'GetSeguimientoPublicoPorNumero';
+exports.getSeguimientoPublicoPorNumeroRef = getSeguimientoPublicoPorNumeroRef;
+
+exports.getSeguimientoPublicoPorNumero = function getSeguimientoPublicoPorNumero(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getSeguimientoPublicoPorNumeroRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getComandaOperativaPorQrRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandaOperativaPorQr', inputVars);
+}
+getComandaOperativaPorQrRef.operationName = 'GetComandaOperativaPorQr';
+exports.getComandaOperativaPorQrRef = getComandaOperativaPorQrRef;
+
+exports.getComandaOperativaPorQr = function getComandaOperativaPorQr(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getComandaOperativaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

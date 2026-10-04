@@ -362,6 +362,8 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
   }
   comanda(id: $id) {
     id
+    codigoQr
+    actualizadoEn
     numeroComanda
     estado
     valorTotal

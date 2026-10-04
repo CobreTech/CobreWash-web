@@ -1,6 +1,8 @@
 "use client";
 
 import { Search, Bell, Mail, Sun, Moon } from "lucide-react";
+import Link from "next/link";
+import { useAlertasRetraso } from "./AlertasRetraso";
 import { motion } from "framer-motion";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -22,6 +24,7 @@ const rolLabel: Record<Rol, string> = {
 export default function IntranetTopbar() {
   const usuario = useUsuarioActualContext();
   const { theme, setTheme } = useTheme();
+  const { alertas, error } = useAlertasRetraso();
 
   const rol = (usuario?.rol.nombre as Rol) ?? "admin";
   const nombreCompleto = usuario ? `${usuario.nombre} ${usuario.apellido ?? ""}`.trim() : "Usuario";
@@ -56,10 +59,10 @@ export default function IntranetTopbar() {
         <button className="relative grid place-items-center w-10 h-10 rounded-2xl bg-white/70 dark:bg-white/5 border border-stone-200/70 dark:border-white/5 text-stone-500 dark:text-stone-400 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-300 dark:hover:border-brand-500/20 transition-colors cursor-pointer">
           <Mail className="w-[18px] h-[18px]" />
         </button>
-        <button className="relative grid place-items-center w-10 h-10 rounded-2xl bg-white/70 dark:bg-white/5 border border-stone-200/70 dark:border-white/5 text-stone-500 dark:text-stone-400 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-300 dark:hover:border-brand-500/20 transition-colors cursor-pointer">
+        {rol === "admin" && <Link href={alertas[0]?.href ?? "/intranet#alertas-retraso"} aria-label={error ? "Error al actualizar alertas de retraso" : `Alertas de retraso: ${alertas.length}`} className="relative grid place-items-center w-10 h-10 rounded-2xl bg-white/70 dark:bg-white/5 border border-stone-200/70 dark:border-white/5 text-stone-500 dark:text-stone-400 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-300 dark:hover:border-brand-500/20 transition-colors cursor-pointer">
           <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-stone-950" />
-        </button>
+          {(alertas.length > 0 || error) && <span className="absolute -top-1 -right-1 rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{error ? "!" : alertas.length}</span>}
+        </Link>}
       </div>
 
       {/* User chip */}

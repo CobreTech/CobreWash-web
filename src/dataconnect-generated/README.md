@@ -13,6 +13,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetEtapasProduccion*](#getetapasproduccion)
   - [*GetSeguimientoProduccion*](#getseguimientoproduccion)
   - [*GetPanelProduccion*](#getpanelproduccion)
+  - [*GetComandasParaAlertas*](#getcomandasparaalertas)
   - [*GetIncidencias*](#getincidencias)
   - [*GetMiComandaGuardada*](#getmicomandaguardada)
   - [*GetRoles*](#getroles)
@@ -29,6 +30,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetCatalogosComanda*](#getcatalogoscomanda)
   - [*DiagnosticoComandas*](#diagnosticocomandas)
   - [*GetFichasClientes*](#getfichasclientes)
+  - [*GetSeguimientoPublicoPorQr*](#getseguimientopublicoporqr)
+  - [*GetSeguimientoPublicoPorNumero*](#getseguimientopublicopornumero)
+  - [*GetComandaOperativaPorQr*](#getcomandaoperativaporqr)
 - [**Mutations**](#mutations)
   - [*Registrarse*](#registrarse)
   - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
@@ -58,6 +62,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*RegistrarSalidaInventario*](#registrarsalidainventario)
   - [*AsociarFlujoComandaPendiente*](#asociarflujocomandapendiente)
   - [*ConfigurarEtapaProduccion*](#configuraretapaproduccion)
+  - [*ConfigurarLimitesEtapas*](#configurarlimitesetapas)
   - [*CompletarEtapaComanda*](#completaretapacomanda)
   - [*RegistrarIncidenciaComanda*](#registrarincidenciacomanda)
   - [*ActualizarEstadoIncidencia*](#actualizarestadoincidencia)
@@ -582,6 +587,144 @@ executeQuery(ref).then((response) => {
   console.log(data.pendientes);
   console.log(data.enProceso);
   console.log(data.listas);
+});
+```
+
+## GetComandasParaAlertas
+You can execute the `GetComandasParaAlertas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getComandasParaAlertas(vars?: GetComandasParaAlertasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+
+interface GetComandasParaAlertasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetComandasParaAlertasVariables): QueryRef<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+}
+export const getComandasParaAlertasRef: GetComandasParaAlertasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getComandasParaAlertas(dc: DataConnect, vars?: GetComandasParaAlertasVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+
+interface GetComandasParaAlertasRef {
+  ...
+  (dc: DataConnect, vars?: GetComandasParaAlertasVariables): QueryRef<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+}
+export const getComandasParaAlertasRef: GetComandasParaAlertasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getComandasParaAlertasRef:
+```typescript
+const name = getComandasParaAlertasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetComandasParaAlertas` query has an optional argument of type `GetComandasParaAlertasVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetComandasParaAlertasVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetComandasParaAlertas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetComandasParaAlertasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetComandasParaAlertasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      asignadoA?: {
+        nombre: string;
+        apellido?: string | null;
+      };
+      etapa: {
+        nombre: string;
+        orden: number;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+  } & Comanda_Key)[];
+}
+```
+### Using `GetComandasParaAlertas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getComandasParaAlertas, GetComandasParaAlertasVariables } from '@dataconnect/generated';
+
+// The `GetComandasParaAlertas` query has an optional argument of type `GetComandasParaAlertasVariables`:
+const getComandasParaAlertasVars: GetComandasParaAlertasVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getComandasParaAlertas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getComandasParaAlertas(getComandasParaAlertasVars);
+// Variables can be defined inline as well.
+const { data } = await getComandasParaAlertas({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetComandasParaAlertasVariables` argument.
+const { data } = await getComandasParaAlertas();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getComandasParaAlertas(dataConnect, getComandasParaAlertasVars);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+getComandasParaAlertas(getComandasParaAlertasVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+### Using `GetComandasParaAlertas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getComandasParaAlertasRef, GetComandasParaAlertasVariables } from '@dataconnect/generated';
+
+// The `GetComandasParaAlertas` query has an optional argument of type `GetComandasParaAlertasVariables`:
+const getComandasParaAlertasVars: GetComandasParaAlertasVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getComandasParaAlertasRef()` function to get a reference to the query.
+const ref = getComandasParaAlertasRef(getComandasParaAlertasVars);
+// Variables can be defined inline as well.
+const ref = getComandasParaAlertasRef({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetComandasParaAlertasVariables` argument.
+const ref = getComandasParaAlertasRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getComandasParaAlertasRef(dataConnect, getComandasParaAlertasVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
 });
 ```
 
@@ -2070,6 +2213,8 @@ The `data` property is an object of type `GetComandaDetalleData`, which is defin
 export interface GetComandaDetalleData {
   comanda?: {
     id: UUIDString;
+    codigoQr: UUIDString;
+    actualizadoEn: TimestampString;
     numeroComanda: string;
     estado: ComandaEstado;
     valorTotal: number;
@@ -2551,6 +2696,429 @@ console.log(data.clientes);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.clientes);
+});
+```
+
+## GetSeguimientoPublicoPorQr
+You can execute the `GetSeguimientoPublicoPorQr` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getSeguimientoPublicoPorQr(vars: GetSeguimientoPublicoPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+
+interface GetSeguimientoPublicoPorQrRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetSeguimientoPublicoPorQrVariables): QueryRef<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+}
+export const getSeguimientoPublicoPorQrRef: GetSeguimientoPublicoPorQrRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getSeguimientoPublicoPorQr(dc: DataConnect, vars: GetSeguimientoPublicoPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+
+interface GetSeguimientoPublicoPorQrRef {
+  ...
+  (dc: DataConnect, vars: GetSeguimientoPublicoPorQrVariables): QueryRef<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+}
+export const getSeguimientoPublicoPorQrRef: GetSeguimientoPublicoPorQrRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getSeguimientoPublicoPorQrRef:
+```typescript
+const name = getSeguimientoPublicoPorQrRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetSeguimientoPublicoPorQr` query requires an argument of type `GetSeguimientoPublicoPorQrVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetSeguimientoPublicoPorQrVariables {
+  codigoQr: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `GetSeguimientoPublicoPorQr` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetSeguimientoPublicoPorQrData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetSeguimientoPublicoPorQrData {
+  comanda?: {
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  };
+}
+```
+### Using `GetSeguimientoPublicoPorQr`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getSeguimientoPublicoPorQr, GetSeguimientoPublicoPorQrVariables } from '@dataconnect/generated';
+
+// The `GetSeguimientoPublicoPorQr` query requires an argument of type `GetSeguimientoPublicoPorQrVariables`:
+const getSeguimientoPublicoPorQrVars: GetSeguimientoPublicoPorQrVariables = {
+  codigoQr: ...,
+};
+
+// Call the `getSeguimientoPublicoPorQr()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getSeguimientoPublicoPorQr(getSeguimientoPublicoPorQrVars);
+// Variables can be defined inline as well.
+const { data } = await getSeguimientoPublicoPorQr({ codigoQr: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getSeguimientoPublicoPorQr(dataConnect, getSeguimientoPublicoPorQrVars);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+getSeguimientoPublicoPorQr(getSeguimientoPublicoPorQrVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+### Using `GetSeguimientoPublicoPorQr`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getSeguimientoPublicoPorQrRef, GetSeguimientoPublicoPorQrVariables } from '@dataconnect/generated';
+
+// The `GetSeguimientoPublicoPorQr` query requires an argument of type `GetSeguimientoPublicoPorQrVariables`:
+const getSeguimientoPublicoPorQrVars: GetSeguimientoPublicoPorQrVariables = {
+  codigoQr: ...,
+};
+
+// Call the `getSeguimientoPublicoPorQrRef()` function to get a reference to the query.
+const ref = getSeguimientoPublicoPorQrRef(getSeguimientoPublicoPorQrVars);
+// Variables can be defined inline as well.
+const ref = getSeguimientoPublicoPorQrRef({ codigoQr: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getSeguimientoPublicoPorQrRef(dataConnect, getSeguimientoPublicoPorQrVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+## GetSeguimientoPublicoPorNumero
+You can execute the `GetSeguimientoPublicoPorNumero` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getSeguimientoPublicoPorNumero(vars: GetSeguimientoPublicoPorNumeroVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+
+interface GetSeguimientoPublicoPorNumeroRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetSeguimientoPublicoPorNumeroVariables): QueryRef<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+}
+export const getSeguimientoPublicoPorNumeroRef: GetSeguimientoPublicoPorNumeroRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getSeguimientoPublicoPorNumero(dc: DataConnect, vars: GetSeguimientoPublicoPorNumeroVariables, options?: ExecuteQueryOptions): QueryPromise<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+
+interface GetSeguimientoPublicoPorNumeroRef {
+  ...
+  (dc: DataConnect, vars: GetSeguimientoPublicoPorNumeroVariables): QueryRef<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+}
+export const getSeguimientoPublicoPorNumeroRef: GetSeguimientoPublicoPorNumeroRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getSeguimientoPublicoPorNumeroRef:
+```typescript
+const name = getSeguimientoPublicoPorNumeroRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetSeguimientoPublicoPorNumero` query requires an argument of type `GetSeguimientoPublicoPorNumeroVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetSeguimientoPublicoPorNumeroVariables {
+  numeroComanda: string;
+}
+```
+### Return Type
+Recall that executing the `GetSeguimientoPublicoPorNumero` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetSeguimientoPublicoPorNumeroData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetSeguimientoPublicoPorNumeroData {
+  comanda?: {
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  };
+}
+```
+### Using `GetSeguimientoPublicoPorNumero`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getSeguimientoPublicoPorNumero, GetSeguimientoPublicoPorNumeroVariables } from '@dataconnect/generated';
+
+// The `GetSeguimientoPublicoPorNumero` query requires an argument of type `GetSeguimientoPublicoPorNumeroVariables`:
+const getSeguimientoPublicoPorNumeroVars: GetSeguimientoPublicoPorNumeroVariables = {
+  numeroComanda: ...,
+};
+
+// Call the `getSeguimientoPublicoPorNumero()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getSeguimientoPublicoPorNumero(getSeguimientoPublicoPorNumeroVars);
+// Variables can be defined inline as well.
+const { data } = await getSeguimientoPublicoPorNumero({ numeroComanda: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getSeguimientoPublicoPorNumero(dataConnect, getSeguimientoPublicoPorNumeroVars);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+getSeguimientoPublicoPorNumero(getSeguimientoPublicoPorNumeroVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+### Using `GetSeguimientoPublicoPorNumero`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getSeguimientoPublicoPorNumeroRef, GetSeguimientoPublicoPorNumeroVariables } from '@dataconnect/generated';
+
+// The `GetSeguimientoPublicoPorNumero` query requires an argument of type `GetSeguimientoPublicoPorNumeroVariables`:
+const getSeguimientoPublicoPorNumeroVars: GetSeguimientoPublicoPorNumeroVariables = {
+  numeroComanda: ...,
+};
+
+// Call the `getSeguimientoPublicoPorNumeroRef()` function to get a reference to the query.
+const ref = getSeguimientoPublicoPorNumeroRef(getSeguimientoPublicoPorNumeroVars);
+// Variables can be defined inline as well.
+const ref = getSeguimientoPublicoPorNumeroRef({ numeroComanda: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getSeguimientoPublicoPorNumeroRef(dataConnect, getSeguimientoPublicoPorNumeroVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+## GetComandaOperativaPorQr
+You can execute the `GetComandaOperativaPorQr` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getComandaOperativaPorQr(vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+
+interface GetComandaOperativaPorQrRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComandaOperativaPorQrVariables): QueryRef<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+}
+export const getComandaOperativaPorQrRef: GetComandaOperativaPorQrRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getComandaOperativaPorQr(dc: DataConnect, vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+
+interface GetComandaOperativaPorQrRef {
+  ...
+  (dc: DataConnect, vars: GetComandaOperativaPorQrVariables): QueryRef<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+}
+export const getComandaOperativaPorQrRef: GetComandaOperativaPorQrRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getComandaOperativaPorQrRef:
+```typescript
+const name = getComandaOperativaPorQrRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetComandaOperativaPorQr` query requires an argument of type `GetComandaOperativaPorQrVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetComandaOperativaPorQrVariables {
+  codigoQr: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `GetComandaOperativaPorQr` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetComandaOperativaPorQrData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetComandaOperativaPorQrData {
+  comanda?: {
+    id: UUIDString;
+    codigoQr: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    actualizadoEn: TimestampString;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      tipoCliente: TipoCliente;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      id: UUIDString;
+      cantidad: number;
+      pesoKg?: number | null;
+      detalle?: string | null;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    } & ComandaDetalle_Key)[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        descripcion?: string | null;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+  } & Comanda_Key;
+}
+```
+### Using `GetComandaOperativaPorQr`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getComandaOperativaPorQr, GetComandaOperativaPorQrVariables } from '@dataconnect/generated';
+
+// The `GetComandaOperativaPorQr` query requires an argument of type `GetComandaOperativaPorQrVariables`:
+const getComandaOperativaPorQrVars: GetComandaOperativaPorQrVariables = {
+  codigoQr: ...,
+};
+
+// Call the `getComandaOperativaPorQr()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getComandaOperativaPorQr(getComandaOperativaPorQrVars);
+// Variables can be defined inline as well.
+const { data } = await getComandaOperativaPorQr({ codigoQr: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getComandaOperativaPorQr(dataConnect, getComandaOperativaPorQrVars);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+getComandaOperativaPorQr(getComandaOperativaPorQrVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+### Using `GetComandaOperativaPorQr`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getComandaOperativaPorQrRef, GetComandaOperativaPorQrVariables } from '@dataconnect/generated';
+
+// The `GetComandaOperativaPorQr` query requires an argument of type `GetComandaOperativaPorQrVariables`:
+const getComandaOperativaPorQrVars: GetComandaOperativaPorQrVariables = {
+  codigoQr: ...,
+};
+
+// Call the `getComandaOperativaPorQrRef()` function to get a reference to the query.
+const ref = getComandaOperativaPorQrRef(getComandaOperativaPorQrVars);
+// Variables can be defined inline as well.
+const ref = getComandaOperativaPorQrRef({ codigoQr: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getComandaOperativaPorQrRef(dataConnect, getComandaOperativaPorQrVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
 });
 ```
 
@@ -5954,6 +6522,147 @@ console.log(data.etapaProduccion_update);
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.etapaProduccion_update);
+});
+```
+
+## ConfigurarLimitesEtapas
+You can execute the `ConfigurarLimitesEtapas` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+configurarLimitesEtapas(vars: ConfigurarLimitesEtapasVariables): MutationPromise<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+
+interface ConfigurarLimitesEtapasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ConfigurarLimitesEtapasVariables): MutationRef<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+}
+export const configurarLimitesEtapasRef: ConfigurarLimitesEtapasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+configurarLimitesEtapas(dc: DataConnect, vars: ConfigurarLimitesEtapasVariables): MutationPromise<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+
+interface ConfigurarLimitesEtapasRef {
+  ...
+  (dc: DataConnect, vars: ConfigurarLimitesEtapasVariables): MutationRef<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+}
+export const configurarLimitesEtapasRef: ConfigurarLimitesEtapasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the configurarLimitesEtapasRef:
+```typescript
+const name = configurarLimitesEtapasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ConfigurarLimitesEtapas` mutation requires an argument of type `ConfigurarLimitesEtapasVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ConfigurarLimitesEtapasVariables {
+  recepcion: number;
+  lavado: number;
+  secado: number;
+  planchado: number;
+  entrega: number;
+}
+```
+### Return Type
+Recall that executing the `ConfigurarLimitesEtapas` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ConfigurarLimitesEtapasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ConfigurarLimitesEtapasData {
+  recepcion?: EtapaProduccion_Key | null;
+  lavado?: EtapaProduccion_Key | null;
+  secado?: EtapaProduccion_Key | null;
+  planchado?: EtapaProduccion_Key | null;
+  entrega?: EtapaProduccion_Key | null;
+}
+```
+### Using `ConfigurarLimitesEtapas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, configurarLimitesEtapas, ConfigurarLimitesEtapasVariables } from '@dataconnect/generated';
+
+// The `ConfigurarLimitesEtapas` mutation requires an argument of type `ConfigurarLimitesEtapasVariables`:
+const configurarLimitesEtapasVars: ConfigurarLimitesEtapasVariables = {
+  recepcion: ...,
+  lavado: ...,
+  secado: ...,
+  planchado: ...,
+  entrega: ...,
+};
+
+// Call the `configurarLimitesEtapas()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await configurarLimitesEtapas(configurarLimitesEtapasVars);
+// Variables can be defined inline as well.
+const { data } = await configurarLimitesEtapas({ recepcion: ..., lavado: ..., secado: ..., planchado: ..., entrega: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await configurarLimitesEtapas(dataConnect, configurarLimitesEtapasVars);
+
+console.log(data.recepcion);
+console.log(data.lavado);
+console.log(data.secado);
+console.log(data.planchado);
+console.log(data.entrega);
+
+// Or, you can use the `Promise` API.
+configurarLimitesEtapas(configurarLimitesEtapasVars).then((response) => {
+  const data = response.data;
+  console.log(data.recepcion);
+  console.log(data.lavado);
+  console.log(data.secado);
+  console.log(data.planchado);
+  console.log(data.entrega);
+});
+```
+
+### Using `ConfigurarLimitesEtapas`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, configurarLimitesEtapasRef, ConfigurarLimitesEtapasVariables } from '@dataconnect/generated';
+
+// The `ConfigurarLimitesEtapas` mutation requires an argument of type `ConfigurarLimitesEtapasVariables`:
+const configurarLimitesEtapasVars: ConfigurarLimitesEtapasVariables = {
+  recepcion: ...,
+  lavado: ...,
+  secado: ...,
+  planchado: ...,
+  entrega: ...,
+};
+
+// Call the `configurarLimitesEtapasRef()` function to get a reference to the mutation.
+const ref = configurarLimitesEtapasRef(configurarLimitesEtapasVars);
+// Variables can be defined inline as well.
+const ref = configurarLimitesEtapasRef({ recepcion: ..., lavado: ..., secado: ..., planchado: ..., entrega: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = configurarLimitesEtapasRef(dataConnect, configurarLimitesEtapasVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.recepcion);
+console.log(data.lavado);
+console.log(data.secado);
+console.log(data.planchado);
+console.log(data.entrega);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.recepcion);
+  console.log(data.lavado);
+  console.log(data.secado);
+  console.log(data.planchado);
+  console.log(data.entrega);
 });
 ```
 

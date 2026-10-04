@@ -20,6 +20,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetEtapasProduccion*](#getetapasproduccion)
   - [*GetSeguimientoProduccion*](#getseguimientoproduccion)
   - [*GetPanelProduccion*](#getpanelproduccion)
+  - [*GetComandasParaAlertas*](#getcomandasparaalertas)
   - [*GetIncidencias*](#getincidencias)
   - [*GetMiComandaGuardada*](#getmicomandaguardada)
   - [*GetRoles*](#getroles)
@@ -36,6 +37,9 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetCatalogosComanda*](#getcatalogoscomanda)
   - [*DiagnosticoComandas*](#diagnosticocomandas)
   - [*GetFichasClientes*](#getfichasclientes)
+  - [*GetSeguimientoPublicoPorQr*](#getseguimientopublicoporqr)
+  - [*GetSeguimientoPublicoPorNumero*](#getseguimientopublicopornumero)
+  - [*GetComandaOperativaPorQr*](#getcomandaoperativaporqr)
 - [**Mutations**](#mutations)
   - [*Registrarse*](#registrarse)
   - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
@@ -65,6 +69,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*RegistrarSalidaInventario*](#registrarsalidainventario)
   - [*AsociarFlujoComandaPendiente*](#asociarflujocomandapendiente)
   - [*ConfigurarEtapaProduccion*](#configuraretapaproduccion)
+  - [*ConfigurarLimitesEtapas*](#configurarlimitesetapas)
   - [*CompletarEtapaComanda*](#completaretapacomanda)
   - [*RegistrarIncidenciaComanda*](#registrarincidenciacomanda)
   - [*ActualizarEstadoIncidencia*](#actualizarestadoincidencia)
@@ -543,6 +548,118 @@ export default function GetPanelProduccionComponent() {
     console.log(query.data.pendientes);
     console.log(query.data.enProceso);
     console.log(query.data.listas);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetComandasParaAlertas
+You can execute the `GetComandasParaAlertas` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetComandasParaAlertas(dc: DataConnect, vars?: GetComandasParaAlertasVariables, options?: useDataConnectQueryOptions<GetComandasParaAlertasData>): UseDataConnectQueryResult<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetComandasParaAlertas(vars?: GetComandasParaAlertasVariables, options?: useDataConnectQueryOptions<GetComandasParaAlertasData>): UseDataConnectQueryResult<GetComandasParaAlertasData, GetComandasParaAlertasVariables>;
+```
+
+### Variables
+The `GetComandasParaAlertas` Query has an optional argument of type `GetComandasParaAlertasVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetComandasParaAlertasVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that calling the `GetComandasParaAlertas` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetComandasParaAlertas` Query is of type `GetComandasParaAlertasData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetComandasParaAlertasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      asignadoA?: {
+        nombre: string;
+        apellido?: string | null;
+      };
+      etapa: {
+        nombre: string;
+        orden: number;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+  } & Comanda_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetComandasParaAlertas`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetComandasParaAlertasVariables } from '@dataconnect/generated';
+import { useGetComandasParaAlertas } from '@dataconnect/generated/react'
+
+export default function GetComandasParaAlertasComponent() {
+  // The `useGetComandasParaAlertas` Query hook has an optional argument of type `GetComandasParaAlertasVariables`:
+  const getComandasParaAlertasVars: GetComandasParaAlertasVariables = {
+    limit: ..., // optional
+    offset: ..., // optional
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetComandasParaAlertas(getComandasParaAlertasVars);
+  // Variables can be defined inline as well.
+  const query = useGetComandasParaAlertas({ limit: ..., offset: ..., });
+  // Since all variables are optional for this Query, you can omit the `GetComandasParaAlertasVariables` argument.
+  // (as long as you don't want to provide any `options`!)
+  const query = useGetComandasParaAlertas();
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetComandasParaAlertas(dataConnect, getComandasParaAlertasVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetComandasParaAlertas(getComandasParaAlertasVars, options);
+  // If you'd like to provide options without providing any variables, you must
+  // pass `undefined` where you would normally pass the variables.
+  const query = useGetComandasParaAlertas(undefined, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetComandasParaAlertas(dataConnect, getComandasParaAlertasVars /** or undefined */, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.comandas);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -1706,6 +1823,8 @@ To access the data returned by a Query, use the `UseQueryResult.data` field. The
 export interface GetComandaDetalleData {
   comanda?: {
     id: UUIDString;
+    codigoQr: UUIDString;
+    actualizadoEn: TimestampString;
     numeroComanda: string;
     estado: ComandaEstado;
     valorTotal: number;
@@ -2096,6 +2215,348 @@ export default function GetFichasClientesComponent() {
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
     console.log(query.data.clientes);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetSeguimientoPublicoPorQr
+You can execute the `GetSeguimientoPublicoPorQr` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetSeguimientoPublicoPorQr(dc: DataConnect, vars: GetSeguimientoPublicoPorQrVariables, options?: useDataConnectQueryOptions<GetSeguimientoPublicoPorQrData>): UseDataConnectQueryResult<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetSeguimientoPublicoPorQr(vars: GetSeguimientoPublicoPorQrVariables, options?: useDataConnectQueryOptions<GetSeguimientoPublicoPorQrData>): UseDataConnectQueryResult<GetSeguimientoPublicoPorQrData, GetSeguimientoPublicoPorQrVariables>;
+```
+
+### Variables
+The `GetSeguimientoPublicoPorQr` Query requires an argument of type `GetSeguimientoPublicoPorQrVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetSeguimientoPublicoPorQrVariables {
+  codigoQr: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `GetSeguimientoPublicoPorQr` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetSeguimientoPublicoPorQr` Query is of type `GetSeguimientoPublicoPorQrData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetSeguimientoPublicoPorQrData {
+  comanda?: {
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  };
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetSeguimientoPublicoPorQr`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetSeguimientoPublicoPorQrVariables } from '@dataconnect/generated';
+import { useGetSeguimientoPublicoPorQr } from '@dataconnect/generated/react'
+
+export default function GetSeguimientoPublicoPorQrComponent() {
+  // The `useGetSeguimientoPublicoPorQr` Query hook requires an argument of type `GetSeguimientoPublicoPorQrVariables`:
+  const getSeguimientoPublicoPorQrVars: GetSeguimientoPublicoPorQrVariables = {
+    codigoQr: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetSeguimientoPublicoPorQr(getSeguimientoPublicoPorQrVars);
+  // Variables can be defined inline as well.
+  const query = useGetSeguimientoPublicoPorQr({ codigoQr: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetSeguimientoPublicoPorQr(dataConnect, getSeguimientoPublicoPorQrVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetSeguimientoPublicoPorQr(getSeguimientoPublicoPorQrVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetSeguimientoPublicoPorQr(dataConnect, getSeguimientoPublicoPorQrVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.comanda);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetSeguimientoPublicoPorNumero
+You can execute the `GetSeguimientoPublicoPorNumero` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetSeguimientoPublicoPorNumero(dc: DataConnect, vars: GetSeguimientoPublicoPorNumeroVariables, options?: useDataConnectQueryOptions<GetSeguimientoPublicoPorNumeroData>): UseDataConnectQueryResult<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetSeguimientoPublicoPorNumero(vars: GetSeguimientoPublicoPorNumeroVariables, options?: useDataConnectQueryOptions<GetSeguimientoPublicoPorNumeroData>): UseDataConnectQueryResult<GetSeguimientoPublicoPorNumeroData, GetSeguimientoPublicoPorNumeroVariables>;
+```
+
+### Variables
+The `GetSeguimientoPublicoPorNumero` Query requires an argument of type `GetSeguimientoPublicoPorNumeroVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetSeguimientoPublicoPorNumeroVariables {
+  numeroComanda: string;
+}
+```
+### Return Type
+Recall that calling the `GetSeguimientoPublicoPorNumero` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetSeguimientoPublicoPorNumero` Query is of type `GetSeguimientoPublicoPorNumeroData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetSeguimientoPublicoPorNumeroData {
+  comanda?: {
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  };
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetSeguimientoPublicoPorNumero`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetSeguimientoPublicoPorNumeroVariables } from '@dataconnect/generated';
+import { useGetSeguimientoPublicoPorNumero } from '@dataconnect/generated/react'
+
+export default function GetSeguimientoPublicoPorNumeroComponent() {
+  // The `useGetSeguimientoPublicoPorNumero` Query hook requires an argument of type `GetSeguimientoPublicoPorNumeroVariables`:
+  const getSeguimientoPublicoPorNumeroVars: GetSeguimientoPublicoPorNumeroVariables = {
+    numeroComanda: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetSeguimientoPublicoPorNumero(getSeguimientoPublicoPorNumeroVars);
+  // Variables can be defined inline as well.
+  const query = useGetSeguimientoPublicoPorNumero({ numeroComanda: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetSeguimientoPublicoPorNumero(dataConnect, getSeguimientoPublicoPorNumeroVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetSeguimientoPublicoPorNumero(getSeguimientoPublicoPorNumeroVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetSeguimientoPublicoPorNumero(dataConnect, getSeguimientoPublicoPorNumeroVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.comanda);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetComandaOperativaPorQr
+You can execute the `GetComandaOperativaPorQr` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetComandaOperativaPorQr(dc: DataConnect, vars: GetComandaOperativaPorQrVariables, options?: useDataConnectQueryOptions<GetComandaOperativaPorQrData>): UseDataConnectQueryResult<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetComandaOperativaPorQr(vars: GetComandaOperativaPorQrVariables, options?: useDataConnectQueryOptions<GetComandaOperativaPorQrData>): UseDataConnectQueryResult<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+```
+
+### Variables
+The `GetComandaOperativaPorQr` Query requires an argument of type `GetComandaOperativaPorQrVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetComandaOperativaPorQrVariables {
+  codigoQr: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `GetComandaOperativaPorQr` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetComandaOperativaPorQr` Query is of type `GetComandaOperativaPorQrData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetComandaOperativaPorQrData {
+  comanda?: {
+    id: UUIDString;
+    codigoQr: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    actualizadoEn: TimestampString;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+      tipoCliente: TipoCliente;
+    } & Cliente_Key;
+    comandaDetalles_on_comanda: ({
+      id: UUIDString;
+      cantidad: number;
+      pesoKg?: number | null;
+      detalle?: string | null;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    } & ComandaDetalle_Key)[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        descripcion?: string | null;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+  } & Comanda_Key;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetComandaOperativaPorQr`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetComandaOperativaPorQrVariables } from '@dataconnect/generated';
+import { useGetComandaOperativaPorQr } from '@dataconnect/generated/react'
+
+export default function GetComandaOperativaPorQrComponent() {
+  // The `useGetComandaOperativaPorQr` Query hook requires an argument of type `GetComandaOperativaPorQrVariables`:
+  const getComandaOperativaPorQrVars: GetComandaOperativaPorQrVariables = {
+    codigoQr: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetComandaOperativaPorQr(getComandaOperativaPorQrVars);
+  // Variables can be defined inline as well.
+  const query = useGetComandaOperativaPorQr({ codigoQr: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetComandaOperativaPorQr(dataConnect, getComandaOperativaPorQrVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetComandaOperativaPorQr(getComandaOperativaPorQrVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetComandaOperativaPorQr(dataConnect, getComandaOperativaPorQrVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.comanda);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -4961,6 +5422,116 @@ export default function ConfigurarEtapaProduccionComponent() {
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
     console.log(mutation.data.etapaProduccion_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ConfigurarLimitesEtapas
+You can execute the `ConfigurarLimitesEtapas` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useConfigurarLimitesEtapas(options?: useDataConnectMutationOptions<ConfigurarLimitesEtapasData, FirebaseError, ConfigurarLimitesEtapasVariables>): UseDataConnectMutationResult<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useConfigurarLimitesEtapas(dc: DataConnect, options?: useDataConnectMutationOptions<ConfigurarLimitesEtapasData, FirebaseError, ConfigurarLimitesEtapasVariables>): UseDataConnectMutationResult<ConfigurarLimitesEtapasData, ConfigurarLimitesEtapasVariables>;
+```
+
+### Variables
+The `ConfigurarLimitesEtapas` Mutation requires an argument of type `ConfigurarLimitesEtapasVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ConfigurarLimitesEtapasVariables {
+  recepcion: number;
+  lavado: number;
+  secado: number;
+  planchado: number;
+  entrega: number;
+}
+```
+### Return Type
+Recall that calling the `ConfigurarLimitesEtapas` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ConfigurarLimitesEtapas` Mutation is of type `ConfigurarLimitesEtapasData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ConfigurarLimitesEtapasData {
+  recepcion?: EtapaProduccion_Key | null;
+  lavado?: EtapaProduccion_Key | null;
+  secado?: EtapaProduccion_Key | null;
+  planchado?: EtapaProduccion_Key | null;
+  entrega?: EtapaProduccion_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `ConfigurarLimitesEtapas`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ConfigurarLimitesEtapasVariables } from '@dataconnect/generated';
+import { useConfigurarLimitesEtapas } from '@dataconnect/generated/react'
+
+export default function ConfigurarLimitesEtapasComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useConfigurarLimitesEtapas();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useConfigurarLimitesEtapas(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useConfigurarLimitesEtapas(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useConfigurarLimitesEtapas(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useConfigurarLimitesEtapas` Mutation requires an argument of type `ConfigurarLimitesEtapasVariables`:
+  const configurarLimitesEtapasVars: ConfigurarLimitesEtapasVariables = {
+    recepcion: ...,
+    lavado: ...,
+    secado: ...,
+    planchado: ...,
+    entrega: ...,
+  };
+  mutation.mutate(configurarLimitesEtapasVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ recepcion: ..., lavado: ..., secado: ..., planchado: ..., entrega: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(configurarLimitesEtapasVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.recepcion);
+    console.log(mutation.data.lavado);
+    console.log(mutation.data.secado);
+    console.log(mutation.data.planchado);
+    console.log(mutation.data.entrega);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

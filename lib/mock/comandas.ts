@@ -23,6 +23,8 @@ export interface PrendaLinea {
 }
 
 export interface Comanda {
+  /** UUID persistido; las comandas mock sin código no emiten comprobantes QR. */
+  codigoQr?: string;
   etapas?: EtapaVisible[];
   id: string; // numeroComanda público, ej. "ELCOBRE-14r3"
   cliente: string;

@@ -38,7 +38,7 @@ mutation CrearComandaConFlujo(
       nombreEtapa_expr: "response.query.etapas[0].nombre"
       ordenEtapa_expr: "response.query.etapas[0].orden"
       descripcionEtapa_expr: "response.query.etapas[0].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[0].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[0].tiempoEstimadoMin != null ? response.query.etapas[0].tiempoEstimadoMin : 15"
       estado: PENDIENTE
     }
     {
@@ -47,7 +47,7 @@ mutation CrearComandaConFlujo(
       nombreEtapa_expr: "response.query.etapas[1].nombre"
       ordenEtapa_expr: "response.query.etapas[1].orden"
       descripcionEtapa_expr: "response.query.etapas[1].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[1].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[1].tiempoEstimadoMin != null ? response.query.etapas[1].tiempoEstimadoMin : 90"
       estado: PENDIENTE
     }
     {
@@ -56,7 +56,7 @@ mutation CrearComandaConFlujo(
       nombreEtapa_expr: "response.query.etapas[2].nombre"
       ordenEtapa_expr: "response.query.etapas[2].orden"
       descripcionEtapa_expr: "response.query.etapas[2].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[2].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[2].tiempoEstimadoMin != null ? response.query.etapas[2].tiempoEstimadoMin : 60"
       estado: PENDIENTE
     }
     {
@@ -65,7 +65,7 @@ mutation CrearComandaConFlujo(
       nombreEtapa_expr: "response.query.etapas[3].nombre"
       ordenEtapa_expr: "response.query.etapas[3].orden"
       descripcionEtapa_expr: "response.query.etapas[3].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[3].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[3].tiempoEstimadoMin != null ? response.query.etapas[3].tiempoEstimadoMin : 60"
       estado: PENDIENTE
     }
     {
@@ -74,7 +74,7 @@ mutation CrearComandaConFlujo(
       nombreEtapa_expr: "response.query.etapas[4].nombre"
       ordenEtapa_expr: "response.query.etapas[4].orden"
       descripcionEtapa_expr: "response.query.etapas[4].descripcion"
-      tiempoEstimadoMin_expr: "response.query.etapas[4].tiempoEstimadoMin"
+      tiempoEstimadoMin_expr: "response.query.etapas[4].tiempoEstimadoMin != null ? response.query.etapas[4].tiempoEstimadoMin : 1440"
       estado: PENDIENTE
     }
   ])

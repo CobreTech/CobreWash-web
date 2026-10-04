@@ -16,18 +16,21 @@ import {
   Sun,
   Moon,
   Monitor,
+  Clock3,
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { useTheme, type Theme } from "@/components/providers/ThemeProvider";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
+import LimitesEtapasConfig from "@/components/intranet/LimitesEtapasConfig";
 
-type Tab = "apariencia" | "empresa" | "perfil" | "notificaciones" | "seguridad";
+type Tab = "apariencia" | "empresa" | "perfil" | "notificaciones" | "seguridad" | "limites";
 
 type TabDef = { id: Tab; label: string; icon: React.ElementType; adminOnly?: boolean };
 
 const tabs: TabDef[] = [
   { id: "apariencia", label: "Apariencia", icon: Palette },
+  { id: "limites", label: "Límites de etapas", icon: Clock3, adminOnly: true },
   { id: "perfil", label: "Mi Perfil", icon: User },
   { id: "notificaciones", label: "Notificaciones", icon: Bell },
   { id: "seguridad", label: "Seguridad", icon: Shield },
@@ -219,6 +222,7 @@ export default function ConfiguracionPage() {
           className="flex-1 min-w-0"
         >
           <AnimatePresence mode="wait">
+            {activeTab === "limites" && isAdmin && <motion.div key="limites" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}><LimitesEtapasConfig /></motion.div>}
             {/* APARIENCIA */}
             {activeTab === "apariencia" && (
               <motion.div

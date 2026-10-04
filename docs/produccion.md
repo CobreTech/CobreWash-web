@@ -1,5 +1,23 @@
 # RF17 · Flujo de producción
 
+## QR compartido y seguimiento público
+
+La web codifica `Comanda.codigoQr` en una URL HTTPS de seguimiento y conserva el
+mismo código al editar, avanzar o reimprimir. El seguimiento público consulta
+estado, fechas, servicios y etapas reales; la app Android debe resolver el QR con
+`GetComandaOperativaPorQr`, que comprueba perfil activo y rol en el servidor.
+El contrato y la guía para Android están en [qr-android.md](qr-android.md).
+
+El 4 de octubre de 2026 se desplegó el conector `example` con las tres consultas
+nuevas y la recuperación del QR por UUID. No se modificó el esquema ni se
+crearon pedidos de prueba en producción. Se verificaron las consultas públicas
+y el rechazo de acceso operativo sin sesión en el servicio desplegado.
+La publicación web en Vercel requiere una sesión de su encargado y configurar
+`NEXT_PUBLIC_SEGUIMIENTO_BASE_URL` antes de compilar. La implementación Android
+y la prueba física de teléfono, tablet e impresora corresponden a su encargado.
+
+## Creación y etapas
+
 Una comanda se considera aprobada cuando se guarda correctamente. La web usa
 `CrearComandaConFlujo` para insertar cabecera, prendas, cinco etapas e historial
 en una transacción; el total se calcula en el servidor desde las prendas.
@@ -147,3 +165,44 @@ requiere revisión.
    de Chile y el nombre de cada responsable, incluso después de recargar.
 8. Entregar otra comanda desde recepción: verificar en su detalle la quinta etapa
    completada, con la persona de recepción como responsable y las anteriores intactas.
+# Alertas por tiempo de etapa
+
+Administración dispone de **Configuración → Límites de etapas**. Los cinco
+límites se guardan juntos mediante `ConfigurarLimitesEtapas`, con validación de
+perfil activo y rol `admin` en el servidor. Se pueden ingresar minutos u horas
+(incluidas horas fraccionarias equivalentes a minutos enteros), entre 1 minuto
+y 30 días. Valores iniciales: Recepción 15 min, Lavado 90 min, Secado 60 min,
+Planchado 60 min y Entrega 24 h. Son valores de partida que debe ajustar el
+administrador a la operación de la lavandería.
+
+Los nuevos flujos copian los límites vigentes del catálogo. Un límite todavía
+vacío se sustituye por el valor inicial al crear el flujo. Las comandas ya
+asociadas conservan su configuración; una copia antigua sin tiempo utiliza el
+valor inicial correspondiente, sin heredar ediciones posteriores del catálogo.
+Las comandas históricas sin etapas no generan alertas.
+
+Recepción cuenta desde `fechaRecepcion`; las siguientes etapas, desde
+`fechaInicio` guardada por el servidor al completar la anterior. Solo se evalúa
+la primera etapa incompleta. Las etapas completadas, las futuras pendientes y
+las comandas anuladas o entregadas quedan excluidas. El límite exacto todavía
+no es retraso: se alerta cuando el tiempo transcurrido lo supera. Se cuentan
+minutos continuos, incluidas noches y fines de semana; Entrega incluye la espera
+de retiro por el cliente.
+
+`GetComandasParaAlertas` es una consulta mínima exclusiva de administración
+activa, paginada por identificador. La web recorre todas las páginas, sin
+depender de los filtros ni del límite de 100 comandas del panel. Las alertas
+aparecen en todas las secciones de la intranet, la campana y la barra lateral,
+con número, etapa, límite, minutos excedidos y operario. El enlace abre la
+comanda expandida en Seguimiento para actuar o reasignar un operario.
+
+Se consulta cada 30 segundos mientras la intranet esté visible, al recuperar
+el foco y tras reportar avances; el reloj de detección se evalúa cada 10 segundos.
+En caso de fallo se muestran los últimos datos junto con un aviso y reintento.
+La comparación utiliza el reloj del navegador, que debe estar sincronizado.
+Las alertas son avisos dentro de la intranet: no hay envío de correo, push ni
+proceso programado cuando está cerrada, y no se modifica `alertaRetraso`.
+
+Publicar los conectores `example` (consulta y configuración) y `produccion`
+(valores iniciales al crear flujos) antes de publicar la web. No se necesita
+migración de esquema ni sobrescribir los tiempos configurados en producción.
