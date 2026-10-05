@@ -56,6 +56,50 @@ const connectorConfig = {
 };
 exports.connectorConfig = connectorConfig;
 
+const crearAvisoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearAviso', inputVars);
+}
+crearAvisoRef.operationName = 'CrearAviso';
+exports.crearAvisoRef = crearAvisoRef;
+
+exports.crearAviso = function crearAviso(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearAvisoRef(dcInstance, inputVars));
+}
+;
+
+const getAvisosAdministracionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetAvisosAdministracion', inputVars);
+}
+getAvisosAdministracionRef.operationName = 'GetAvisosAdministracion';
+exports.getAvisosAdministracionRef = getAvisosAdministracionRef;
+
+exports.getAvisosAdministracion = function getAvisosAdministracion(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getAvisosAdministracionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getAvisosParaEquipoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetAvisosParaEquipo', inputVars);
+}
+getAvisosParaEquipoRef.operationName = 'GetAvisosParaEquipo';
+exports.getAvisosParaEquipoRef = getAvisosParaEquipoRef;
+
+exports.getAvisosParaEquipo = function getAvisosParaEquipo(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getAvisosParaEquipoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const registrarseRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

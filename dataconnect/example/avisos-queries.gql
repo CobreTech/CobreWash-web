@@ -1,0 +1,43 @@
+query GetAvisosAdministracion($limit: Int = 20, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar todos los avisos") }
+  }
+  avisos(where: { activo: { eq: true } }, orderBy: [{ fechaPublicacion: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id titulo contenido fechaPublicacion
+    autor { nombre apellido }
+    rolDestinatario { nombre }
+  }
+  total: avisos(where: { activo: { eq: true } }) { _count }
+}
+
+# El rol recibido se verifica contra el perfil autenticado. Cambiar la variable
+# desde el navegador nunca permite consultar los avisos de otro equipo.
+query GetAvisosParaEquipo($rol: String!, $limit: Int = 20, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['operario', 'recepcionista'] && this == vars.rol", message: "No puedes consultar avisos de otro equipo") }
+  }
+  avisos(where: {
+    _and: [
+      { activo: { eq: true } }
+      { _or: [
+        { rolDestinatarioId: { isNull: true } }
+        { rolDestinatario: { nombre: { eq: $rol } } }
+      ] }
+    ]
+  }, orderBy: [{ fechaPublicacion: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id titulo contenido fechaPublicacion
+    autor { nombre apellido }
+    rolDestinatario { nombre }
+  }
+  total: avisos(where: {
+    _and: [
+      { activo: { eq: true } }
+      { _or: [
+        { rolDestinatarioId: { isNull: true } }
+        { rolDestinatario: { nombre: { eq: $rol } } }
+      ] }
+    ]
+  }) { _count }
+}
