@@ -11,6 +11,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*Connecting to the local Emulator*](#connecting-to-the-local-emulator)
 - [**Queries**](#queries)
   - [*GetAvisosAdministracion*](#getavisosadministracion)
+  - [*GetAvisosParaEquipo*](#getavisosparaequipo)
   - [*GetEtapasProduccion*](#getetapasproduccion)
   - [*GetSeguimientoProduccion*](#getseguimientoproduccion)
   - [*GetPanelProduccion*](#getpanelproduccion)
@@ -234,6 +235,140 @@ const ref = getAvisosAdministracionRef();
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = getAvisosAdministracionRef(dataConnect, getAvisosAdministracionVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.avisos);
+console.log(data.total);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.avisos);
+  console.log(data.total);
+});
+```
+
+## GetAvisosParaEquipo
+You can execute the `GetAvisosParaEquipo` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getAvisosParaEquipo(vars: GetAvisosParaEquipoVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+
+interface GetAvisosParaEquipoRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetAvisosParaEquipoVariables): QueryRef<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+}
+export const getAvisosParaEquipoRef: GetAvisosParaEquipoRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getAvisosParaEquipo(dc: DataConnect, vars: GetAvisosParaEquipoVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+
+interface GetAvisosParaEquipoRef {
+  ...
+  (dc: DataConnect, vars: GetAvisosParaEquipoVariables): QueryRef<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+}
+export const getAvisosParaEquipoRef: GetAvisosParaEquipoRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getAvisosParaEquipoRef:
+```typescript
+const name = getAvisosParaEquipoRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetAvisosParaEquipo` query requires an argument of type `GetAvisosParaEquipoVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetAvisosParaEquipoVariables {
+  rol: string;
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetAvisosParaEquipo` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetAvisosParaEquipoData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetAvisosParaEquipoData {
+  avisos: ({
+    id: UUIDString;
+    titulo: string;
+    contenido: string;
+    fechaPublicacion: TimestampString;
+    autor: {
+      nombre: string;
+      apellido?: string | null;
+    };
+    rolDestinatario?: {
+      nombre: string;
+    };
+  } & Aviso_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+```
+### Using `GetAvisosParaEquipo`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getAvisosParaEquipo, GetAvisosParaEquipoVariables } from '@dataconnect/generated';
+
+// The `GetAvisosParaEquipo` query requires an argument of type `GetAvisosParaEquipoVariables`:
+const getAvisosParaEquipoVars: GetAvisosParaEquipoVariables = {
+  rol: ...,
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getAvisosParaEquipo()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getAvisosParaEquipo(getAvisosParaEquipoVars);
+// Variables can be defined inline as well.
+const { data } = await getAvisosParaEquipo({ rol: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getAvisosParaEquipo(dataConnect, getAvisosParaEquipoVars);
+
+console.log(data.avisos);
+console.log(data.total);
+
+// Or, you can use the `Promise` API.
+getAvisosParaEquipo(getAvisosParaEquipoVars).then((response) => {
+  const data = response.data;
+  console.log(data.avisos);
+  console.log(data.total);
+});
+```
+
+### Using `GetAvisosParaEquipo`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getAvisosParaEquipoRef, GetAvisosParaEquipoVariables } from '@dataconnect/generated';
+
+// The `GetAvisosParaEquipo` query requires an argument of type `GetAvisosParaEquipoVariables`:
+const getAvisosParaEquipoVars: GetAvisosParaEquipoVariables = {
+  rol: ...,
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getAvisosParaEquipoRef()` function to get a reference to the query.
+const ref = getAvisosParaEquipoRef(getAvisosParaEquipoVars);
+// Variables can be defined inline as well.
+const ref = getAvisosParaEquipoRef({ rol: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getAvisosParaEquipoRef(dataConnect, getAvisosParaEquipoVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.

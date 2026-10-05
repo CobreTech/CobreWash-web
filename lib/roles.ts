@@ -49,6 +49,7 @@ export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
     { href: "/intranet/seguimiento", label: "Seguimiento", icon: Package },
     { href: "/intranet/incidencias", label: "Incidencias", icon: ShieldAlert },
     { href: "/intranet/clientes", label: "Clientes", icon: Contact },
+    { href: "/intranet/comunicacion", label: "Avisos", icon: Megaphone },
     { href: "/intranet/configuracion", label: "Configuración", icon: Settings },
   ],
   operario: [
@@ -70,7 +71,7 @@ export const ACCESO_POR_RUTA: Record<string, Rol[]> = {
   "/intranet/incidencias": ["admin", "recepcionista"],
   "/intranet/inventario": ["admin"],
   "/intranet/reportes": ["admin"],
-  "/intranet/comunicacion": ["admin", "operario"],
+  "/intranet/comunicacion": ["admin", "operario", "recepcionista"],
   "/intranet/usuarios": ["admin"],
   "/intranet/configuracion": ["admin", "recepcionista", "operario"],
 };

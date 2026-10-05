@@ -15,12 +15,12 @@ import {
 } from "@/lib/avisos/modelo";
 
 export default function ComunicacionPage() {
-  const permitido = useRoleGuard(["admin", "operario"]);
+  const permitido = useRoleGuard(["admin", "operario", "recepcionista"]);
   const usuario = useUsuarioActualContext();
   const esAdmin = usuario?.rol.nombre === "admin";
 
   const [pagina, setPagina] = useState(1);
-  const { avisos, total, cargando, error, recargar } = useAvisos(usuario?.id, permitido && esAdmin, pagina);
+  const { avisos, total, cargando, error, recargar } = useAvisos(usuario?.id, usuario?.rol.nombre, permitido, pagina);
   const [nuevo, setNuevo] = useState(false);
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [guardando, setGuardando] = useState(false);
@@ -78,7 +78,7 @@ export default function ComunicacionPage() {
             {esAdmin ? "Comunicación Interna" : "Avisos"}
           </h1>
           <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">
-            {esAdmin ? "Publica avisos para los equipos de la lavandería" : "Avisos publicados por administración · solo lectura"}
+            {esAdmin ? "Publica avisos para los equipos de la lavandería" : "Avisos generales y de tu equipo · solo lectura"}
           </p>
         </div>
         {esAdmin && (
@@ -203,6 +203,7 @@ export default function ComunicacionPage() {
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Destinatario</label>
                   <GlassSelect
+                    disabled={guardando}
                     value={form.destinatario}
                     onChange={(v) => { if (!guardando) setForm({ ...form, destinatario: v }); }}
                     ariaLabel="Destinatario"

@@ -85,6 +85,21 @@ exports.getAvisosAdministracion = function getAvisosAdministracion(dcOrVars, var
 }
 ;
 
+const getAvisosParaEquipoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetAvisosParaEquipo', inputVars);
+}
+getAvisosParaEquipoRef.operationName = 'GetAvisosParaEquipo';
+exports.getAvisosParaEquipoRef = getAvisosParaEquipoRef;
+
+exports.getAvisosParaEquipo = function getAvisosParaEquipo(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getAvisosParaEquipoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const registrarseRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

@@ -457,6 +457,31 @@ export interface GetAvisosAdministracionVariables {
   offset?: number | null;
 }
 
+export interface GetAvisosParaEquipoData {
+  avisos: ({
+    id: UUIDString;
+    titulo: string;
+    contenido: string;
+    fechaPublicacion: TimestampString;
+    autor: {
+      nombre: string;
+      apellido?: string | null;
+    };
+    rolDestinatario?: {
+      nombre: string;
+    };
+  } & Aviso_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetAvisosParaEquipoVariables {
+  rol: string;
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetCatalogosComandaData {
   tipoServicios: ({
     id: UUIDString;
@@ -1376,6 +1401,18 @@ export const getAvisosAdministracionRef: GetAvisosAdministracionRef;
 
 export function getAvisosAdministracion(vars?: GetAvisosAdministracionVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
 export function getAvisosAdministracion(dc: DataConnect, vars?: GetAvisosAdministracionVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+
+interface GetAvisosParaEquipoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetAvisosParaEquipoVariables): QueryRef<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetAvisosParaEquipoVariables): QueryRef<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+  operationName: string;
+}
+export const getAvisosParaEquipoRef: GetAvisosParaEquipoRef;
+
+export function getAvisosParaEquipo(vars: GetAvisosParaEquipoVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+export function getAvisosParaEquipo(dc: DataConnect, vars: GetAvisosParaEquipoVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
 
 interface RegistrarseRef {
   /* Allow users to create refs without passing in DataConnect */

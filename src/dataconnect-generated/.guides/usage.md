@@ -12,12 +12,14 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useCrearAviso, useGetAvisosAdministracion, useRegistrarse, useCrearUsuarioAdministrado, useRegistrarseComoCliente, useCrearClienteAdministrado, useActualizarUsuario, useCrearVehiculo, useActualizarVehiculo, useCrearSalidaVehiculo } from '@dataconnect/generated/react';
+import { useCrearAviso, useGetAvisosAdministracion, useGetAvisosParaEquipo, useRegistrarse, useCrearUsuarioAdministrado, useRegistrarseComoCliente, useCrearClienteAdministrado, useActualizarUsuario, useCrearVehiculo, useActualizarVehiculo } from '@dataconnect/generated/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useCrearAviso(crearAvisoVars);
 
 const { data, isPending, isSuccess, isError, error } = useGetAvisosAdministracion(getAvisosAdministracionVars);
+
+const { data, isPending, isSuccess, isError, error } = useGetAvisosParaEquipo(getAvisosParaEquipoVars);
 
 const { data, isPending, isSuccess, isError, error } = useRegistrarse(registrarseVars);
 
@@ -32,8 +34,6 @@ const { data, isPending, isSuccess, isError, error } = useActualizarUsuario(actu
 const { data, isPending, isSuccess, isError, error } = useCrearVehiculo(crearVehiculoVars);
 
 const { data, isPending, isSuccess, isError, error } = useActualizarVehiculo(actualizarVehiculoVars);
-
-const { data, isPending, isSuccess, isError, error } = useCrearSalidaVehiculo(crearSalidaVehiculoVars);
 
 ```
 
@@ -72,7 +72,7 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { crearAviso, getAvisosAdministracion, registrarse, crearUsuarioAdministrado, registrarseComoCliente, crearClienteAdministrado, actualizarUsuario, crearVehiculo, actualizarVehiculo, crearSalidaVehiculo } from '@dataconnect/generated';
+import { crearAviso, getAvisosAdministracion, getAvisosParaEquipo, registrarse, crearUsuarioAdministrado, registrarseComoCliente, crearClienteAdministrado, actualizarUsuario, crearVehiculo, actualizarVehiculo } from '@dataconnect/generated';
 
 
 // Operation CrearAviso:  For variables, look at type CrearAvisoVars in ../index.d.ts
@@ -80,6 +80,9 @@ const { data } = await CrearAviso(dataConnect, crearAvisoVars);
 
 // Operation GetAvisosAdministracion:  For variables, look at type GetAvisosAdministracionVars in ../index.d.ts
 const { data } = await GetAvisosAdministracion(dataConnect, getAvisosAdministracionVars);
+
+// Operation GetAvisosParaEquipo:  For variables, look at type GetAvisosParaEquipoVars in ../index.d.ts
+const { data } = await GetAvisosParaEquipo(dataConnect, getAvisosParaEquipoVars);
 
 // Operation Registrarse:  For variables, look at type RegistrarseVars in ../index.d.ts
 const { data } = await Registrarse(dataConnect, registrarseVars);
@@ -101,9 +104,6 @@ const { data } = await CrearVehiculo(dataConnect, crearVehiculoVars);
 
 // Operation ActualizarVehiculo:  For variables, look at type ActualizarVehiculoVars in ../index.d.ts
 const { data } = await ActualizarVehiculo(dataConnect, actualizarVehiculoVars);
-
-// Operation CrearSalidaVehiculo:  For variables, look at type CrearSalidaVehiculoVars in ../index.d.ts
-const { data } = await CrearSalidaVehiculo(dataConnect, crearSalidaVehiculoVars);
 
 
 ```

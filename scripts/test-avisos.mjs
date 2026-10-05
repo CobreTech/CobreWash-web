@@ -82,4 +82,43 @@ await check("acepta los límites y pagina sin duplicar avisos", async () => {
   assert.equal(new Set([...primero.avisos, ...segundo.avisos].map(a => a.id)).size, 4);
 });
 
+const listarEquipo = (rol, user, variables = {}) => execute(queries, "GetAvisosParaEquipo", { ...variables, rol }, user);
+
+await check("cada equipo solo recibe avisos generales y los destinados a su rol", async () => {
+  for (const [rol, user] of [["operario", "test-operario"], ["recepcionista", "test-recepcion"]]) {
+    const data = await listarEquipo(rol, user);
+    assert.equal(data.total[0]._count, 3);
+    assert.equal(data.avisos.length, 3);
+    assert(data.avisos.every(a => !a.rolDestinatario || a.rolDestinatario.nombre === rol));
+    assert(data.avisos.some(a => a.rolDestinatario?.nombre === rol));
+    assert.equal((await listarEquipo(rol, user, { limit: 1, offset: 1 })).avisos.length, 1);
+  }
+});
+
+await check("no permite suplantar el rol ni leer avisos sin perfil activo", async () => {
+  for (const [rol, user] of [
+    ["operario", "test-recepcion"], ["recepcionista", "test-operario"],
+    ["admin", "test-operario"], ["cliente", "test-cliente"],
+    ["operario", null], ["operario", "test-cliente"],
+    ["operario", "test-inactivo"], ["operario", "sin-perfil"],
+  ]) await assert.rejects(listarEquipo(rol, user), `Acceso indebido: ${rol}/${user}`);
+});
+
+await check("una publicación nueva se recupera en otra consulta del equipo correcto", async () => {
+  const contenido = "Nuevo aviso " + randomUUID();
+  await crear({ titulo: "Novedad para recepción", contenido, rolDestinatarioId: roles.recepcionista });
+  assert((await listarEquipo("recepcionista", "test-recepcion")).avisos.some(a => a.contenido === contenido));
+  assert(!(await listarEquipo("operario", "test-operario")).avisos.some(a => a.contenido === contenido));
+});
+
+await check("excluye los avisos inactivos de listas y conteos", async () => {
+  const data = await listarAdmin();
+  const aviso = data.avisos.find(a => a.rolDestinatario?.nombre === "recepcionista");
+  await execute("mutation Desactivar($id: UUID!) { aviso_update(id: $id, data: { activo: false }) }", "Desactivar", { id: aviso.id });
+  assert.equal((await listarAdmin()).total[0]._count, data.total[0]._count - 1);
+  const equipo = await listarEquipo("recepcionista", "test-recepcion");
+  assert.equal(equipo.total[0]._count, 3);
+  assert(!equipo.avisos.some(a => a.id === aviso.id));
+});
+
 console.log(`${count} verificaciones de avisos completadas.`);
