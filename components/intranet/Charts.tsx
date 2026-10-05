@@ -44,7 +44,7 @@ export function HBarChart({
   formatValue = (v) => v.toLocaleString("es-CL"),
   color = "#f97316",
 }: {
-  items: { label: string; value: number; hint?: string }[];
+  items: { id?: string; label: string; value: number; hint?: string }[];
   formatValue?: (v: number) => string;
   color?: string;
 }) {
@@ -52,7 +52,7 @@ export function HBarChart({
   return (
     <div className="space-y-3">
       {items.map((item, i) => (
-        <div key={item.label} className="space-y-1">
+        <div key={item.id ?? item.label} className="space-y-1">
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-xs font-semibold text-stone-700 dark:text-stone-200 truncate">
               {item.label}

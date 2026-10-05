@@ -1,0 +1,46 @@
+mutation AgregarComentarioComanda($comandaId: UUID!, $texto: String!) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.texto.size() > 0 && vars.texto.size() <= 288", message: "El comentario debe tener entre 1 y 288 caracteres") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null") {
+      activo @check(expr: "this == true")
+      rol { nombre @check(expr: "this in ['admin', 'operario']") }
+    }
+    comanda(id: $comandaId) @check(expr: "this != null") { estado }
+  }
+  comandaHistorialEstado_insert(data: {
+    comandaId: $comandaId
+    usuarioId_expr: "auth.uid"
+    estadoNuevo_expr: "response.query.comanda.estado"
+    motivo_expr: "'Comentario: ' + vars.texto"
+  })
+}
+
+mutation ResolverMiIncidencia($id: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null") {
+      activo @check(expr: "this == true")
+      rol { nombre @check(expr: "this == 'operario'") }
+    }
+    incidenciaComanda(id: $id) @check(expr: "this != null") {
+      reportadaPorId @check(expr: "this == auth.uid", message: "Solo puedes resolver tus propias incidencias")
+      estado @check(expr: "this != 'RESUELTA'", message: "La incidencia ya está resuelta")
+    }
+  }
+  incidenciaComanda_update(id: $id, data: { estado: RESUELTA, actualizadaEn_expr: "request.time" })
+}
+
+mutation AutoAsignarComandaOperario($comandaId: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    yo: usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'operario'", message: "Solo operarios pueden autoasignarse comandas") }
+    }
+    comanda(id: $comandaId) @check(expr: "this != null", message: "Comanda no encontrada") {
+      estado @check(expr: "this in ['PENDIENTE', 'EN_PROCESO', 'FINALIZADA']", message: "La comanda está cerrada")
+      comandaEtapas_on_comanda @check(expr: "this.size() == 5", message: "La comanda no tiene un flujo completo") { etapaId }
+    }
+  }
+  comandaEtapa_updateMany(
+    where: { comandaId: { eq: $comandaId }, estado: { in: [PENDIENTE, EN_PROCESO] } }
+    data: { asignadoAId_expr: "auth.uid" }
+  ) @check(expr: "this > 0", message: "No hay etapas pendientes para asignar")
+}

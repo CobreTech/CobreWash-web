@@ -9,14 +9,18 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:reportes": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-reportes.mjs\"",
     "test:avisos": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-avisos.mjs\"",
     "test:production": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-production.mjs\"",
     "dataconnect:compile:web": "node scripts/prepare-production-test.mjs --sdk && npx -y firebase-tools@latest dataconnect:sdk:generate --config scratch/production-test/firebase.json && node scripts/normalize-generated.mjs"
   },
   "dependencies": {
     "@dataconnect/generated": "link:src\\dataconnect-generated",
+    "exceljs": "^4.4.0",
     "firebase": "^12.19.0",
     "framer-motion": "^12.43.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.51.0",
     "next": "^16.3.8",
     "qrcode.react": "^4.2.0",

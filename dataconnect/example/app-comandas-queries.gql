@@ -1,0 +1,48 @@
+# Contrato mínimo de producción: nunca incluye información comercial o de contacto.
+query GetComandaDetalleOperario($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista', 'operario']", message: "Acceso reservado al personal") }
+  }
+  comanda(id: $id) {
+    id numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn observaciones
+    cliente { nombre }
+    comandaDetalles_on_comanda { cantidad detalle pesoKg tipoPrenda { nombre } tipoServicio { nombre } }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado fechaInicio fechaCompletado
+      operario { id nombre apellido }
+      asignadoA { id nombre apellido }
+      etapa { nombre orden descripcion tiempoEstimadoMin }
+    }
+    comandaHistorialEstados_on_comanda(orderBy: [{ fecha: DESC }]) {
+      estadoNuevo fecha motivo usuario { nombre }
+    }
+    incidenciaComandas_on_comanda(orderBy: [{ fecha: DESC }]) {
+      id motivo descripcion estado fecha reportadaPor { id nombre }
+    }
+  }
+}
+
+query GetMisComandasAsignadas($limit: Int = 50, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'operario'", message: "Solo operarios pueden ver su bandeja") }
+  }
+  comandas(
+    where: { 
+      comandaEtapas_on_comanda: { exist: { asignadoAId: { eq_expr: "auth.uid" }, estado: { in: [PENDIENTE, EN_PROCESO] } } },
+      estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] }
+    }
+    orderBy: [{ creadoEn: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id numeroComanda estado fechaRecepcion
+    cliente { nombre }
+    comandaDetalles_on_comanda { cantidad tipoPrenda { nombre } tipoServicio { nombre } }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado fechaInicio
+      asignadoA { nombre apellido }
+    }
+  }
+}

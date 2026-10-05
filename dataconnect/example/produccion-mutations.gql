@@ -166,7 +166,7 @@ mutation CompletarEtapaComanda($comandaId: UUID!, $etapaId: UUID!, $orden: Int!,
 mutation RegistrarIncidenciaComanda(
   $comandaId: UUID!
   $motivo: String!
-  $descripcion: String
+  $descripcion: String = null
 ) @auth(level: USER) @transaction {
   query @redact @check(
     expr: "vars.motivo.size() > 0 && vars.motivo.size() <= 100 && (vars.descripcion == null || vars.descripcion.size() <= 300)"

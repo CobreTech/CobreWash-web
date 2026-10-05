@@ -2,219 +2,653 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Layers, CalendarRange, Download, Loader2, TrendingUp } from "lucide-react";
+import {
+  Users,
+  Layers,
+  CalendarRange,
+  Download,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
-import { BarChart, DonutChart, HBarChart } from "@/components/intranet/Charts";
-import { COMANDAS, prendasTotales, valorTotal, type Comanda } from "@/lib/mock/comandas";
+import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
+import { HBarChart, DonutChart, BarChart } from "@/components/intranet/Charts";
+import GlassSelect from "@/components/ui/GlassSelect";
+import { useReportes } from "@/lib/reportes/useReportes";
+import { fechaChile, periodoInicial } from "@/lib/reportes/fechas";
+import {
+  volumenPorPeriodo,
+  indicadoresVolumen,
+  type AgrupacionPeriodo,
+} from "@/lib/reportes/volumen";
+import type { FiltrosReporte, VistaReporte } from "@/lib/reportes/modelo";
+import { prepararExportacion } from "@/lib/reportes/exportable";
 
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
-const facturables = COMANDAS.filter((c) => c.estado !== "Anulado");
-
-type Vista = "cliente" | "servicio" | "volumen";
-const VISTAS: { id: Vista; label: string; icon: typeof Users }[] = [
-  { id: "cliente", label: "Por cliente / empresa", icon: Users },
-  { id: "servicio", label: "Por tipo de servicio", icon: Layers },
-  { id: "volumen", label: "Por volumen de prendas", icon: CalendarRange },
+const VISTAS = [
+  { id: "cliente" as const, label: "Por cliente / empresa", icon: Users },
+  { id: "servicio" as const, label: "Por tipo de servicio", icon: Layers },
+  {
+    id: "volumen" as const,
+    label: "Por volumen de prendas",
+    icon: CalendarRange,
+  },
 ];
-
-const SERVICIO_COLOR: Record<string, string> = {
-  "Doméstica y Particular": "#f97316",
-  "Industrial / Empresa": "#db541a",
-  "Retiro a Domicilio": "#fed7aa",
-};
-
-function agrupar<T extends string>(items: Comanda[], key: (c: Comanda) => T) {
-  const map = new Map<T, { facturado: number; prendas: number; comandas: number }>();
-  for (const c of items) {
-    const k = key(c);
-    const cur = map.get(k) ?? { facturado: 0, prendas: 0, comandas: 0 };
-    cur.facturado += valorTotal(c);
-    cur.prendas += prendasTotales(c);
-    cur.comandas += 1;
-    map.set(k, cur);
-  }
-  return map;
-}
+const panel = "glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none";
+const boton =
+  "flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-600 shadow-sm transition-colors hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700";
+const input =
+  "w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-3 text-sm dark:border-white/10 dark:bg-stone-800";
 
 export default function ReportesPage() {
   const permitido = useRoleGuard(["admin"]);
-  const [vista, setVista] = useState<Vista>("cliente");
-
-  const porCliente = useMemo(() => {
-    const map = agrupar(facturables, (c) => c.cliente);
-    return [...map.entries()]
-      .map(([cliente, v]) => ({ label: cliente, ...v }))
-      .sort((a, b) => b.facturado - a.facturado);
-  }, []);
-
-  const porServicio = useMemo(() => {
-    const map = agrupar(facturables, (c) => c.servicio);
-    return [...map.entries()].map(([servicio, v]) => ({ label: servicio, ...v }));
-  }, []);
-
-  // Volumen por mes (derivado de la fecha dd/mm/aaaa de recepción).
-  const porMes = useMemo(() => {
-    const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const acc = new Map<number, number>();
-    for (const c of facturables) {
-      const m = parseInt(c.fechaRecepcion.split("/")[1] ?? "0", 10) - 1;
-      acc.set(m, (acc.get(m) ?? 0) + prendasTotales(c));
+  const usuario = useUsuarioActualContext();
+  const [vista, setVista] = useState<VistaReporte>("cliente");
+  const [filtros, setFiltros] = useState<FiltrosReporte>(() => ({
+    ...periodoInicial(),
+    clienteId: "",
+    empresa: "",
+  }));
+  const { datos, catalogos, cargando, error, recargar } = useReportes(
+    usuario?.id,
+    permitido,
+    vista,
+    filtros,
+  );
+  const [pagina, setPagina] = useState({ clave: "", numero: 1 });
+  const [agrupacion, setAgrupacion] = useState<AgrupacionPeriodo>("mes");
+  const periodos = useMemo(
+    () =>
+      vista === "volumen" && datos && !error
+        ? volumenPorPeriodo(
+            datos.detalle,
+            filtros.desde,
+            filtros.hasta,
+            agrupacion,
+          )
+        : [],
+    [vista, datos, error, filtros.desde, filtros.hasta, agrupacion],
+  );
+  const indicadores = useMemo(
+    () =>
+      vista === "volumen" && datos && !error
+        ? indicadoresVolumen(datos.detalle, filtros.desde, filtros.hasta)
+        : null,
+    [vista, datos, error, filtros.desde, filtros.hasta],
+  );
+  const resumen = vista === "volumen" ? periodos : (datos?.resumen ?? []);
+  const clave = JSON.stringify([vista, filtros]);
+  const numeroPagina = pagina.clave === clave ? pagina.numero : 1;
+  const actualizar = (campo: keyof FiltrosReporte, valor: string) =>
+    setFiltros((f) => ({ ...f, [campo]: valor }));
+  const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
+  const [descarga, setDescarga] = useState<{
+    clave: string;
+    error?: string;
+    mensaje?: string;
+  } | null>(null);
+  const exportar = async (formato: "pdf" | "excel") => {
+    if (!permitido || !datos || cargando || error || exportando) return;
+    const reporte = prepararExportacion({
+      vista,
+      filtros,
+      datos,
+      agrupacion,
+      clienteNombre: catalogos?.clientes.find((c) => c.id === filtros.clienteId)
+        ?.nombre,
+      servicioNombre: catalogos?.servicios.find(
+        (s) => s.id === filtros.servicioId,
+      )?.nombre,
+    });
+    setExportando(formato);
+    setDescarga(null);
+    try {
+      const { exportarReporte } = await import("@/lib/reportes/exportar");
+      await exportarReporte(reporte, formato);
+      setDescarga({
+        clave,
+        mensaje: `Descarga de ${formato === "pdf" ? "PDF" : "Excel"} iniciada.`,
+      });
+    } catch {
+      setDescarga({
+        clave,
+        error: "No se pudo exportar el reporte. Vuelve a intentar.",
+      });
+    } finally {
+      setExportando(null);
     }
-    // Muestra los últimos 6 meses hasta junio (mes actual del prototipo).
-    const orden = [0, 1, 2, 3, 4, 5];
-    return { labels: orden.map((m) => meses[m]), data: orden.map((m) => acc.get(m) ?? 0) };
-  }, []);
+  };
 
-  if (!permitido) {
+  if (!permitido)
     return (
-      <div className="flex h-full items-center justify-center py-24">
-        <Loader2 className="w-6 h-6 text-brand-500 animate-spin" />
+      <div className="flex justify-center py-24">
+        <Loader2
+          aria-label="Verificando acceso"
+          className="h-6 w-6 animate-spin text-brand-500"
+        />
       </div>
     );
-  }
-
-  const totalFacturado = facturables.reduce((s, c) => s + valorTotal(c), 0);
-  const totalPrendas = facturables.reduce((s, c) => s + prendasTotales(c), 0);
 
   return (
-    <div className="min-h-screen text-stone-900 dark:text-stone-100 p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="min-h-screen space-y-6 p-4 text-stone-900 sm:p-6 dark:text-stone-100">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
+      >
         <div>
-          <h1 className="text-2xl font-display font-extrabold text-stone-900 dark:text-white">Reportes</h1>
-          <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">
-            Análisis del periodo · {facturables.length} comandas facturadas
+          <h1 className="font-display text-2xl font-extrabold dark:text-white">
+            Reportes
+          </h1>
+          <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+            Análisis del periodo · {datos?.comandas ?? 0} comandas · Montos en
+            CLP
           </p>
         </div>
-        <button className="flex items-center gap-2 bg-white dark:bg-stone-800 border border-stone-200 dark:border-white/10 text-stone-600 dark:text-stone-300 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-stone-100 dark:hover:bg-stone-700 transition-all self-start sm:self-auto shadow-sm dark:shadow-none cursor-pointer">
-          <Download className="w-4 h-4" />
-          Exportar
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={recargar} disabled={cargando} className={boton}>
+            <RefreshCw className="h-4 w-4" />
+            Actualizar
+          </button>
+          {(["pdf", "excel"] as const).map((formato) => (
+            <button
+              key={formato}
+              onClick={() => void exportar(formato)}
+              disabled={!datos || cargando || !!error || !!exportando}
+              className={boton}
+            >
+              {exportando === formato ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Exportar {formato === "pdf" ? "PDF" : "Excel"}
+            </button>
+          ))}
+        </div>
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        {[
-          { label: "Total facturado", value: clp(totalFacturado) },
-          { label: "Prendas procesadas", value: totalPrendas.toLocaleString("es-CL") },
-          { label: "Ticket promedio", value: clp(Math.round(totalFacturado / facturables.length)) },
-        ].map((k) => (
-          <div key={k.label} className="glass-panel rounded-2xl p-4 shadow-sm dark:shadow-none">
-            <p className="text-xl font-display font-extrabold text-brand-600 dark:text-brand-400">{k.value}</p>
-            <p className="text-stone-500 dark:text-stone-500 text-xs mt-1">{k.label}</p>
+      {descarga?.clave === clave && (descarga.error || descarga.mensaje) && (
+        <p
+          role={descarga.error ? "alert" : "status"}
+          className={`text-sm ${descarga.error ? "text-red-600 dark:text-red-400" : "text-brand-600 dark:text-brand-400"}`}
+        >
+          {descarga.error || descarga.mensaje}
+        </p>
+      )}
+
+      <div className={`${panel} grid gap-4 sm:grid-cols-2 ${vista === "cliente" ? "lg:grid-cols-4" : "lg:grid-cols-5"}`}>
+        <label className="space-y-1 text-xs font-bold">
+          Desde
+          <input
+            aria-label="Desde"
+            type="date"
+            value={filtros.desde}
+            onChange={(e) => actualizar("desde", e.target.value)}
+            className={input}
+          />
+        </label>
+        <label className="space-y-1 text-xs font-bold">
+          Hasta
+          <input
+            aria-label="Hasta"
+            type="date"
+            value={filtros.hasta}
+            onChange={(e) => actualizar("hasta", e.target.value)}
+            className={input}
+          />
+        </label>
+        <div className="space-y-1">
+          <p className="text-xs font-bold">Cliente</p>
+          <GlassSelect
+            ariaLabel="Cliente"
+            searchable
+            value={filtros.clienteId}
+            onChange={(v) => actualizar("clienteId", v)}
+            options={[
+              { value: "", label: "Todos los clientes" },
+              ...(catalogos?.clientes ?? []).map((c) => ({
+                value: c.id,
+                label: c.nombre,
+              })),
+            ]}
+          />
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs font-bold">Empresa</p>
+          <GlassSelect
+            ariaLabel="Empresa"
+            searchable
+            value={filtros.empresa}
+            onChange={(v) => actualizar("empresa", v)}
+            options={[
+              { value: "", label: "Todas las empresas" },
+              ...(catalogos?.empresas ?? []).map((e) => ({
+                value: e,
+                label: e,
+              })),
+            ]}
+          />
+        </div>
+        {vista !== "cliente" && (
+          <div className="space-y-1">
+            <p className="text-xs font-bold">Servicio</p>
+            <GlassSelect
+              ariaLabel="Servicio"
+              searchable
+              value={filtros.servicioId ?? ""}
+              onChange={(v) => actualizar("servicioId", v)}
+              options={[
+                { value: "", label: "Todos los servicios" },
+                ...(catalogos?.servicios ?? []).map((s) => ({
+                  value: s.id,
+                  label: s.nombre,
+                })),
+              ]}
+            />
           </div>
+        )}
+        <p className="text-xs text-stone-500 sm:col-span-2 lg:col-span-full">
+          {vista === "volumen"
+            ? "Periodo según el primer cierre de producción; entrega registrada como respaldo. Solo se cuentan comandas con cierre registrado, una vez por comanda."
+            : "Periodo según recepción. Los montos corresponden al valor de las comandas o subtotales de los servicios."}{" "}
+          Horario de Chile. Se excluyen las comandas anuladas.
+        </p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-wrap gap-2"
+      >
+        {VISTAS.map((v) => (
+          <button
+            key={v.id}
+            aria-pressed={vista === v.id}
+            onClick={() => setVista(v.id)}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all disabled:opacity-40 ${vista === v.id ? "bg-brand-500 text-white shadow-md" : "glass-panel text-stone-500 dark:text-stone-400"}`}
+          >
+            <v.icon className="h-4 w-4" />
+            {v.label}
+          </button>
         ))}
       </motion.div>
 
-      {/* Vista selector */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="flex flex-wrap gap-2">
-        {VISTAS.map((v) => {
-          const Icon = v.icon;
-          return (
-            <button
-              key={v.id}
-              onClick={() => setVista(v.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                vista === v.id
-                  ? "bg-brand-500 text-white shadow-md"
-                  : "glass-panel text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800"
-              }`}
+      {error && (
+        <div
+          role="alert"
+          className={`${panel} text-sm text-red-600 dark:text-red-400`}
+        >
+          {error}
+          <button onClick={recargar} className="ml-3 font-bold underline">
+            Reintentar
+          </button>
+        </div>
+      )}
+      {cargando && (
+        <div
+          role="status"
+          className={`${panel} flex items-center justify-center gap-2 py-16 text-sm text-stone-500`}
+        >
+          <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+          Generando reporte…
+        </div>
+      )}
+      {!cargando && !error && datos && (
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-2 gap-3 lg:grid-cols-3"
+          >
+            {[
+              { label: "Total facturado", value: clp(datos.facturado) },
+              {
+                label:
+                  vista === "volumen"
+                    ? "Prendas procesadas"
+                    : "Prendas recibidas",
+                value: datos.prendas.toLocaleString("es-CL"),
+              },
+              {
+                label: "Ticket promedio",
+                value: clp(
+                  datos.comandas
+                    ? Math.round(datos.facturado / datos.comandas)
+                    : 0,
+                ),
+              },
+            ].map((k) => (
+              <div
+                key={k.label}
+                className="glass-panel rounded-2xl p-4 shadow-sm"
+              >
+                <p className="font-display text-xl font-extrabold text-brand-600 dark:text-brand-400">
+                  {k.value}
+                </p>
+                <p className="mt-1 text-xs text-stone-500">{k.label}</p>
+              </div>
+            ))}
+          </motion.div>
+          {!datos.comandas && vista !== "volumen" ? (
+            <div
+              role="status"
+              className={`${panel} py-12 text-center text-sm text-stone-500`}
             >
-              <Icon className="w-4 h-4" />
-              {v.label}
-            </button>
-          );
-        })}
-      </motion.div>
-
-      {/* Content */}
-      <motion.div key={vista} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {vista === "cliente" && (
-          <>
-            <div className="lg:col-span-2 glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none">
-              <h3 className="text-stone-900 dark:text-white font-bold text-sm mb-4">Facturación por cliente / empresa</h3>
-              <HBarChart items={porCliente.map((c) => ({ label: c.label, value: c.facturado, hint: "CLP" }))} formatValue={(v) => `$${v.toLocaleString("es-CL")}`} />
+              No hay comandas para los filtros seleccionados.
             </div>
-            <div className="glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none overflow-hidden">
-              <h3 className="text-stone-900 dark:text-white font-bold text-sm mb-4">Ranking</h3>
-              <div className="space-y-2">
-                {porCliente.slice(0, 6).map((c, i) => (
-                  <div key={c.label} className="flex items-center justify-between text-xs border-b border-stone-100 dark:border-white/5 pb-2 last:border-0">
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className="w-5 h-5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold flex items-center justify-center shrink-0">{i + 1}</span>
-                      <span className="truncate text-stone-700 dark:text-stone-200 font-semibold">{c.label}</span>
-                    </span>
-                    <span className="text-stone-400 dark:text-stone-600 shrink-0">{c.prendas} pz</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {vista === "servicio" && (
-          <>
-            <div className="glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none">
-              <h3 className="text-stone-900 dark:text-white font-bold text-sm mb-4">Distribución por servicio</h3>
-              <DonutChart
-                segments={porServicio.map((s) => ({ label: s.label, value: s.facturado, color: SERVICIO_COLOR[s.label] ?? "#a8a29e" }))}
-                centerValue={facturables.length}
-                centerLabel="comandas"
-              />
-            </div>
-            <div className="lg:col-span-2 glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none overflow-x-auto">
-              <h3 className="text-stone-900 dark:text-white font-bold text-sm mb-4">Detalle por tipo de servicio</h3>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-stone-400 dark:text-stone-600 border-b border-stone-200 dark:border-white/5">
-                    <th className="text-left font-bold py-2">Servicio</th>
-                    <th className="text-right font-bold py-2">Comandas</th>
-                    <th className="text-right font-bold py-2">Prendas</th>
-                    <th className="text-right font-bold py-2">Facturado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {porServicio.map((s) => (
-                    <tr key={s.label} className="border-b border-stone-100 dark:border-white/5 last:border-0">
-                      <td className="py-2.5 font-semibold text-stone-700 dark:text-stone-200 flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: SERVICIO_COLOR[s.label] ?? "#a8a29e" }} />
-                        {s.label}
-                      </td>
-                      <td className="py-2.5 text-right text-stone-500 dark:text-stone-400">{s.comandas}</td>
-                      <td className="py-2.5 text-right text-stone-500 dark:text-stone-400">{s.prendas}</td>
-                      <td className="py-2.5 text-right font-bold text-stone-700 dark:text-stone-200">{clp(s.facturado)}</td>
-                    </tr>
+          ) : (
+            <>
+              <motion.div
+                key={vista}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid gap-4 lg:grid-cols-3"
+              >
+                {vista === "cliente" && (
+                  <>
+                    <div className={`${panel} lg:col-span-2`}>
+                      <h3 className="mb-4 text-sm font-bold">
+                        Facturación por cliente / empresa
+                      </h3>
+                      <HBarChart
+                        items={datos.resumen.slice(0, 12).map((r) => ({
+                          id: r.id,
+                          label: r.label,
+                          value: r.facturado,
+                        }))}
+                        formatValue={clp}
+                      />
+                      <p className="mt-4 text-xs text-stone-500">
+                        Se muestran las 12 cuentas con mayor facturación. El
+                        detalle incluye todas.
+                      </p>
+                    </div>
+                    <div className={panel}>
+                      <h3 className="mb-4 text-sm font-bold">Ranking</h3>
+                      <div className="space-y-2">
+                        {datos.resumen.slice(0, 6).map((r, i) => (
+                          <div
+                            key={r.id}
+                            className="flex items-center justify-between gap-2 border-b border-stone-100 pb-2 text-xs last:border-0 dark:border-white/5"
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-brand-500/10 font-bold text-brand-600">
+                                {i + 1}
+                              </span>
+                              <span
+                                className="truncate font-semibold"
+                                title={r.label}
+                              >
+                                {r.label}
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-stone-500">
+                              {r.prendas} pz
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+                {vista === "servicio" && (
+                  <>
+                    <div className={panel}>
+                      <h3 className="mb-4 text-sm font-bold">
+                        Distribución por servicio
+                      </h3>
+                      <DonutChart
+                        segments={datos.resumen.map((r, i) => ({
+                          label: r.label,
+                          value: r.prendas,
+                          color: [
+                            "#f97316",
+                            "#db541a",
+                            "#fed7aa",
+                            "#a8a29e",
+                            "#fb923c",
+                          ][i % 5],
+                        }))}
+                        centerValue={datos.prendas}
+                        centerLabel="prendas"
+                      />
+                    </div>
+                    <div className={`${panel} lg:col-span-2`}>
+                      <h3 className="mb-4 text-sm font-bold">
+                        Demanda por tipo de servicio
+                      </h3>
+                      <HBarChart
+                        items={datos.resumen.map((r) => ({
+                          label: r.label,
+                          value: r.prendas,
+                          hint: "pz",
+                        }))}
+                      />
+                      <p className="mt-4 text-xs text-stone-500">
+                        Cada comanda se cuenta una vez por servicio utilizado.
+                        El total muestra comandas únicas. Los montos son los
+                        subtotales de los servicios seleccionados.
+                      </p>
+                    </div>
+                  </>
+                )}
+                {vista === "volumen" && (
+                  <>
+                    <div className={`${panel} lg:col-span-2`}>
+                      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="text-sm font-bold">
+                          Volumen de prendas por periodo
+                        </h3>
+                        <GlassSelect
+                          ariaLabel="Agrupar por"
+                          value={agrupacion}
+                          onChange={(v) =>
+                            setAgrupacion(v as AgrupacionPeriodo)
+                          }
+                          options={[
+                            { value: "dia", label: "Por día" },
+                            { value: "mes", label: "Por mes" },
+                          ]}
+                        />
+                      </div>
+                      <div className="overflow-x-auto pb-3">
+                        <div
+                          style={{
+                            minWidth: Math.max(300, periodos.length * 50),
+                          }}
+                        >
+                          <BarChart
+                            data={periodos.map((r) => r.prendas)}
+                            labels={periodos.map((r) => r.label)}
+                            height={180}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className={panel}>
+                      <h3 className="mb-4 text-sm font-bold">
+                        Prendas por cliente
+                      </h3>
+                      <HBarChart
+                        items={datos.resumen.slice(0, 6).map((r) => ({
+                          id: r.id,
+                          label: r.label,
+                          value: r.prendas,
+                          hint: "pz",
+                        }))}
+                        color="#db541a"
+                      />
+                    </div>
+                  </>
+                )}
+              </motion.div>
+              {vista === "volumen" && indicadores && (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    {
+                      label: "Promedio diario del periodo",
+                      valor:
+                        indicadores.promedioDiario.toLocaleString("es-CL", {
+                          maximumFractionDigits: 1,
+                        }) + " pz",
+                    },
+                    {
+                      label: "Prendas por comanda",
+                      valor: indicadores.prendasPorComanda.toLocaleString(
+                        "es-CL",
+                        { maximumFractionDigits: 1 },
+                      ),
+                    },
+                    {
+                      label: "Día de mayor carga",
+                      valor: indicadores.pico
+                        ? `${indicadores.pico.label} · ${indicadores.pico.prendas} pz`
+                        : "Sin actividad",
+                    },
+                  ].map((i) => (
+                    <div key={i.label} className={panel}>
+                      <p className="text-lg font-bold text-brand-600 dark:text-brand-400">
+                        {i.valor}
+                      </p>
+                      <p className="mt-1 text-xs text-stone-500">{i.label}</p>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-
-        {vista === "volumen" && (
-          <>
-            <div className="lg:col-span-2 glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none">
-              <div className="flex items-start justify-between mb-5">
-                <div>
-                  <h3 className="text-stone-900 dark:text-white font-bold text-sm">Volumen de prendas por periodo</h3>
-                  <p className="text-stone-500 dark:text-stone-500 text-xs mt-0.5">Prendas procesadas por mes</p>
                 </div>
-                <span className="text-brand-600 dark:text-brand-400 font-bold text-sm flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4" /> {totalPrendas} pz
-                </span>
+              )}
+              <div className={`${panel} overflow-x-auto`}>
+                <h3 className="mb-4 text-sm font-bold">
+                  {vista === "servicio"
+                    ? "Totales por tipo de servicio"
+                    : vista === "volumen"
+                      ? "Totales por periodo"
+                      : "Totales por cuenta"}
+                </h3>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-stone-200 text-stone-500 dark:border-white/10">
+                      <th className="py-2 text-left">
+                        {vista === "servicio"
+                          ? "Servicio"
+                          : vista === "volumen"
+                            ? "Periodo"
+                            : "Cliente / empresa"}
+                      </th>
+                      <th className="text-right">Comandas</th>
+                      <th className="text-right">Prendas</th>
+                      <th className="text-right">Facturado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {resumen.map((r) => (
+                      <tr
+                        key={r.id}
+                        className="border-b border-stone-100 dark:border-white/5"
+                      >
+                        <td className="py-3 font-semibold">{r.label}</td>
+                        <td className="text-right">{r.comandas}</td>
+                        <td className="text-right">{r.prendas}</td>
+                        <td className="text-right font-bold">
+                          {clp(r.facturado)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="font-bold">
+                      <td className="pt-3">Total</td>
+                      <td className="pt-3 text-right">{datos.comandas}</td>
+                      <td className="pt-3 text-right">{datos.prendas}</td>
+                      <td className="pt-3 text-right">
+                        {clp(datos.facturado)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-              <BarChart data={porMes.data} labels={porMes.labels} height={180} />
-            </div>
-            <div className="glass-panel rounded-2xl p-5 shadow-sm dark:shadow-none">
-              <h3 className="text-stone-900 dark:text-white font-bold text-sm mb-4">Prendas por cliente</h3>
-              <HBarChart
-                items={[...porCliente].sort((a, b) => b.prendas - a.prendas).slice(0, 6).map((c) => ({ label: c.label, value: c.prendas, hint: "pz" }))}
-                color="#db541a"
-              />
-            </div>
-          </>
-        )}
-      </motion.div>
+              <div className={`${panel} overflow-x-auto`}>
+                <h3 className="mb-4 text-sm font-bold">Detalle de comandas</h3>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-stone-200 text-left text-stone-500 dark:border-white/10">
+                      {[
+                        "Comanda",
+                        vista === "volumen" ? "Procesamiento" : "Recepción",
+                        "Cliente",
+                        "Empresa",
+                        "Estado",
+                        ...(vista === "servicio"
+                          ? ["Servicio", "Prenda", "Peso (kg)"]
+                          : []),
+                        "Prendas",
+                        "Valor",
+                      ].map((t) => (
+                        <th key={t} className="px-2 py-2">
+                          {t}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {datos.detalle
+                      .slice((numeroPagina - 1) * 20, numeroPagina * 20)
+                      .map((r) => (
+                        <tr
+                          key={r.id}
+                          className="border-b border-stone-100 dark:border-white/5"
+                        >
+                          <td className="px-2 py-3 font-semibold">
+                            {r.numero}
+                          </td>
+                          <td className="px-2">{fechaChile(r.fecha)}</td>
+                          <td className="px-2">{r.cliente}</td>
+                          <td className="px-2">{r.empresa || "—"}</td>
+                          <td className="px-2">
+                            {r.estado.replaceAll("_", " ")}
+                          </td>
+                          {vista === "servicio" && (
+                            <>
+                              <td className="px-2">{r.servicio}</td>
+                              <td className="px-2">{r.prenda}</td>
+                              <td className="px-2">{r.pesoKg ?? "—"}</td>
+                            </>
+                          )}
+                          <td className="px-2">{r.prendas}</td>
+                          <td className="px-2 font-bold">{clp(r.facturado)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+                <div className="mt-4 flex flex-wrap items-center justify-end gap-3 text-xs">
+                  <span>
+                    Página {numeroPagina} de{" "}
+                    {Math.max(1, Math.ceil(datos.detalle.length / 20))} ·{" "}
+                    {datos.detalle.length} resultados
+                  </span>
+                  <button
+                    className={boton}
+                    disabled={numeroPagina <= 1}
+                    onClick={() =>
+                      setPagina({ clave, numero: numeroPagina - 1 })
+                    }
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    className={boton}
+                    disabled={numeroPagina * 20 >= datos.detalle.length}
+                    onClick={() =>
+                      setPagina({ clave, numero: numeroPagina + 1 })
+                    }
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }
