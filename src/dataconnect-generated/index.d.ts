@@ -226,6 +226,16 @@ export interface ConfigurarLimitesEtapasVariables {
   entrega: number;
 }
 
+export interface CrearAvisoData {
+  aviso_insert: Aviso_Key;
+}
+
+export interface CrearAvisoVariables {
+  titulo: string;
+  contenido: string;
+  rolDestinatarioId?: UUIDString | null;
+}
+
 export interface CrearClienteAdministradoData {
   usuario_insert: Usuario_Key;
   cliente_insert: Cliente_Key;
@@ -421,6 +431,30 @@ export interface EtapaProduccion_Key {
 export interface FotoInspeccionVehiculo_Key {
   id: UUIDString;
   __typename?: 'FotoInspeccionVehiculo_Key';
+}
+
+export interface GetAvisosAdministracionData {
+  avisos: ({
+    id: UUIDString;
+    titulo: string;
+    contenido: string;
+    fechaPublicacion: TimestampString;
+    autor: {
+      nombre: string;
+      apellido?: string | null;
+    };
+    rolDestinatario?: {
+      nombre: string;
+    };
+  } & Aviso_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetAvisosAdministracionVariables {
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetCatalogosComandaData {
@@ -1318,6 +1352,30 @@ export interface Vehiculo_Key {
   id: UUIDString;
   __typename?: 'Vehiculo_Key';
 }
+
+interface CrearAvisoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearAvisoVariables): MutationRef<CrearAvisoData, CrearAvisoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CrearAvisoVariables): MutationRef<CrearAvisoData, CrearAvisoVariables>;
+  operationName: string;
+}
+export const crearAvisoRef: CrearAvisoRef;
+
+export function crearAviso(vars: CrearAvisoVariables): MutationPromise<CrearAvisoData, CrearAvisoVariables>;
+export function crearAviso(dc: DataConnect, vars: CrearAvisoVariables): MutationPromise<CrearAvisoData, CrearAvisoVariables>;
+
+interface GetAvisosAdministracionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetAvisosAdministracionVariables): QueryRef<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetAvisosAdministracionVariables): QueryRef<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+  operationName: string;
+}
+export const getAvisosAdministracionRef: GetAvisosAdministracionRef;
+
+export function getAvisosAdministracion(vars?: GetAvisosAdministracionVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+export function getAvisosAdministracion(dc: DataConnect, vars?: GetAvisosAdministracionVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
 
 interface RegistrarseRef {
   /* Allow users to create refs without passing in DataConnect */

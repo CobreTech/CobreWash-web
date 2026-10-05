@@ -10,6 +10,7 @@ This README will guide you through the process of using the generated JavaScript
 - [**Accessing the connector**](#accessing-the-connector)
   - [*Connecting to the local Emulator*](#connecting-to-the-local-emulator)
 - [**Queries**](#queries)
+  - [*GetAvisosAdministracion*](#getavisosadministracion)
   - [*GetEtapasProduccion*](#getetapasproduccion)
   - [*GetSeguimientoProduccion*](#getseguimientoproduccion)
   - [*GetPanelProduccion*](#getpanelproduccion)
@@ -34,6 +35,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetSeguimientoPublicoPorNumero*](#getseguimientopublicopornumero)
   - [*GetComandaOperativaPorQr*](#getcomandaoperativaporqr)
 - [**Mutations**](#mutations)
+  - [*CrearAviso*](#crearaviso)
   - [*Registrarse*](#registrarse)
   - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
   - [*RegistrarseComoCliente*](#registrarsecomocliente)
@@ -112,6 +114,141 @@ The following is true for both the action shortcut function and the `QueryRef` f
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `example` connector's generated functions to execute each query. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-queries).
+
+## GetAvisosAdministracion
+You can execute the `GetAvisosAdministracion` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getAvisosAdministracion(vars?: GetAvisosAdministracionVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+
+interface GetAvisosAdministracionRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetAvisosAdministracionVariables): QueryRef<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+}
+export const getAvisosAdministracionRef: GetAvisosAdministracionRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getAvisosAdministracion(dc: DataConnect, vars?: GetAvisosAdministracionVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+
+interface GetAvisosAdministracionRef {
+  ...
+  (dc: DataConnect, vars?: GetAvisosAdministracionVariables): QueryRef<GetAvisosAdministracionData, GetAvisosAdministracionVariables>;
+}
+export const getAvisosAdministracionRef: GetAvisosAdministracionRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getAvisosAdministracionRef:
+```typescript
+const name = getAvisosAdministracionRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetAvisosAdministracion` query has an optional argument of type `GetAvisosAdministracionVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetAvisosAdministracionVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetAvisosAdministracion` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetAvisosAdministracionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetAvisosAdministracionData {
+  avisos: ({
+    id: UUIDString;
+    titulo: string;
+    contenido: string;
+    fechaPublicacion: TimestampString;
+    autor: {
+      nombre: string;
+      apellido?: string | null;
+    };
+    rolDestinatario?: {
+      nombre: string;
+    };
+  } & Aviso_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+```
+### Using `GetAvisosAdministracion`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getAvisosAdministracion, GetAvisosAdministracionVariables } from '@dataconnect/generated';
+
+// The `GetAvisosAdministracion` query has an optional argument of type `GetAvisosAdministracionVariables`:
+const getAvisosAdministracionVars: GetAvisosAdministracionVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getAvisosAdministracion()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getAvisosAdministracion(getAvisosAdministracionVars);
+// Variables can be defined inline as well.
+const { data } = await getAvisosAdministracion({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetAvisosAdministracionVariables` argument.
+const { data } = await getAvisosAdministracion();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getAvisosAdministracion(dataConnect, getAvisosAdministracionVars);
+
+console.log(data.avisos);
+console.log(data.total);
+
+// Or, you can use the `Promise` API.
+getAvisosAdministracion(getAvisosAdministracionVars).then((response) => {
+  const data = response.data;
+  console.log(data.avisos);
+  console.log(data.total);
+});
+```
+
+### Using `GetAvisosAdministracion`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getAvisosAdministracionRef, GetAvisosAdministracionVariables } from '@dataconnect/generated';
+
+// The `GetAvisosAdministracion` query has an optional argument of type `GetAvisosAdministracionVariables`:
+const getAvisosAdministracionVars: GetAvisosAdministracionVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getAvisosAdministracionRef()` function to get a reference to the query.
+const ref = getAvisosAdministracionRef(getAvisosAdministracionVars);
+// Variables can be defined inline as well.
+const ref = getAvisosAdministracionRef({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetAvisosAdministracionVariables` argument.
+const ref = getAvisosAdministracionRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getAvisosAdministracionRef(dataConnect, getAvisosAdministracionVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.avisos);
+console.log(data.total);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.avisos);
+  console.log(data.total);
+});
+```
 
 ## GetEtapasProduccion
 You can execute the `GetEtapasProduccion` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
@@ -3136,6 +3273,121 @@ The following is true for both the action shortcut function and the `MutationRef
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `example` connector's generated functions to execute each mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-mutations).
+
+## CrearAviso
+You can execute the `CrearAviso` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+crearAviso(vars: CrearAvisoVariables): MutationPromise<CrearAvisoData, CrearAvisoVariables>;
+
+interface CrearAvisoRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CrearAvisoVariables): MutationRef<CrearAvisoData, CrearAvisoVariables>;
+}
+export const crearAvisoRef: CrearAvisoRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+crearAviso(dc: DataConnect, vars: CrearAvisoVariables): MutationPromise<CrearAvisoData, CrearAvisoVariables>;
+
+interface CrearAvisoRef {
+  ...
+  (dc: DataConnect, vars: CrearAvisoVariables): MutationRef<CrearAvisoData, CrearAvisoVariables>;
+}
+export const crearAvisoRef: CrearAvisoRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the crearAvisoRef:
+```typescript
+const name = crearAvisoRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CrearAviso` mutation requires an argument of type `CrearAvisoVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CrearAvisoVariables {
+  titulo: string;
+  contenido: string;
+  rolDestinatarioId?: UUIDString | null;
+}
+```
+### Return Type
+Recall that executing the `CrearAviso` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CrearAvisoData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CrearAvisoData {
+  aviso_insert: Aviso_Key;
+}
+```
+### Using `CrearAviso`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, crearAviso, CrearAvisoVariables } from '@dataconnect/generated';
+
+// The `CrearAviso` mutation requires an argument of type `CrearAvisoVariables`:
+const crearAvisoVars: CrearAvisoVariables = {
+  titulo: ...,
+  contenido: ...,
+  rolDestinatarioId: ..., // optional
+};
+
+// Call the `crearAviso()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await crearAviso(crearAvisoVars);
+// Variables can be defined inline as well.
+const { data } = await crearAviso({ titulo: ..., contenido: ..., rolDestinatarioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await crearAviso(dataConnect, crearAvisoVars);
+
+console.log(data.aviso_insert);
+
+// Or, you can use the `Promise` API.
+crearAviso(crearAvisoVars).then((response) => {
+  const data = response.data;
+  console.log(data.aviso_insert);
+});
+```
+
+### Using `CrearAviso`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, crearAvisoRef, CrearAvisoVariables } from '@dataconnect/generated';
+
+// The `CrearAviso` mutation requires an argument of type `CrearAvisoVariables`:
+const crearAvisoVars: CrearAvisoVariables = {
+  titulo: ...,
+  contenido: ...,
+  rolDestinatarioId: ..., // optional
+};
+
+// Call the `crearAvisoRef()` function to get a reference to the mutation.
+const ref = crearAvisoRef(crearAvisoVars);
+// Variables can be defined inline as well.
+const ref = crearAvisoRef({ titulo: ..., contenido: ..., rolDestinatarioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = crearAvisoRef(dataConnect, crearAvisoVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.aviso_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.aviso_insert);
+});
+```
 
 ## Registrarse
 You can execute the `Registrarse` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):

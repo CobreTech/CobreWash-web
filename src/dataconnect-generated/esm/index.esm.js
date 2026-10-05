@@ -47,6 +47,31 @@ export const connectorConfig = {
   service: 'lavanderia-el-cobre',
   location: 'southamerica-west1'
 };
+export const crearAvisoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CrearAviso', inputVars);
+}
+crearAvisoRef.operationName = 'CrearAviso';
+
+export function crearAviso(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(crearAvisoRef(dcInstance, inputVars));
+}
+
+export const getAvisosAdministracionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetAvisosAdministracion', inputVars);
+}
+getAvisosAdministracionRef.operationName = 'GetAvisosAdministracion';
+
+export function getAvisosAdministracion(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getAvisosAdministracionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
 export const registrarseRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

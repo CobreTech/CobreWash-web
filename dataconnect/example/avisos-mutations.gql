@@ -1,0 +1,23 @@
+mutation CrearAviso($titulo: String!, $contenido: String!, $rolDestinatarioId: UUID = null)
+  @auth(level: USER) @transaction {
+  query @redact
+    @check(expr: "vars.titulo.size() <= 120 && vars.titulo.matches('[^[:space:]]') && vars.contenido.size() <= 1000 && vars.contenido.matches('[^[:space:]]')", message: "El aviso necesita título (hasta 120 caracteres) y contenido (hasta 1000 caracteres)") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      id
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede publicar avisos") }
+    }
+    destinatario: rol(first: { where: { id: { eq: $rolDestinatarioId } } })
+      @check(expr: "vars.rolDestinatarioId == null || (this != null && this.nombre in ['operario', 'recepcionista'])", message: "Destinatario inválido") {
+      nombre
+    }
+  }
+  aviso_insert(data: {
+    autorId_expr: "response.query.usuario.id"
+    rolDestinatarioId: $rolDestinatarioId
+    titulo: $titulo
+    contenido: $contenido
+    activo: true
+    fechaPublicacion_expr: "request.time"
+  })
+}
