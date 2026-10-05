@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -22,6 +22,7 @@ import {
   type AgrupacionPeriodo,
 } from "@/lib/reportes/volumen";
 import type { FiltrosReporte, VistaReporte } from "@/lib/reportes/modelo";
+import { prepararExportacion } from "@/lib/reportes/exportable";
 
 const clp = (n: number) => `$${n.toLocaleString("es-CL")}`;
 const VISTAS = [
@@ -56,24 +57,67 @@ export default function ReportesPage() {
   );
   const [pagina, setPagina] = useState({ clave: "", numero: 1 });
   const [agrupacion, setAgrupacion] = useState<AgrupacionPeriodo>("mes");
-  const periodos =
-    datos && !error
-      ? volumenPorPeriodo(
-          datos.detalle,
-          filtros.desde,
-          filtros.hasta,
-          agrupacion,
-        )
-      : [];
-  const indicadores =
-    datos && !error
-      ? indicadoresVolumen(datos.detalle, filtros.desde, filtros.hasta)
-      : null;
+  const periodos = useMemo(
+    () =>
+      vista === "volumen" && datos && !error
+        ? volumenPorPeriodo(
+            datos.detalle,
+            filtros.desde,
+            filtros.hasta,
+            agrupacion,
+          )
+        : [],
+    [vista, datos, error, filtros.desde, filtros.hasta, agrupacion],
+  );
+  const indicadores = useMemo(
+    () =>
+      vista === "volumen" && datos && !error
+        ? indicadoresVolumen(datos.detalle, filtros.desde, filtros.hasta)
+        : null,
+    [vista, datos, error, filtros.desde, filtros.hasta],
+  );
   const resumen = vista === "volumen" ? periodos : (datos?.resumen ?? []);
   const clave = JSON.stringify([vista, filtros]);
   const numeroPagina = pagina.clave === clave ? pagina.numero : 1;
   const actualizar = (campo: keyof FiltrosReporte, valor: string) =>
     setFiltros((f) => ({ ...f, [campo]: valor }));
+  const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
+  const [descarga, setDescarga] = useState<{
+    clave: string;
+    error?: string;
+    mensaje?: string;
+  } | null>(null);
+  const exportar = async (formato: "pdf" | "excel") => {
+    if (!permitido || !datos || cargando || error || exportando) return;
+    const reporte = prepararExportacion({
+      vista,
+      filtros,
+      datos,
+      agrupacion,
+      clienteNombre: catalogos?.clientes.find((c) => c.id === filtros.clienteId)
+        ?.nombre,
+      servicioNombre: catalogos?.servicios.find(
+        (s) => s.id === filtros.servicioId,
+      )?.nombre,
+    });
+    setExportando(formato);
+    setDescarga(null);
+    try {
+      const { exportarReporte } = await import("@/lib/reportes/exportar");
+      await exportarReporte(reporte, formato);
+      setDescarga({
+        clave,
+        mensaje: `Descarga de ${formato === "pdf" ? "PDF" : "Excel"} iniciada.`,
+      });
+    } catch {
+      setDescarga({
+        clave,
+        error: "No se pudo exportar el reporte. Vuelve a intentar.",
+      });
+    } finally {
+      setExportando(null);
+    }
+  };
 
   if (!permitido)
     return (
@@ -106,14 +150,34 @@ export default function ReportesPage() {
             <RefreshCw className="h-4 w-4" />
             Actualizar
           </button>
-          <button disabled className={boton}>
-            <Download className="h-4 w-4" />
-            Exportar
-          </button>
+          {(["pdf", "excel"] as const).map((formato) => (
+            <button
+              key={formato}
+              onClick={() => void exportar(formato)}
+              disabled={!datos || cargando || !!error || !!exportando}
+              className={boton}
+            >
+              {exportando === formato ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Exportar {formato === "pdf" ? "PDF" : "Excel"}
+            </button>
+          ))}
         </div>
       </motion.div>
 
-      <div className={`${panel} grid gap-4 sm:grid-cols-2 lg:grid-cols-5`}>
+      {descarga?.clave === clave && (descarga.error || descarga.mensaje) && (
+        <p
+          role={descarga.error ? "alert" : "status"}
+          className={`text-sm ${descarga.error ? "text-red-600 dark:text-red-400" : "text-brand-600 dark:text-brand-400"}`}
+        >
+          {descarga.error || descarga.mensaje}
+        </p>
+      )}
+
+      <div className={`${panel} grid gap-4 sm:grid-cols-2 ${vista === "cliente" ? "lg:grid-cols-4" : "lg:grid-cols-5"}`}>
         <label className="space-y-1 text-xs font-bold">
           Desde
           <input
@@ -184,7 +248,7 @@ export default function ReportesPage() {
             />
           </div>
         )}
-        <p className="text-xs text-stone-500 sm:col-span-2 lg:col-span-5">
+        <p className="text-xs text-stone-500 sm:col-span-2 lg:col-span-full">
           {vista === "volumen"
             ? "Periodo según el primer cierre de producción; entrega registrada como respaldo. Solo se cuentan comandas con cierre registrado, una vez por comanda."
             : "Periodo según recepción. Los montos corresponden al valor de las comandas o subtotales de los servicios."}{" "}
@@ -266,7 +330,7 @@ export default function ReportesPage() {
               </div>
             ))}
           </motion.div>
-          {!datos.comandas ? (
+          {!datos.comandas && vista !== "volumen" ? (
             <div
               role="status"
               className={`${panel} py-12 text-center text-sm text-stone-500`}
@@ -288,13 +352,11 @@ export default function ReportesPage() {
                         Facturación por cliente / empresa
                       </h3>
                       <HBarChart
-                        items={datos.resumen
-                          .slice(0, 12)
-                          .map((r) => ({
-                            id: r.id,
-                            label: r.label,
-                            value: r.facturado,
-                          }))}
+                        items={datos.resumen.slice(0, 12).map((r) => ({
+                          id: r.id,
+                          label: r.label,
+                          value: r.facturado,
+                        }))}
                         formatValue={clp}
                       />
                       <p className="mt-4 text-xs text-stone-500">
@@ -409,14 +471,12 @@ export default function ReportesPage() {
                         Prendas por cliente
                       </h3>
                       <HBarChart
-                        items={datos.resumen
-                          .slice(0, 6)
-                          .map((r) => ({
-                            id: r.id,
-                            label: r.label,
-                            value: r.prendas,
-                            hint: "pz",
-                          }))}
+                        items={datos.resumen.slice(0, 6).map((r) => ({
+                          id: r.id,
+                          label: r.label,
+                          value: r.prendas,
+                          hint: "pz",
+                        }))}
                         color="#db541a"
                       />
                     </div>
