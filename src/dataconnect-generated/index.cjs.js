@@ -934,6 +934,21 @@ exports.getFichasClientes = function getFichasClientes(dcOrOptions, options) {
 }
 ;
 
+const getReporteVolumenRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetReporteVolumen', inputVars);
+}
+getReporteVolumenRef.operationName = 'GetReporteVolumen';
+exports.getReporteVolumenRef = getReporteVolumenRef;
+
+exports.getReporteVolumen = function getReporteVolumen(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getReporteVolumenRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const getReporteCuentasRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

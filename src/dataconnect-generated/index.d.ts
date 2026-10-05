@@ -1310,6 +1310,37 @@ export interface GetReporteServiciosVariables {
   offset?: number | null;
 }
 
+export interface GetReporteVolumenData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    empresa?: string | null;
+    fechaEntregaReal?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+    } & Cliente_Key;
+    primerCierre: ({
+      fecha: TimestampString;
+    })[];
+    prendas: ({
+      tipoServicioId: UUIDString;
+      cantidad_sum?: number | null;
+      subtotal_sum?: number | null;
+    })[];
+  } & Comanda_Key)[];
+}
+
+export interface GetReporteVolumenVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetRolesData {
   rols: ({
     id: UUIDString;
@@ -2408,6 +2439,18 @@ export const getFichasClientesRef: GetFichasClientesRef;
 
 export function getFichasClientes(options?: ExecuteQueryOptions): QueryPromise<GetFichasClientesData, undefined>;
 export function getFichasClientes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetFichasClientesData, undefined>;
+
+interface GetReporteVolumenRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetReporteVolumenVariables): QueryRef<GetReporteVolumenData, GetReporteVolumenVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetReporteVolumenVariables): QueryRef<GetReporteVolumenData, GetReporteVolumenVariables>;
+  operationName: string;
+}
+export const getReporteVolumenRef: GetReporteVolumenRef;
+
+export function getReporteVolumen(vars: GetReporteVolumenVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteVolumenData, GetReporteVolumenVariables>;
+export function getReporteVolumen(dc: DataConnect, vars: GetReporteVolumenVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteVolumenData, GetReporteVolumenVariables>;
 
 interface GetReporteCuentasRef {
   /* Allow users to create refs without passing in DataConnect */

@@ -87,4 +87,23 @@ await check("protege las consultas y detalles por servicio", async () => {
     for (const op of ["GetReporteServicios", "GetDetalleReporteServicios"]) await assert.rejects(consultar(op, vars, user));
   }
 });
+for (const [n, estadoNuevo, fecha] of [
+  [200, "FINALIZADA", "2026-10-03T03:00:00Z"], [200, "ENTREGADA", "2026-11-05T03:00:00Z"],
+  [201, "FINALIZADA", "2026-09-30T03:00:00Z"], [201, "ENTREGADA", "2026-10-02T03:00:00Z"],
+  [204, "FINALIZADA", "2026-10-04T03:00:00Z"], [203, "FINALIZADA", "2026-10-05T03:00:00Z"],
+  [205, "FINALIZADA", "2026-11-02T03:00:00Z"],
+]) await execute(`mutation Cierre { comandaHistorialEstado_insert(data: {comandaId:"${id(n)}",estadoNuevo:${estadoNuevo},fecha:"${fecha}"}) }`, "Cierre");
+await check("consulta volumen por cierre, incluye recepciones anteriores y no suma recepción ni entrega dos veces", async () => {
+  const data = await consultar("GetReporteVolumen");
+  assert.deepEqual(new Set(data.comandas.map((c) => c.numeroComanda)), new Set(["REP-200", "REP-201", "REP-204"]));
+  assert.equal(data.comandas.find((c) => c.numeroComanda === "REP-200").prendas.reduce((s, p) => s + p.cantidad_sum, 0), 6);
+  assert.equal(Date.parse(data.comandas.find((c) => c.numeroComanda === "REP-201").primerCierre[0].fecha), Date.parse("2026-09-30T03:00:00Z"));
+  const procesadas = data.comandas.filter((c) => Date.parse(c.primerCierre[0].fecha) >= Date.parse(vars.desde) && Date.parse(c.primerCierre[0].fecha) < Date.parse(vars.hasta));
+  assert.equal(procesadas.reduce((s, c) => s + c.prendas.reduce((total, p) => total + p.cantidad_sum, 0), 0), 14);
+  assert.equal(data.comandas.find((c) => c.numeroComanda === "REP-200").prendas.find((p) => p.tipoServicioId.replaceAll("-", "") === id(102).replaceAll("-", "")).cantidad_sum, 2);
+  assert.equal((await consultar("GetReporteVolumen", { ...vars, empresa: "Hotel" })).comandas.length, 0);
+});
+await check("solo administración activa puede consultar volumen", async () => {
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) await assert.rejects(consultar("GetReporteVolumen", vars, user));
+});
 console.log(`${count} verificaciones de reportes completadas.`);

@@ -34,6 +34,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetCatalogosComanda*](#getcatalogoscomanda)
   - [*DiagnosticoComandas*](#diagnosticocomandas)
   - [*GetFichasClientes*](#getfichasclientes)
+  - [*GetReporteVolumen*](#getreportevolumen)
   - [*GetReporteCuentas*](#getreportecuentas)
   - [*GetDetalleReporteCuentas*](#getdetallereportecuentas)
   - [*GetFiltrosReportes*](#getfiltrosreportes)
@@ -3323,6 +3324,148 @@ console.log(data.clientes);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.clientes);
+});
+```
+
+## GetReporteVolumen
+You can execute the `GetReporteVolumen` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getReporteVolumen(vars: GetReporteVolumenVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteVolumenData, GetReporteVolumenVariables>;
+
+interface GetReporteVolumenRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetReporteVolumenVariables): QueryRef<GetReporteVolumenData, GetReporteVolumenVariables>;
+}
+export const getReporteVolumenRef: GetReporteVolumenRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getReporteVolumen(dc: DataConnect, vars: GetReporteVolumenVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteVolumenData, GetReporteVolumenVariables>;
+
+interface GetReporteVolumenRef {
+  ...
+  (dc: DataConnect, vars: GetReporteVolumenVariables): QueryRef<GetReporteVolumenData, GetReporteVolumenVariables>;
+}
+export const getReporteVolumenRef: GetReporteVolumenRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getReporteVolumenRef:
+```typescript
+const name = getReporteVolumenRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetReporteVolumen` query requires an argument of type `GetReporteVolumenVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetReporteVolumenVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetReporteVolumen` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetReporteVolumenData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetReporteVolumenData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    empresa?: string | null;
+    fechaEntregaReal?: TimestampString | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+    } & Cliente_Key;
+    primerCierre: ({
+      fecha: TimestampString;
+    })[];
+    prendas: ({
+      tipoServicioId: UUIDString;
+      cantidad_sum?: number | null;
+      subtotal_sum?: number | null;
+    })[];
+  } & Comanda_Key)[];
+}
+```
+### Using `GetReporteVolumen`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getReporteVolumen, GetReporteVolumenVariables } from '@dataconnect/generated';
+
+// The `GetReporteVolumen` query requires an argument of type `GetReporteVolumenVariables`:
+const getReporteVolumenVars: GetReporteVolumenVariables = {
+  desde: ...,
+  hasta: ...,
+  clienteId: ..., // optional
+  empresa: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getReporteVolumen()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getReporteVolumen(getReporteVolumenVars);
+// Variables can be defined inline as well.
+const { data } = await getReporteVolumen({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getReporteVolumen(dataConnect, getReporteVolumenVars);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+getReporteVolumen(getReporteVolumenVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+### Using `GetReporteVolumen`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getReporteVolumenRef, GetReporteVolumenVariables } from '@dataconnect/generated';
+
+// The `GetReporteVolumen` query requires an argument of type `GetReporteVolumenVariables`:
+const getReporteVolumenVars: GetReporteVolumenVariables = {
+  desde: ...,
+  hasta: ...,
+  clienteId: ..., // optional
+  empresa: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getReporteVolumenRef()` function to get a reference to the query.
+const ref = getReporteVolumenRef(getReporteVolumenVars);
+// Variables can be defined inline as well.
+const ref = getReporteVolumenRef({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getReporteVolumenRef(dataConnect, getReporteVolumenVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
 });
 ```
 

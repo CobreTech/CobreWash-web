@@ -1,24 +1,40 @@
 const zona = "America/Santiago";
-const formato = new Intl.DateTimeFormat("en-CA", { timeZone: zona, year: "numeric", month: "2-digit", day: "2-digit" });
+const formato = new Intl.DateTimeFormat("en-CA", {
+  timeZone: zona,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
 
 export function fechaChile(value: string | Date = new Date()) {
   const partes = formato.formatToParts(new Date(value));
-  return ["year", "month", "day"].map((tipo) => partes.find((p) => p.type === tipo)!.value).join("-");
+  return ["year", "month", "day"]
+    .map((tipo) => partes.find((p) => p.type === tipo)!.value)
+    .join("-");
 }
 
 function validarFecha(fecha: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(fecha) && Number.isFinite(Date.parse(fecha)) && new Date(fecha).toISOString().slice(0, 10) === fecha;
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(fecha) &&
+    Number.isFinite(Date.parse(fecha)) &&
+    new Date(fecha).toISOString().slice(0, 10) === fecha
+  );
 }
 
 export function errorRango(desde: string, hasta: string) {
-  if (!validarFecha(desde) || !validarFecha(hasta)) return "Selecciona ambas fechas válidas.";
-  if (desde > hasta) return "La fecha inicial debe ser anterior o igual a la final.";
-  if (Date.parse(hasta) - Date.parse(desde) > 366 * 5 * 86400000) return "Selecciona un periodo de hasta cinco años.";
+  if (!validarFecha(desde) || !validarFecha(hasta))
+    return "Selecciona ambas fechas válidas.";
+  if (desde > hasta)
+    return "La fecha inicial debe ser anterior o igual a la final.";
+  if (Date.parse(hasta) - Date.parse(desde) > 366 * 5 * 86400000)
+    return "Selecciona un periodo de hasta cinco años.";
   return "";
 }
 
 export function sumarDias(fecha: string, dias: number) {
-  return new Date(Date.parse(fecha) + dias * 86400000).toISOString().slice(0, 10);
+  return new Date(Date.parse(fecha) + dias * 86400000)
+    .toISOString()
+    .slice(0, 10);
 }
 
 // Primer instante del día chileno: incluye el salto de medianoche del horario
