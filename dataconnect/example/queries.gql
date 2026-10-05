@@ -73,7 +73,6 @@ query GetComandaPorQr($codigoQr: UUID!)
     comandaDetalles_on_comanda {
       cantidad
       pesoKg
-      precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }
     }
@@ -320,6 +319,7 @@ query GetComandasPaginadas(
       etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
       fechaInicio fechaCompletado
       operario { id nombre apellido }
+      asignadoA { id nombre apellido }
       etapa { nombre orden descripcion tiempoEstimadoMin }
     }
     comandaDetalles_on_comanda {
@@ -358,7 +358,7 @@ query GetComandasActivasCount @auth(level: USER) {
 query GetComandaDetalle($id: UUID!) @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
-    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar comandas") }
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para consultar datos comerciales de comandas") }
   }
   comanda(id: $id) {
     id
@@ -373,9 +373,11 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
     motivoAnulacion
     fechaRecepcion
     fechaEntregaEstimada
+    fechaEntregaReal
     cliente {
       id
       nombre
+      rut
       telefono
       email
       tipoCliente
@@ -386,6 +388,7 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
       etapaId nombreEtapa ordenEtapa descripcionEtapa tiempoEstimadoMin estado
       fechaInicio fechaCompletado
       operario { id nombre apellido }
+      asignadoA { id nombre apellido }
       etapa { nombre orden descripcion tiempoEstimadoMin }
     }
     comandaDetalles_on_comanda {
@@ -413,6 +416,9 @@ query GetComandaDetalle($id: UUID!) @auth(level: USER) {
       usuario {
         nombre
       }
+    }
+    incidenciaComandas_on_comanda(orderBy: [{ fecha: DESC }]) {
+      id motivo descripcion estado fecha reportadaPor { id nombre }
     }
   }
 }

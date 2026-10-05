@@ -47,6 +47,68 @@ export const connectorConfig = {
   service: 'lavanderia-el-cobre',
   location: 'southamerica-west1'
 };
+export const agregarComentarioComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AgregarComentarioComanda', inputVars);
+}
+agregarComentarioComandaRef.operationName = 'AgregarComentarioComanda';
+
+export function agregarComentarioComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(agregarComentarioComandaRef(dcInstance, inputVars));
+}
+
+export const resolverMiIncidenciaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ResolverMiIncidencia', inputVars);
+}
+resolverMiIncidenciaRef.operationName = 'ResolverMiIncidencia';
+
+export function resolverMiIncidencia(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(resolverMiIncidenciaRef(dcInstance, inputVars));
+}
+
+export const autoAsignarComandaOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AutoAsignarComandaOperario', inputVars);
+}
+autoAsignarComandaOperarioRef.operationName = 'AutoAsignarComandaOperario';
+
+export function autoAsignarComandaOperario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(autoAsignarComandaOperarioRef(dcInstance, inputVars));
+}
+
+export const getComandaDetalleOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandaDetalleOperario', inputVars);
+}
+getComandaDetalleOperarioRef.operationName = 'GetComandaDetalleOperario';
+
+export function getComandaDetalleOperario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getComandaDetalleOperarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getMisComandasAsignadasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMisComandasAsignadas', inputVars);
+}
+getMisComandasAsignadasRef.operationName = 'GetMisComandasAsignadas';
+
+export function getMisComandasAsignadas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getMisComandasAsignadasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
 export const crearAvisoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

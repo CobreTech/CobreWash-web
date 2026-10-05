@@ -114,6 +114,15 @@ export interface AgregarComandaDetalleVariables {
   subtotal: number;
 }
 
+export interface AgregarComentarioComandaData {
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+
+export interface AgregarComentarioComandaVariables {
+  comandaId: UUIDString;
+  texto: string;
+}
+
 export interface AgregarFotoInspeccionVehiculoData {
   fotoInspeccionVehiculo_insert: FotoInspeccionVehiculo_Key;
 }
@@ -146,6 +155,14 @@ export interface AsociarFlujoComandaPendienteData {
 
 export interface AsociarFlujoComandaPendienteVariables {
   id: UUIDString;
+}
+
+export interface AutoAsignarComandaOperarioData {
+  comandaEtapa_updateMany: number;
+}
+
+export interface AutoAsignarComandaOperarioVariables {
+  comandaId: UUIDString;
 }
 
 export interface Aviso_Key {
@@ -518,9 +535,11 @@ export interface GetComandaDetalleData {
     motivoAnulacion?: string | null;
     fechaRecepcion: TimestampString;
     fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
     cliente: {
       id: UUIDString;
       nombre: string;
+      rut?: string | null;
       telefono?: string | null;
       email?: string | null;
       tipoCliente: TipoCliente;
@@ -536,6 +555,11 @@ export interface GetComandaDetalleData {
       fechaInicio?: TimestampString | null;
       fechaCompletado?: TimestampString | null;
       operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
         id: string;
         nombre: string;
         apellido?: string | null;
@@ -573,7 +597,94 @@ export interface GetComandaDetalleData {
         nombre: string;
       };
     } & ComandaHistorialEstado_Key)[];
+    incidenciaComandas_on_comanda: ({
+      id: UUIDString;
+      motivo: string;
+      descripcion?: string | null;
+      estado: IncidenciaEstado;
+      fecha: TimestampString;
+      reportadaPor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & IncidenciaComanda_Key)[];
   } & Comanda_Key;
+}
+
+export interface GetComandaDetalleOperarioData {
+  comanda?: {
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    observaciones?: string | null;
+    cliente: {
+      nombre: string;
+    };
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+      detalle?: string | null;
+      pesoKg?: number | null;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        descripcion?: string | null;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+    comandaHistorialEstados_on_comanda: ({
+      estadoNuevo: ComandaEstado;
+      fecha: TimestampString;
+      motivo?: string | null;
+      usuario?: {
+        nombre: string;
+      };
+    })[];
+    incidenciaComandas_on_comanda: ({
+      id: UUIDString;
+      motivo: string;
+      descripcion?: string | null;
+      estado: IncidenciaEstado;
+      fecha: TimestampString;
+      reportadaPor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & IncidenciaComanda_Key)[];
+  } & Comanda_Key;
+}
+
+export interface GetComandaDetalleOperarioVariables {
+  id: UUIDString;
 }
 
 export interface GetComandaDetalleVariables {
@@ -653,7 +764,6 @@ export interface GetComandaPorQrData {
     comandaDetalles_on_comanda: ({
       cantidad: number;
       pesoKg?: number | null;
-      precioUnitario: number;
       tipoPrenda: {
         nombre: string;
       };
@@ -709,6 +819,11 @@ export interface GetComandasPaginadasData {
       fechaInicio?: TimestampString | null;
       fechaCompletado?: TimestampString | null;
       operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
         id: string;
         nombre: string;
         apellido?: string | null;
@@ -926,6 +1041,45 @@ export interface GetMiPerfilData {
       direccion?: string | null;
     } & Cliente_Key)[];
   } & Usuario_Key;
+}
+
+export interface GetMisComandasAsignadasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    cliente: {
+      nombre: string;
+    };
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      asignadoA?: {
+        nombre: string;
+        apellido?: string | null;
+      };
+    })[];
+  } & Comanda_Key)[];
+}
+
+export interface GetMisComandasAsignadasVariables {
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetMisSalidasVehiculoData {
@@ -1348,6 +1502,14 @@ export interface RegistrarseVariables {
   email: string;
 }
 
+export interface ResolverMiIncidenciaData {
+  incidenciaComanda_update?: IncidenciaComanda_Key | null;
+}
+
+export interface ResolverMiIncidenciaVariables {
+  id: UUIDString;
+}
+
 export interface Rol_Key {
   id: UUIDString;
   __typename?: 'Rol_Key';
@@ -1377,6 +1539,66 @@ export interface Vehiculo_Key {
   id: UUIDString;
   __typename?: 'Vehiculo_Key';
 }
+
+interface AgregarComentarioComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AgregarComentarioComandaVariables): MutationRef<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AgregarComentarioComandaVariables): MutationRef<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+  operationName: string;
+}
+export const agregarComentarioComandaRef: AgregarComentarioComandaRef;
+
+export function agregarComentarioComanda(vars: AgregarComentarioComandaVariables): MutationPromise<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+export function agregarComentarioComanda(dc: DataConnect, vars: AgregarComentarioComandaVariables): MutationPromise<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+
+interface ResolverMiIncidenciaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ResolverMiIncidenciaVariables): MutationRef<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ResolverMiIncidenciaVariables): MutationRef<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+  operationName: string;
+}
+export const resolverMiIncidenciaRef: ResolverMiIncidenciaRef;
+
+export function resolverMiIncidencia(vars: ResolverMiIncidenciaVariables): MutationPromise<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+export function resolverMiIncidencia(dc: DataConnect, vars: ResolverMiIncidenciaVariables): MutationPromise<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+
+interface AutoAsignarComandaOperarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AutoAsignarComandaOperarioVariables): MutationRef<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AutoAsignarComandaOperarioVariables): MutationRef<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+  operationName: string;
+}
+export const autoAsignarComandaOperarioRef: AutoAsignarComandaOperarioRef;
+
+export function autoAsignarComandaOperario(vars: AutoAsignarComandaOperarioVariables): MutationPromise<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+export function autoAsignarComandaOperario(dc: DataConnect, vars: AutoAsignarComandaOperarioVariables): MutationPromise<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+
+interface GetComandaDetalleOperarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComandaDetalleOperarioVariables): QueryRef<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetComandaDetalleOperarioVariables): QueryRef<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+  operationName: string;
+}
+export const getComandaDetalleOperarioRef: GetComandaDetalleOperarioRef;
+
+export function getComandaDetalleOperario(vars: GetComandaDetalleOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+export function getComandaDetalleOperario(dc: DataConnect, vars: GetComandaDetalleOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+
+interface GetMisComandasAsignadasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetMisComandasAsignadasVariables): QueryRef<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetMisComandasAsignadasVariables): QueryRef<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+  operationName: string;
+}
+export const getMisComandasAsignadasRef: GetMisComandasAsignadasRef;
+
+export function getMisComandasAsignadas(vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+export function getMisComandasAsignadas(dc: DataConnect, vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
 
 interface CrearAvisoRef {
   /* Allow users to create refs without passing in DataConnect */

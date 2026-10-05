@@ -10,6 +10,8 @@ This README will guide you through the process of using the generated JavaScript
 - [**Accessing the connector**](#accessing-the-connector)
   - [*Connecting to the local Emulator*](#connecting-to-the-local-emulator)
 - [**Queries**](#queries)
+  - [*GetComandaDetalleOperario*](#getcomandadetalleoperario)
+  - [*GetMisComandasAsignadas*](#getmiscomandasasignadas)
   - [*GetAvisosAdministracion*](#getavisosadministracion)
   - [*GetAvisosParaEquipo*](#getavisosparaequipo)
   - [*GetEtapasProduccion*](#getetapasproduccion)
@@ -36,6 +38,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetSeguimientoPublicoPorNumero*](#getseguimientopublicopornumero)
   - [*GetComandaOperativaPorQr*](#getcomandaoperativaporqr)
 - [**Mutations**](#mutations)
+  - [*AgregarComentarioComanda*](#agregarcomentariocomanda)
+  - [*ResolverMiIncidencia*](#resolvermiincidencia)
+  - [*AutoAsignarComandaOperario*](#autoasignarcomandaoperario)
   - [*CrearAviso*](#crearaviso)
   - [*Registrarse*](#registrarse)
   - [*CrearUsuarioAdministrado*](#crearusuarioadministrado)
@@ -115,6 +120,329 @@ The following is true for both the action shortcut function and the `QueryRef` f
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `example` connector's generated functions to execute each query. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-queries).
+
+## GetComandaDetalleOperario
+You can execute the `GetComandaDetalleOperario` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getComandaDetalleOperario(vars: GetComandaDetalleOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+
+interface GetComandaDetalleOperarioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComandaDetalleOperarioVariables): QueryRef<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+}
+export const getComandaDetalleOperarioRef: GetComandaDetalleOperarioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getComandaDetalleOperario(dc: DataConnect, vars: GetComandaDetalleOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+
+interface GetComandaDetalleOperarioRef {
+  ...
+  (dc: DataConnect, vars: GetComandaDetalleOperarioVariables): QueryRef<GetComandaDetalleOperarioData, GetComandaDetalleOperarioVariables>;
+}
+export const getComandaDetalleOperarioRef: GetComandaDetalleOperarioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getComandaDetalleOperarioRef:
+```typescript
+const name = getComandaDetalleOperarioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetComandaDetalleOperario` query requires an argument of type `GetComandaDetalleOperarioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetComandaDetalleOperarioVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `GetComandaDetalleOperario` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetComandaDetalleOperarioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetComandaDetalleOperarioData {
+  comanda?: {
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    observaciones?: string | null;
+    cliente: {
+      nombre: string;
+    };
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+      detalle?: string | null;
+      pesoKg?: number | null;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        descripcion?: string | null;
+        tiempoEstimadoMin?: number | null;
+      };
+    })[];
+    comandaHistorialEstados_on_comanda: ({
+      estadoNuevo: ComandaEstado;
+      fecha: TimestampString;
+      motivo?: string | null;
+      usuario?: {
+        nombre: string;
+      };
+    })[];
+    incidenciaComandas_on_comanda: ({
+      id: UUIDString;
+      motivo: string;
+      descripcion?: string | null;
+      estado: IncidenciaEstado;
+      fecha: TimestampString;
+      reportadaPor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & IncidenciaComanda_Key)[];
+  } & Comanda_Key;
+}
+```
+### Using `GetComandaDetalleOperario`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getComandaDetalleOperario, GetComandaDetalleOperarioVariables } from '@dataconnect/generated';
+
+// The `GetComandaDetalleOperario` query requires an argument of type `GetComandaDetalleOperarioVariables`:
+const getComandaDetalleOperarioVars: GetComandaDetalleOperarioVariables = {
+  id: ...,
+};
+
+// Call the `getComandaDetalleOperario()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getComandaDetalleOperario(getComandaDetalleOperarioVars);
+// Variables can be defined inline as well.
+const { data } = await getComandaDetalleOperario({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getComandaDetalleOperario(dataConnect, getComandaDetalleOperarioVars);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+getComandaDetalleOperario(getComandaDetalleOperarioVars).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+### Using `GetComandaDetalleOperario`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getComandaDetalleOperarioRef, GetComandaDetalleOperarioVariables } from '@dataconnect/generated';
+
+// The `GetComandaDetalleOperario` query requires an argument of type `GetComandaDetalleOperarioVariables`:
+const getComandaDetalleOperarioVars: GetComandaDetalleOperarioVariables = {
+  id: ...,
+};
+
+// Call the `getComandaDetalleOperarioRef()` function to get a reference to the query.
+const ref = getComandaDetalleOperarioRef(getComandaDetalleOperarioVars);
+// Variables can be defined inline as well.
+const ref = getComandaDetalleOperarioRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getComandaDetalleOperarioRef(dataConnect, getComandaDetalleOperarioVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comanda);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comanda);
+});
+```
+
+## GetMisComandasAsignadas
+You can execute the `GetMisComandasAsignadas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getMisComandasAsignadas(vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+
+interface GetMisComandasAsignadasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetMisComandasAsignadasVariables): QueryRef<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+}
+export const getMisComandasAsignadasRef: GetMisComandasAsignadasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getMisComandasAsignadas(dc: DataConnect, vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+
+interface GetMisComandasAsignadasRef {
+  ...
+  (dc: DataConnect, vars?: GetMisComandasAsignadasVariables): QueryRef<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+}
+export const getMisComandasAsignadasRef: GetMisComandasAsignadasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getMisComandasAsignadasRef:
+```typescript
+const name = getMisComandasAsignadasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetMisComandasAsignadas` query has an optional argument of type `GetMisComandasAsignadasVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetMisComandasAsignadasVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetMisComandasAsignadas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetMisComandasAsignadasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetMisComandasAsignadasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    cliente: {
+      nombre: string;
+    };
+    comandaDetalles_on_comanda: ({
+      cantidad: number;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    })[];
+    comandaEtapas_on_comanda: ({
+      etapaId: UUIDString;
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      descripcionEtapa?: string | null;
+      tiempoEstimadoMin?: number | null;
+      estado: EtapaEstado;
+      fechaInicio?: TimestampString | null;
+      asignadoA?: {
+        nombre: string;
+        apellido?: string | null;
+      };
+    })[];
+  } & Comanda_Key)[];
+}
+```
+### Using `GetMisComandasAsignadas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getMisComandasAsignadas, GetMisComandasAsignadasVariables } from '@dataconnect/generated';
+
+// The `GetMisComandasAsignadas` query has an optional argument of type `GetMisComandasAsignadasVariables`:
+const getMisComandasAsignadasVars: GetMisComandasAsignadasVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getMisComandasAsignadas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getMisComandasAsignadas(getMisComandasAsignadasVars);
+// Variables can be defined inline as well.
+const { data } = await getMisComandasAsignadas({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetMisComandasAsignadasVariables` argument.
+const { data } = await getMisComandasAsignadas();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getMisComandasAsignadas(dataConnect, getMisComandasAsignadasVars);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+getMisComandasAsignadas(getMisComandasAsignadasVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+### Using `GetMisComandasAsignadas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getMisComandasAsignadasRef, GetMisComandasAsignadasVariables } from '@dataconnect/generated';
+
+// The `GetMisComandasAsignadas` query has an optional argument of type `GetMisComandasAsignadasVariables`:
+const getMisComandasAsignadasVars: GetMisComandasAsignadasVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getMisComandasAsignadasRef()` function to get a reference to the query.
+const ref = getMisComandasAsignadasRef(getMisComandasAsignadasVars);
+// Variables can be defined inline as well.
+const ref = getMisComandasAsignadasRef({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetMisComandasAsignadasVariables` argument.
+const ref = getMisComandasAsignadasRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getMisComandasAsignadasRef(dataConnect, getMisComandasAsignadasVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
 
 ## GetAvisosAdministracion
 You can execute the `GetAvisosAdministracion` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
@@ -1587,7 +1915,6 @@ export interface GetComandaPorQrData {
     comandaDetalles_on_comanda: ({
       cantidad: number;
       pesoKg?: number | null;
-      precioUnitario: number;
       tipoPrenda: {
         nombre: string;
       };
@@ -2200,6 +2527,11 @@ export interface GetComandasPaginadasData {
         nombre: string;
         apellido?: string | null;
       } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
       etapa: {
         nombre: string;
         orden: number;
@@ -2496,9 +2828,11 @@ export interface GetComandaDetalleData {
     motivoAnulacion?: string | null;
     fechaRecepcion: TimestampString;
     fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
     cliente: {
       id: UUIDString;
       nombre: string;
+      rut?: string | null;
       telefono?: string | null;
       email?: string | null;
       tipoCliente: TipoCliente;
@@ -2514,6 +2848,11 @@ export interface GetComandaDetalleData {
       fechaInicio?: TimestampString | null;
       fechaCompletado?: TimestampString | null;
       operario?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
         id: string;
         nombre: string;
         apellido?: string | null;
@@ -2551,6 +2890,17 @@ export interface GetComandaDetalleData {
         nombre: string;
       };
     } & ComandaHistorialEstado_Key)[];
+    incidenciaComandas_on_comanda: ({
+      id: UUIDString;
+      motivo: string;
+      descripcion?: string | null;
+      estado: IncidenciaEstado;
+      fecha: TimestampString;
+      reportadaPor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & IncidenciaComanda_Key)[];
   } & Comanda_Key;
 }
 ```
@@ -3408,6 +3758,336 @@ The following is true for both the action shortcut function and the `MutationRef
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `example` connector's generated functions to execute each mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-mutations).
+
+## AgregarComentarioComanda
+You can execute the `AgregarComentarioComanda` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+agregarComentarioComanda(vars: AgregarComentarioComandaVariables): MutationPromise<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+
+interface AgregarComentarioComandaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AgregarComentarioComandaVariables): MutationRef<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+}
+export const agregarComentarioComandaRef: AgregarComentarioComandaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+agregarComentarioComanda(dc: DataConnect, vars: AgregarComentarioComandaVariables): MutationPromise<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+
+interface AgregarComentarioComandaRef {
+  ...
+  (dc: DataConnect, vars: AgregarComentarioComandaVariables): MutationRef<AgregarComentarioComandaData, AgregarComentarioComandaVariables>;
+}
+export const agregarComentarioComandaRef: AgregarComentarioComandaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the agregarComentarioComandaRef:
+```typescript
+const name = agregarComentarioComandaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AgregarComentarioComanda` mutation requires an argument of type `AgregarComentarioComandaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AgregarComentarioComandaVariables {
+  comandaId: UUIDString;
+  texto: string;
+}
+```
+### Return Type
+Recall that executing the `AgregarComentarioComanda` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AgregarComentarioComandaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AgregarComentarioComandaData {
+  comandaHistorialEstado_insert: ComandaHistorialEstado_Key;
+}
+```
+### Using `AgregarComentarioComanda`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, agregarComentarioComanda, AgregarComentarioComandaVariables } from '@dataconnect/generated';
+
+// The `AgregarComentarioComanda` mutation requires an argument of type `AgregarComentarioComandaVariables`:
+const agregarComentarioComandaVars: AgregarComentarioComandaVariables = {
+  comandaId: ...,
+  texto: ...,
+};
+
+// Call the `agregarComentarioComanda()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await agregarComentarioComanda(agregarComentarioComandaVars);
+// Variables can be defined inline as well.
+const { data } = await agregarComentarioComanda({ comandaId: ..., texto: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await agregarComentarioComanda(dataConnect, agregarComentarioComandaVars);
+
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+agregarComentarioComanda(agregarComentarioComandaVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+### Using `AgregarComentarioComanda`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, agregarComentarioComandaRef, AgregarComentarioComandaVariables } from '@dataconnect/generated';
+
+// The `AgregarComentarioComanda` mutation requires an argument of type `AgregarComentarioComandaVariables`:
+const agregarComentarioComandaVars: AgregarComentarioComandaVariables = {
+  comandaId: ...,
+  texto: ...,
+};
+
+// Call the `agregarComentarioComandaRef()` function to get a reference to the mutation.
+const ref = agregarComentarioComandaRef(agregarComentarioComandaVars);
+// Variables can be defined inline as well.
+const ref = agregarComentarioComandaRef({ comandaId: ..., texto: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = agregarComentarioComandaRef(dataConnect, agregarComentarioComandaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comandaHistorialEstado_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandaHistorialEstado_insert);
+});
+```
+
+## ResolverMiIncidencia
+You can execute the `ResolverMiIncidencia` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+resolverMiIncidencia(vars: ResolverMiIncidenciaVariables): MutationPromise<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+
+interface ResolverMiIncidenciaRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ResolverMiIncidenciaVariables): MutationRef<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+}
+export const resolverMiIncidenciaRef: ResolverMiIncidenciaRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+resolverMiIncidencia(dc: DataConnect, vars: ResolverMiIncidenciaVariables): MutationPromise<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+
+interface ResolverMiIncidenciaRef {
+  ...
+  (dc: DataConnect, vars: ResolverMiIncidenciaVariables): MutationRef<ResolverMiIncidenciaData, ResolverMiIncidenciaVariables>;
+}
+export const resolverMiIncidenciaRef: ResolverMiIncidenciaRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the resolverMiIncidenciaRef:
+```typescript
+const name = resolverMiIncidenciaRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ResolverMiIncidencia` mutation requires an argument of type `ResolverMiIncidenciaVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ResolverMiIncidenciaVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ResolverMiIncidencia` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ResolverMiIncidenciaData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ResolverMiIncidenciaData {
+  incidenciaComanda_update?: IncidenciaComanda_Key | null;
+}
+```
+### Using `ResolverMiIncidencia`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, resolverMiIncidencia, ResolverMiIncidenciaVariables } from '@dataconnect/generated';
+
+// The `ResolverMiIncidencia` mutation requires an argument of type `ResolverMiIncidenciaVariables`:
+const resolverMiIncidenciaVars: ResolverMiIncidenciaVariables = {
+  id: ...,
+};
+
+// Call the `resolverMiIncidencia()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await resolverMiIncidencia(resolverMiIncidenciaVars);
+// Variables can be defined inline as well.
+const { data } = await resolverMiIncidencia({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await resolverMiIncidencia(dataConnect, resolverMiIncidenciaVars);
+
+console.log(data.incidenciaComanda_update);
+
+// Or, you can use the `Promise` API.
+resolverMiIncidencia(resolverMiIncidenciaVars).then((response) => {
+  const data = response.data;
+  console.log(data.incidenciaComanda_update);
+});
+```
+
+### Using `ResolverMiIncidencia`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, resolverMiIncidenciaRef, ResolverMiIncidenciaVariables } from '@dataconnect/generated';
+
+// The `ResolverMiIncidencia` mutation requires an argument of type `ResolverMiIncidenciaVariables`:
+const resolverMiIncidenciaVars: ResolverMiIncidenciaVariables = {
+  id: ...,
+};
+
+// Call the `resolverMiIncidenciaRef()` function to get a reference to the mutation.
+const ref = resolverMiIncidenciaRef(resolverMiIncidenciaVars);
+// Variables can be defined inline as well.
+const ref = resolverMiIncidenciaRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = resolverMiIncidenciaRef(dataConnect, resolverMiIncidenciaVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.incidenciaComanda_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.incidenciaComanda_update);
+});
+```
+
+## AutoAsignarComandaOperario
+You can execute the `AutoAsignarComandaOperario` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+autoAsignarComandaOperario(vars: AutoAsignarComandaOperarioVariables): MutationPromise<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+
+interface AutoAsignarComandaOperarioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AutoAsignarComandaOperarioVariables): MutationRef<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+}
+export const autoAsignarComandaOperarioRef: AutoAsignarComandaOperarioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+autoAsignarComandaOperario(dc: DataConnect, vars: AutoAsignarComandaOperarioVariables): MutationPromise<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+
+interface AutoAsignarComandaOperarioRef {
+  ...
+  (dc: DataConnect, vars: AutoAsignarComandaOperarioVariables): MutationRef<AutoAsignarComandaOperarioData, AutoAsignarComandaOperarioVariables>;
+}
+export const autoAsignarComandaOperarioRef: AutoAsignarComandaOperarioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the autoAsignarComandaOperarioRef:
+```typescript
+const name = autoAsignarComandaOperarioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AutoAsignarComandaOperario` mutation requires an argument of type `AutoAsignarComandaOperarioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AutoAsignarComandaOperarioVariables {
+  comandaId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `AutoAsignarComandaOperario` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AutoAsignarComandaOperarioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AutoAsignarComandaOperarioData {
+  comandaEtapa_updateMany: number;
+}
+```
+### Using `AutoAsignarComandaOperario`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, autoAsignarComandaOperario, AutoAsignarComandaOperarioVariables } from '@dataconnect/generated';
+
+// The `AutoAsignarComandaOperario` mutation requires an argument of type `AutoAsignarComandaOperarioVariables`:
+const autoAsignarComandaOperarioVars: AutoAsignarComandaOperarioVariables = {
+  comandaId: ...,
+};
+
+// Call the `autoAsignarComandaOperario()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await autoAsignarComandaOperario(autoAsignarComandaOperarioVars);
+// Variables can be defined inline as well.
+const { data } = await autoAsignarComandaOperario({ comandaId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await autoAsignarComandaOperario(dataConnect, autoAsignarComandaOperarioVars);
+
+console.log(data.comandaEtapa_updateMany);
+
+// Or, you can use the `Promise` API.
+autoAsignarComandaOperario(autoAsignarComandaOperarioVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandaEtapa_updateMany);
+});
+```
+
+### Using `AutoAsignarComandaOperario`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, autoAsignarComandaOperarioRef, AutoAsignarComandaOperarioVariables } from '@dataconnect/generated';
+
+// The `AutoAsignarComandaOperario` mutation requires an argument of type `AutoAsignarComandaOperarioVariables`:
+const autoAsignarComandaOperarioVars: AutoAsignarComandaOperarioVariables = {
+  comandaId: ...,
+};
+
+// Call the `autoAsignarComandaOperarioRef()` function to get a reference to the mutation.
+const ref = autoAsignarComandaOperarioRef(autoAsignarComandaOperarioVars);
+// Variables can be defined inline as well.
+const ref = autoAsignarComandaOperarioRef({ comandaId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = autoAsignarComandaOperarioRef(dataConnect, autoAsignarComandaOperarioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.comandaEtapa_updateMany);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandaEtapa_updateMany);
+});
+```
 
 ## CrearAviso
 You can execute the `CrearAviso` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):

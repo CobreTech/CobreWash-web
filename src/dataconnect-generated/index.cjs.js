@@ -56,6 +56,78 @@ const connectorConfig = {
 };
 exports.connectorConfig = connectorConfig;
 
+const agregarComentarioComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AgregarComentarioComanda', inputVars);
+}
+agregarComentarioComandaRef.operationName = 'AgregarComentarioComanda';
+exports.agregarComentarioComandaRef = agregarComentarioComandaRef;
+
+exports.agregarComentarioComanda = function agregarComentarioComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(agregarComentarioComandaRef(dcInstance, inputVars));
+}
+;
+
+const resolverMiIncidenciaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ResolverMiIncidencia', inputVars);
+}
+resolverMiIncidenciaRef.operationName = 'ResolverMiIncidencia';
+exports.resolverMiIncidenciaRef = resolverMiIncidenciaRef;
+
+exports.resolverMiIncidencia = function resolverMiIncidencia(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(resolverMiIncidenciaRef(dcInstance, inputVars));
+}
+;
+
+const autoAsignarComandaOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AutoAsignarComandaOperario', inputVars);
+}
+autoAsignarComandaOperarioRef.operationName = 'AutoAsignarComandaOperario';
+exports.autoAsignarComandaOperarioRef = autoAsignarComandaOperarioRef;
+
+exports.autoAsignarComandaOperario = function autoAsignarComandaOperario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(autoAsignarComandaOperarioRef(dcInstance, inputVars));
+}
+;
+
+const getComandaDetalleOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComandaDetalleOperario', inputVars);
+}
+getComandaDetalleOperarioRef.operationName = 'GetComandaDetalleOperario';
+exports.getComandaDetalleOperarioRef = getComandaDetalleOperarioRef;
+
+exports.getComandaDetalleOperario = function getComandaDetalleOperario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getComandaDetalleOperarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getMisComandasAsignadasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMisComandasAsignadas', inputVars);
+}
+getMisComandasAsignadasRef.operationName = 'GetMisComandasAsignadas';
+exports.getMisComandasAsignadasRef = getMisComandasAsignadasRef;
+
+exports.getMisComandasAsignadas = function getMisComandasAsignadas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getMisComandasAsignadasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const crearAvisoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
