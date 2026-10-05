@@ -907,6 +907,33 @@ export interface GetComandasParaAlertasVariables {
   offset?: number | null;
 }
 
+export interface GetDetalleReporteCuentasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    valorTotal: number;
+    empresa?: string | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+    } & Cliente_Key;
+    prendas: ({
+      cantidad_sum?: number | null;
+    })[];
+  } & Comanda_Key)[];
+}
+
+export interface GetDetalleReporteCuentasVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetEtapasProduccionData {
   etapaProduccions: ({
     id: UUIDString;
@@ -937,6 +964,21 @@ export interface GetFichasClientesData {
       })[];
     } & Comanda_Key)[];
   } & Cliente_Key)[];
+}
+
+export interface GetFiltrosReportesData {
+  clientes: ({
+    id: UUIDString;
+    nombre: string;
+  } & Cliente_Key)[];
+  empresas: ({
+    empresa?: string | null;
+  })[];
+}
+
+export interface GetFiltrosReportesVariables {
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetIncidenciasData {
@@ -1171,6 +1213,37 @@ export interface GetPanelProduccionData {
 
 export interface GetPanelProduccionVariables {
   limit?: number | null;
+}
+
+export interface GetReporteCuentasData {
+  cuentas: ({
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+    } & Cliente_Key;
+    empresa?: string | null;
+    _count: number;
+    valorTotal_sum?: number | null;
+  })[];
+  prendas: ({
+    comanda: {
+      cliente: {
+        id: UUIDString;
+        nombre: string;
+      } & Cliente_Key;
+      empresa?: string | null;
+    };
+    cantidad_sum?: number | null;
+  })[];
+}
+
+export interface GetReporteCuentasVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetRolesData {
@@ -2271,6 +2344,42 @@ export const getFichasClientesRef: GetFichasClientesRef;
 
 export function getFichasClientes(options?: ExecuteQueryOptions): QueryPromise<GetFichasClientesData, undefined>;
 export function getFichasClientes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetFichasClientesData, undefined>;
+
+interface GetReporteCuentasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetReporteCuentasVariables): QueryRef<GetReporteCuentasData, GetReporteCuentasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetReporteCuentasVariables): QueryRef<GetReporteCuentasData, GetReporteCuentasVariables>;
+  operationName: string;
+}
+export const getReporteCuentasRef: GetReporteCuentasRef;
+
+export function getReporteCuentas(vars: GetReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteCuentasData, GetReporteCuentasVariables>;
+export function getReporteCuentas(dc: DataConnect, vars: GetReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteCuentasData, GetReporteCuentasVariables>;
+
+interface GetDetalleReporteCuentasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetDetalleReporteCuentasVariables): QueryRef<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetDetalleReporteCuentasVariables): QueryRef<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+  operationName: string;
+}
+export const getDetalleReporteCuentasRef: GetDetalleReporteCuentasRef;
+
+export function getDetalleReporteCuentas(vars: GetDetalleReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+export function getDetalleReporteCuentas(dc: DataConnect, vars: GetDetalleReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+
+interface GetFiltrosReportesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetFiltrosReportesVariables): QueryRef<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetFiltrosReportesVariables): QueryRef<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+  operationName: string;
+}
+export const getFiltrosReportesRef: GetFiltrosReportesRef;
+
+export function getFiltrosReportes(vars?: GetFiltrosReportesVariables, options?: ExecuteQueryOptions): QueryPromise<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+export function getFiltrosReportes(dc: DataConnect, vars?: GetFiltrosReportesVariables, options?: ExecuteQueryOptions): QueryPromise<GetFiltrosReportesData, GetFiltrosReportesVariables>;
 
 interface GetSeguimientoPublicoPorQrRef {
   /* Allow users to create refs without passing in DataConnect */

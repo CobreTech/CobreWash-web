@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:reportes": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-reportes.mjs\"",
     "test:avisos": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-avisos.mjs\"",
     "test:production": "node scripts/prepare-production-test.mjs && npx -y firebase-tools@latest emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-production.mjs\"",
     "dataconnect:compile:web": "node scripts/prepare-production-test.mjs --sdk && npx -y firebase-tools@latest dataconnect:sdk:generate --config scratch/production-test/firebase.json && node scripts/normalize-generated.mjs"

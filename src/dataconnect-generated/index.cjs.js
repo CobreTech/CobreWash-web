@@ -934,6 +934,51 @@ exports.getFichasClientes = function getFichasClientes(dcOrOptions, options) {
 }
 ;
 
+const getReporteCuentasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetReporteCuentas', inputVars);
+}
+getReporteCuentasRef.operationName = 'GetReporteCuentas';
+exports.getReporteCuentasRef = getReporteCuentasRef;
+
+exports.getReporteCuentas = function getReporteCuentas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getReporteCuentasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getDetalleReporteCuentasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetDetalleReporteCuentas', inputVars);
+}
+getDetalleReporteCuentasRef.operationName = 'GetDetalleReporteCuentas';
+exports.getDetalleReporteCuentasRef = getDetalleReporteCuentasRef;
+
+exports.getDetalleReporteCuentas = function getDetalleReporteCuentas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getDetalleReporteCuentasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getFiltrosReportesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetFiltrosReportes', inputVars);
+}
+getFiltrosReportesRef.operationName = 'GetFiltrosReportes';
+exports.getFiltrosReportesRef = getFiltrosReportesRef;
+
+exports.getFiltrosReportes = function getFiltrosReportes(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getFiltrosReportesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const getSeguimientoPublicoPorQrRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

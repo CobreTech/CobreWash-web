@@ -1,0 +1,39 @@
+# Los filtros se aplican antes de agregar. Los campos no agregados definen
+# la agrupación nativa, preservando la identidad aunque se repitan nombres.
+query GetReporteCuentas($desde: Timestamp!, $hasta: Timestamp!, $clienteId: UUID, $empresa: String, $limit: Int = 500, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar reportes") }
+  }
+  cuentas: comandas(where: { estado: { ne: ANULADA }, fechaRecepcion: { ge: $desde, lt: $hasta }, clienteId: { eq: $clienteId }, empresa: { eq: $empresa } }, limit: $limit, offset: $offset, orderBy: [{ clienteId: ASC }, { empresa: ASC }]) {
+    cliente { id nombre }
+    empresa
+    _count
+    valorTotal_sum
+  }
+  prendas: comandaDetalles(where: { comanda: { estado: { ne: ANULADA }, fechaRecepcion: { ge: $desde, lt: $hasta }, clienteId: { eq: $clienteId }, empresa: { eq: $empresa } } }, limit: $limit, offset: $offset, orderBy: [{ comanda: { clienteId: ASC } }, { comanda: { empresa: ASC } }]) {
+    comanda { cliente { id nombre } empresa }
+    cantidad_sum
+  }
+}
+
+query GetDetalleReporteCuentas($desde: Timestamp!, $hasta: Timestamp!, $clienteId: UUID, $empresa: String, $limit: Int = 500, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar reportes") }
+  }
+  comandas(where: { estado: { ne: ANULADA }, fechaRecepcion: { ge: $desde, lt: $hasta }, clienteId: { eq: $clienteId }, empresa: { eq: $empresa } }, limit: $limit, offset: $offset, orderBy: [{ fechaRecepcion: ASC }, { id: ASC }]) {
+    id numeroComanda estado fechaRecepcion valorTotal empresa
+    cliente { id nombre }
+    prendas: comandaDetalles_on_comanda { cantidad_sum }
+  }
+}
+
+query GetFiltrosReportes($limit: Int = 500, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar reportes") }
+  }
+  clientes(orderBy: [{ nombre: ASC }, { id: ASC }], limit: $limit, offset: $offset) { id nombre }
+  empresas: comandas(where: { empresa: { isNull: false } }, distinct: true, orderBy: [{ empresa: ASC }], limit: $limit, offset: $offset) { empresa }
+}

@@ -34,6 +34,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetCatalogosComanda*](#getcatalogoscomanda)
   - [*DiagnosticoComandas*](#diagnosticocomandas)
   - [*GetFichasClientes*](#getfichasclientes)
+  - [*GetReporteCuentas*](#getreportecuentas)
+  - [*GetDetalleReporteCuentas*](#getdetallereportecuentas)
+  - [*GetFiltrosReportes*](#getfiltrosreportes)
   - [*GetSeguimientoPublicoPorQr*](#getseguimientopublicoporqr)
   - [*GetSeguimientoPublicoPorNumero*](#getseguimientopublicopornumero)
   - [*GetComandaOperativaPorQr*](#getcomandaoperativaporqr)
@@ -3318,6 +3321,416 @@ console.log(data.clientes);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.clientes);
+});
+```
+
+## GetReporteCuentas
+You can execute the `GetReporteCuentas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getReporteCuentas(vars: GetReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteCuentasData, GetReporteCuentasVariables>;
+
+interface GetReporteCuentasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetReporteCuentasVariables): QueryRef<GetReporteCuentasData, GetReporteCuentasVariables>;
+}
+export const getReporteCuentasRef: GetReporteCuentasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getReporteCuentas(dc: DataConnect, vars: GetReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetReporteCuentasData, GetReporteCuentasVariables>;
+
+interface GetReporteCuentasRef {
+  ...
+  (dc: DataConnect, vars: GetReporteCuentasVariables): QueryRef<GetReporteCuentasData, GetReporteCuentasVariables>;
+}
+export const getReporteCuentasRef: GetReporteCuentasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getReporteCuentasRef:
+```typescript
+const name = getReporteCuentasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetReporteCuentas` query requires an argument of type `GetReporteCuentasVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetReporteCuentasVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetReporteCuentas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetReporteCuentasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetReporteCuentasData {
+  cuentas: ({
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+    } & Cliente_Key;
+    empresa?: string | null;
+    _count: number;
+    valorTotal_sum?: number | null;
+  })[];
+  prendas: ({
+    comanda: {
+      cliente: {
+        id: UUIDString;
+        nombre: string;
+      } & Cliente_Key;
+      empresa?: string | null;
+    };
+    cantidad_sum?: number | null;
+  })[];
+}
+```
+### Using `GetReporteCuentas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getReporteCuentas, GetReporteCuentasVariables } from '@dataconnect/generated';
+
+// The `GetReporteCuentas` query requires an argument of type `GetReporteCuentasVariables`:
+const getReporteCuentasVars: GetReporteCuentasVariables = {
+  desde: ...,
+  hasta: ...,
+  clienteId: ..., // optional
+  empresa: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getReporteCuentas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getReporteCuentas(getReporteCuentasVars);
+// Variables can be defined inline as well.
+const { data } = await getReporteCuentas({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getReporteCuentas(dataConnect, getReporteCuentasVars);
+
+console.log(data.cuentas);
+console.log(data.prendas);
+
+// Or, you can use the `Promise` API.
+getReporteCuentas(getReporteCuentasVars).then((response) => {
+  const data = response.data;
+  console.log(data.cuentas);
+  console.log(data.prendas);
+});
+```
+
+### Using `GetReporteCuentas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getReporteCuentasRef, GetReporteCuentasVariables } from '@dataconnect/generated';
+
+// The `GetReporteCuentas` query requires an argument of type `GetReporteCuentasVariables`:
+const getReporteCuentasVars: GetReporteCuentasVariables = {
+  desde: ...,
+  hasta: ...,
+  clienteId: ..., // optional
+  empresa: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getReporteCuentasRef()` function to get a reference to the query.
+const ref = getReporteCuentasRef(getReporteCuentasVars);
+// Variables can be defined inline as well.
+const ref = getReporteCuentasRef({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getReporteCuentasRef(dataConnect, getReporteCuentasVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.cuentas);
+console.log(data.prendas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.cuentas);
+  console.log(data.prendas);
+});
+```
+
+## GetDetalleReporteCuentas
+You can execute the `GetDetalleReporteCuentas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getDetalleReporteCuentas(vars: GetDetalleReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+
+interface GetDetalleReporteCuentasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetDetalleReporteCuentasVariables): QueryRef<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+}
+export const getDetalleReporteCuentasRef: GetDetalleReporteCuentasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getDetalleReporteCuentas(dc: DataConnect, vars: GetDetalleReporteCuentasVariables, options?: ExecuteQueryOptions): QueryPromise<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+
+interface GetDetalleReporteCuentasRef {
+  ...
+  (dc: DataConnect, vars: GetDetalleReporteCuentasVariables): QueryRef<GetDetalleReporteCuentasData, GetDetalleReporteCuentasVariables>;
+}
+export const getDetalleReporteCuentasRef: GetDetalleReporteCuentasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getDetalleReporteCuentasRef:
+```typescript
+const name = getDetalleReporteCuentasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetDetalleReporteCuentas` query requires an argument of type `GetDetalleReporteCuentasVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetDetalleReporteCuentasVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetDetalleReporteCuentas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetDetalleReporteCuentasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetDetalleReporteCuentasData {
+  comandas: ({
+    id: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    fechaRecepcion: TimestampString;
+    valorTotal: number;
+    empresa?: string | null;
+    cliente: {
+      id: UUIDString;
+      nombre: string;
+    } & Cliente_Key;
+    prendas: ({
+      cantidad_sum?: number | null;
+    })[];
+  } & Comanda_Key)[];
+}
+```
+### Using `GetDetalleReporteCuentas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getDetalleReporteCuentas, GetDetalleReporteCuentasVariables } from '@dataconnect/generated';
+
+// The `GetDetalleReporteCuentas` query requires an argument of type `GetDetalleReporteCuentasVariables`:
+const getDetalleReporteCuentasVars: GetDetalleReporteCuentasVariables = {
+  desde: ...,
+  hasta: ...,
+  clienteId: ..., // optional
+  empresa: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getDetalleReporteCuentas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getDetalleReporteCuentas(getDetalleReporteCuentasVars);
+// Variables can be defined inline as well.
+const { data } = await getDetalleReporteCuentas({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getDetalleReporteCuentas(dataConnect, getDetalleReporteCuentasVars);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+getDetalleReporteCuentas(getDetalleReporteCuentasVars).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+### Using `GetDetalleReporteCuentas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getDetalleReporteCuentasRef, GetDetalleReporteCuentasVariables } from '@dataconnect/generated';
+
+// The `GetDetalleReporteCuentas` query requires an argument of type `GetDetalleReporteCuentasVariables`:
+const getDetalleReporteCuentasVars: GetDetalleReporteCuentasVariables = {
+  desde: ...,
+  hasta: ...,
+  clienteId: ..., // optional
+  empresa: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getDetalleReporteCuentasRef()` function to get a reference to the query.
+const ref = getDetalleReporteCuentasRef(getDetalleReporteCuentasVars);
+// Variables can be defined inline as well.
+const ref = getDetalleReporteCuentasRef({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., limit: ..., offset: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getDetalleReporteCuentasRef(dataConnect, getDetalleReporteCuentasVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.comandas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.comandas);
+});
+```
+
+## GetFiltrosReportes
+You can execute the `GetFiltrosReportes` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getFiltrosReportes(vars?: GetFiltrosReportesVariables, options?: ExecuteQueryOptions): QueryPromise<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+
+interface GetFiltrosReportesRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetFiltrosReportesVariables): QueryRef<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+}
+export const getFiltrosReportesRef: GetFiltrosReportesRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getFiltrosReportes(dc: DataConnect, vars?: GetFiltrosReportesVariables, options?: ExecuteQueryOptions): QueryPromise<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+
+interface GetFiltrosReportesRef {
+  ...
+  (dc: DataConnect, vars?: GetFiltrosReportesVariables): QueryRef<GetFiltrosReportesData, GetFiltrosReportesVariables>;
+}
+export const getFiltrosReportesRef: GetFiltrosReportesRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getFiltrosReportesRef:
+```typescript
+const name = getFiltrosReportesRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetFiltrosReportes` query has an optional argument of type `GetFiltrosReportesVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetFiltrosReportesVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that executing the `GetFiltrosReportes` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetFiltrosReportesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetFiltrosReportesData {
+  clientes: ({
+    id: UUIDString;
+    nombre: string;
+  } & Cliente_Key)[];
+  empresas: ({
+    empresa?: string | null;
+  })[];
+}
+```
+### Using `GetFiltrosReportes`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getFiltrosReportes, GetFiltrosReportesVariables } from '@dataconnect/generated';
+
+// The `GetFiltrosReportes` query has an optional argument of type `GetFiltrosReportesVariables`:
+const getFiltrosReportesVars: GetFiltrosReportesVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getFiltrosReportes()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getFiltrosReportes(getFiltrosReportesVars);
+// Variables can be defined inline as well.
+const { data } = await getFiltrosReportes({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetFiltrosReportesVariables` argument.
+const { data } = await getFiltrosReportes();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getFiltrosReportes(dataConnect, getFiltrosReportesVars);
+
+console.log(data.clientes);
+console.log(data.empresas);
+
+// Or, you can use the `Promise` API.
+getFiltrosReportes(getFiltrosReportesVars).then((response) => {
+  const data = response.data;
+  console.log(data.clientes);
+  console.log(data.empresas);
+});
+```
+
+### Using `GetFiltrosReportes`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getFiltrosReportesRef, GetFiltrosReportesVariables } from '@dataconnect/generated';
+
+// The `GetFiltrosReportes` query has an optional argument of type `GetFiltrosReportesVariables`:
+const getFiltrosReportesVars: GetFiltrosReportesVariables = {
+  limit: ..., // optional
+  offset: ..., // optional
+};
+
+// Call the `getFiltrosReportesRef()` function to get a reference to the query.
+const ref = getFiltrosReportesRef(getFiltrosReportesVars);
+// Variables can be defined inline as well.
+const ref = getFiltrosReportesRef({ limit: ..., offset: ..., });
+// Since all variables are optional for this query, you can omit the `GetFiltrosReportesVariables` argument.
+const ref = getFiltrosReportesRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getFiltrosReportesRef(dataConnect, getFiltrosReportesVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.clientes);
+console.log(data.empresas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.clientes);
+  console.log(data.empresas);
 });
 ```
 
