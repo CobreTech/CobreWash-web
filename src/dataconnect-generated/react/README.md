@@ -44,6 +44,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetReporteCuentas*](#getreportecuentas)
   - [*GetDetalleReporteCuentas*](#getdetallereportecuentas)
   - [*GetFiltrosReportes*](#getfiltrosreportes)
+  - [*GetReporteServicios*](#getreporteservicios)
+  - [*GetDetalleReporteServicios*](#getdetallereporteservicios)
   - [*GetSeguimientoPublicoPorQr*](#getseguimientopublicoporqr)
   - [*GetSeguimientoPublicoPorNumero*](#getseguimientopublicopornumero)
   - [*GetComandaOperativaPorQr*](#getcomandaoperativaporqr)
@@ -2983,6 +2985,10 @@ export interface GetFiltrosReportesData {
   empresas: ({
     empresa?: string | null;
   })[];
+  servicios: ({
+    id: UUIDString;
+    nombre: string;
+  } & TipoServicio_Key)[];
 }
 ```
 
@@ -3040,6 +3046,227 @@ export default function GetFiltrosReportesComponent() {
   if (query.isSuccess) {
     console.log(query.data.clientes);
     console.log(query.data.empresas);
+    console.log(query.data.servicios);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetReporteServicios
+You can execute the `GetReporteServicios` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetReporteServicios(dc: DataConnect, vars: GetReporteServiciosVariables, options?: useDataConnectQueryOptions<GetReporteServiciosData>): UseDataConnectQueryResult<GetReporteServiciosData, GetReporteServiciosVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetReporteServicios(vars: GetReporteServiciosVariables, options?: useDataConnectQueryOptions<GetReporteServiciosData>): UseDataConnectQueryResult<GetReporteServiciosData, GetReporteServiciosVariables>;
+```
+
+### Variables
+The `GetReporteServicios` Query requires an argument of type `GetReporteServiciosVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetReporteServiciosVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  servicioId?: UUIDString | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that calling the `GetReporteServicios` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetReporteServicios` Query is of type `GetReporteServiciosData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetReporteServiciosData {
+  servicios: ({
+    tipoServicio: {
+      id: UUIDString;
+      nombre: string;
+    } & TipoServicio_Key;
+    comandaId_count: number;
+    cantidad_sum?: number | null;
+    subtotal_sum?: number | null;
+    pesoKg_sum?: number | null;
+  })[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetReporteServicios`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetReporteServiciosVariables } from '@dataconnect/generated';
+import { useGetReporteServicios } from '@dataconnect/generated/react'
+
+export default function GetReporteServiciosComponent() {
+  // The `useGetReporteServicios` Query hook requires an argument of type `GetReporteServiciosVariables`:
+  const getReporteServiciosVars: GetReporteServiciosVariables = {
+    desde: ...,
+    hasta: ...,
+    clienteId: ..., // optional
+    empresa: ..., // optional
+    servicioId: ..., // optional
+    limit: ..., // optional
+    offset: ..., // optional
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetReporteServicios(getReporteServiciosVars);
+  // Variables can be defined inline as well.
+  const query = useGetReporteServicios({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., servicioId: ..., limit: ..., offset: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetReporteServicios(dataConnect, getReporteServiciosVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetReporteServicios(getReporteServiciosVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetReporteServicios(dataConnect, getReporteServiciosVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.servicios);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetDetalleReporteServicios
+You can execute the `GetDetalleReporteServicios` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetDetalleReporteServicios(dc: DataConnect, vars: GetDetalleReporteServiciosVariables, options?: useDataConnectQueryOptions<GetDetalleReporteServiciosData>): UseDataConnectQueryResult<GetDetalleReporteServiciosData, GetDetalleReporteServiciosVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetDetalleReporteServicios(vars: GetDetalleReporteServiciosVariables, options?: useDataConnectQueryOptions<GetDetalleReporteServiciosData>): UseDataConnectQueryResult<GetDetalleReporteServiciosData, GetDetalleReporteServiciosVariables>;
+```
+
+### Variables
+The `GetDetalleReporteServicios` Query requires an argument of type `GetDetalleReporteServiciosVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetDetalleReporteServiciosVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
+  clienteId?: UUIDString | null;
+  empresa?: string | null;
+  servicioId?: UUIDString | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+```
+### Return Type
+Recall that calling the `GetDetalleReporteServicios` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetDetalleReporteServicios` Query is of type `GetDetalleReporteServiciosData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetDetalleReporteServiciosData {
+  detalles: ({
+    id: UUIDString;
+    cantidad: number;
+    subtotal: number;
+    pesoKg?: number | null;
+    tipoServicio: {
+      id: UUIDString;
+      nombre: string;
+    } & TipoServicio_Key;
+    tipoPrenda: {
+      nombre: string;
+    };
+    comanda: {
+      id: UUIDString;
+      numeroComanda: string;
+      estado: ComandaEstado;
+      fechaRecepcion: TimestampString;
+      empresa?: string | null;
+      cliente: {
+        id: UUIDString;
+        nombre: string;
+      } & Cliente_Key;
+    } & Comanda_Key;
+  } & ComandaDetalle_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetDetalleReporteServicios`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetDetalleReporteServiciosVariables } from '@dataconnect/generated';
+import { useGetDetalleReporteServicios } from '@dataconnect/generated/react'
+
+export default function GetDetalleReporteServiciosComponent() {
+  // The `useGetDetalleReporteServicios` Query hook requires an argument of type `GetDetalleReporteServiciosVariables`:
+  const getDetalleReporteServiciosVars: GetDetalleReporteServiciosVariables = {
+    desde: ...,
+    hasta: ...,
+    clienteId: ..., // optional
+    empresa: ..., // optional
+    servicioId: ..., // optional
+    limit: ..., // optional
+    offset: ..., // optional
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetDetalleReporteServicios(getDetalleReporteServiciosVars);
+  // Variables can be defined inline as well.
+  const query = useGetDetalleReporteServicios({ desde: ..., hasta: ..., clienteId: ..., empresa: ..., servicioId: ..., limit: ..., offset: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetDetalleReporteServicios(dataConnect, getDetalleReporteServiciosVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetDetalleReporteServicios(getDetalleReporteServiciosVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetDetalleReporteServicios(dataConnect, getDetalleReporteServiciosVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.detalles);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }

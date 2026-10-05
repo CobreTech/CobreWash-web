@@ -6,8 +6,8 @@ import { errorRango } from "./fechas";
 import type { FiltrosReporte, Reporte, VistaReporte } from "./modelo";
 
 export function useReportes(usuarioId: string | undefined, habilitado: boolean, vista: VistaReporte, filtros: FiltrosReporte) {
-  const { desde, hasta, clienteId, empresa } = filtros;
-  const filtrosEstables = useMemo(() => ({ desde, hasta, clienteId, empresa }), [desde, hasta, clienteId, empresa]);
+  const { desde, hasta, clienteId, empresa, servicioId } = filtros;
+  const filtrosEstables = useMemo(() => ({ desde, hasta, clienteId, empresa, servicioId }), [desde, hasta, clienteId, empresa, servicioId]);
   const [version, setVersion] = useState(0);
   const [resultado, setResultado] = useState<{ clave: string; datos?: Reporte; error?: string } | null>(null);
   const [catalogos, setCatalogos] = useState<{ usuarioId: string; datos?: Awaited<ReturnType<typeof consultarFiltrosReportes>>; error?: string } | null>(null);

@@ -65,4 +65,26 @@ await check("rechaza acceso anónimo, otros roles, cuentas inactivas y perfiles 
     for (const op of ["GetReporteCuentas", "GetDetalleReporteCuentas", "GetFiltrosReportes"]) await assert.rejects(consultar(op, op === "GetFiltrosReportes" ? {} : vars, user), `${op}/${user}`);
   }
 });
+await execute(`mutation LineaMixta {
+  comandaDetalle_upsert(data: {id:"${id(3000)}",comandaId:"${id(200)}",tipoPrendaId:"${id(11)}",tipoServicioId:"${id(102)}",cantidad:2,subtotal:500,pesoKg:1.5})
+}`, "LineaMixta");
+await check("agrupa servicios reales de comandas mixtas y cuenta cada comanda una vez por servicio", async () => {
+  const data = await consultar("GetReporteServicios");
+  assert.equal(data.servicios.length, 2);
+  assert.equal(data.servicios.reduce((s, r) => s + r.cantidad_sum, 0), 11);
+  assert.equal(data.servicios.find((s) => s.tipoServicio.nombre === "Lavado").comandaId_count, 3);
+  assert.equal(data.servicios.find((s) => s.tipoServicio.nombre === "Planchado").subtotal_sum, 500);
+  const filtro = { ...vars, servicioId: id(102), empresa: "Minera" };
+  const detalle = await consultar("GetDetalleReporteServicios", filtro);
+  assert.equal(detalle.detalles.length, 1);
+  assert.equal(detalle.detalles[0].cantidad, 2);
+  assert.equal(detalle.detalles[0].pesoKg, 1.5);
+  assert.equal(detalle.detalles[0].comanda.numeroComanda, "REP-200");
+  assert.equal((await consultar("GetReporteServicios", { ...vars, servicioId: id(102), empresa: "Hotel" })).servicios.length, 0);
+});
+await check("protege las consultas y detalles por servicio", async () => {
+  for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
+    for (const op of ["GetReporteServicios", "GetDetalleReporteServicios"]) await assert.rejects(consultar(op, vars, user));
+  }
+});
 console.log(`${count} verificaciones de reportes completadas.`);

@@ -979,6 +979,36 @@ exports.getFiltrosReportes = function getFiltrosReportes(dcOrVars, varsOrOptions
 }
 ;
 
+const getReporteServiciosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetReporteServicios', inputVars);
+}
+getReporteServiciosRef.operationName = 'GetReporteServicios';
+exports.getReporteServiciosRef = getReporteServiciosRef;
+
+exports.getReporteServicios = function getReporteServicios(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getReporteServiciosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getDetalleReporteServiciosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetDetalleReporteServicios', inputVars);
+}
+getDetalleReporteServiciosRef.operationName = 'GetDetalleReporteServicios';
+exports.getDetalleReporteServiciosRef = getDetalleReporteServiciosRef;
+
+exports.getDetalleReporteServicios = function getDetalleReporteServicios(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getDetalleReporteServiciosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const getSeguimientoPublicoPorQrRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

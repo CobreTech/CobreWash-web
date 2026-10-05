@@ -36,4 +36,30 @@ query GetFiltrosReportes($limit: Int = 500, $offset: Int = 0) @auth(level: USER)
   }
   clientes(orderBy: [{ nombre: ASC }, { id: ASC }], limit: $limit, offset: $offset) { id nombre }
   empresas: comandas(where: { empresa: { isNull: false } }, distinct: true, orderBy: [{ empresa: ASC }], limit: $limit, offset: $offset) { empresa }
+  servicios: tipoServicios(orderBy: [{ nombre: ASC }, { id: ASC }], limit: $limit, offset: $offset) { id nombre }
+}
+
+query GetReporteServicios($desde: Timestamp!, $hasta: Timestamp!, $clienteId: UUID, $empresa: String, $servicioId: UUID, $limit: Int = 500, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar reportes") }
+  }
+  servicios: comandaDetalles(where: { tipoServicioId: { eq: $servicioId }, comanda: { estado: { ne: ANULADA }, fechaRecepcion: { ge: $desde, lt: $hasta }, clienteId: { eq: $clienteId }, empresa: { eq: $empresa } } }, limit: $limit, offset: $offset, orderBy: [{ tipoServicioId: ASC }]) {
+    tipoServicio { id nombre }
+    comandaId_count(distinct: true)
+    cantidad_sum subtotal_sum pesoKg_sum
+  }
+}
+
+query GetDetalleReporteServicios($desde: Timestamp!, $hasta: Timestamp!, $clienteId: UUID, $empresa: String, $servicioId: UUID, $limit: Int = 500, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede consultar reportes") }
+  }
+  detalles: comandaDetalles(where: { tipoServicioId: { eq: $servicioId }, comanda: { estado: { ne: ANULADA }, fechaRecepcion: { ge: $desde, lt: $hasta }, clienteId: { eq: $clienteId }, empresa: { eq: $empresa } } }, limit: $limit, offset: $offset, orderBy: [{ comanda: { fechaRecepcion: ASC } }, { id: ASC }]) {
+    id cantidad subtotal pesoKg
+    tipoServicio { id nombre }
+    tipoPrenda { nombre }
+    comanda { id numeroComanda estado fechaRecepcion empresa cliente { id nombre } }
+  }
 }

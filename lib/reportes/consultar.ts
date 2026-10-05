@@ -1,4 +1,4 @@
-import { getReporteCuentas, getDetalleReporteCuentas, getFiltrosReportes } from "@/src/dataconnect-generated";
+import { getReporteCuentas, getDetalleReporteCuentas, getFiltrosReportes, getReporteServicios, getDetalleReporteServicios } from "@/src/dataconnect-generated";
 import { dataConnect } from "@/lib/firebase/client";
 import { rangoConsulta } from "./fechas";
 import { claveCuenta, totales, type FiltrosReporte, type VistaReporte } from "./modelo";
@@ -17,16 +17,27 @@ export async function todasLasPaginas<T>(consulta: (offset: number) => Promise<T
 }
 
 export async function consultarFiltrosReportes() {
-  const [clientes, empresas] = await Promise.all([
+  const [clientes, empresas, servicios] = await Promise.all([
     todasLasPaginas(async (offset) => (await getFiltrosReportes(dataConnect, { limit: TAMANO_PAGINA, offset }, opciones)).data.clientes),
     todasLasPaginas(async (offset) => (await getFiltrosReportes(dataConnect, { limit: TAMANO_PAGINA, offset }, opciones)).data.empresas),
+    todasLasPaginas(async (offset) => (await getFiltrosReportes(dataConnect, { limit: TAMANO_PAGINA, offset }, opciones)).data.servicios),
   ]);
-  return { clientes, empresas: empresas.map((e) => e.empresa!).filter((e) => e.trim()) };
+  return { clientes, servicios, empresas: empresas.map((e) => e.empresa!).filter((e) => e.trim()) };
 }
 
 export async function consultarReporte(vista: VistaReporte, filtros: FiltrosReporte) {
-  if (vista !== "cliente") throw new Error("Vista no disponible.");
   const variables = { ...rangoConsulta(filtros.desde, filtros.hasta), clienteId: filtros.clienteId || null, empresa: filtros.empresa || null, limit: TAMANO_PAGINA };
+  if (vista === "servicio") {
+    const vars = { ...variables, servicioId: filtros.servicioId || null };
+    const [servicios, detalles] = await Promise.all([
+      todasLasPaginas(async (offset) => (await getReporteServicios(dataConnect, { ...vars, offset }, opciones)).data.servicios),
+      todasLasPaginas(async (offset) => (await getDetalleReporteServicios(dataConnect, { ...vars, offset }, opciones)).data.detalles),
+    ]);
+    const resumen = servicios.map((s) => ({ id: s.tipoServicio.id, label: s.tipoServicio.nombre, comandas: s.comandaId_count, prendas: s.cantidad_sum ?? 0, facturado: s.subtotal_sum ?? 0 })).sort((a, b) => b.prendas - a.prendas || a.label.localeCompare(b.label, "es"));
+    const detalle = detalles.map((d) => ({ id: d.id, comandaId: d.comanda.id, numero: d.comanda.numeroComanda, fecha: d.comanda.fechaRecepcion, cliente: d.comanda.cliente.nombre, empresa: d.comanda.empresa ?? "", estado: d.comanda.estado, servicio: d.tipoServicio.nombre, prenda: d.tipoPrenda.nombre, pesoKg: d.pesoKg, prendas: d.cantidad, facturado: d.subtotal }));
+    return totales(resumen, detalle);
+  }
+  if (vista !== "cliente") throw new Error("Vista no disponible.");
   const [cuentas, prendas, comandas] = await Promise.all([
     todasLasPaginas(async (offset) => (await getReporteCuentas(dataConnect, { ...variables, offset }, opciones)).data.cuentas),
     todasLasPaginas(async (offset) => (await getReporteCuentas(dataConnect, { ...variables, offset }, opciones)).data.prendas),

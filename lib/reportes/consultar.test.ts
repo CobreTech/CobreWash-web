@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ cuentas: vi.fn(), detalle: vi.fn(), filtros: vi.fn() }));
-vi.mock("@/src/dataconnect-generated", () => ({ getReporteCuentas: mocks.cuentas, getDetalleReporteCuentas: mocks.detalle, getFiltrosReportes: mocks.filtros }));
+const mocks = vi.hoisted(() => ({ cuentas: vi.fn(), detalle: vi.fn(), filtros: vi.fn(), servicios: vi.fn(), detalleServicios: vi.fn() }));
+vi.mock("@/src/dataconnect-generated", () => ({ getReporteCuentas: mocks.cuentas, getDetalleReporteCuentas: mocks.detalle, getFiltrosReportes: mocks.filtros, getReporteServicios: mocks.servicios, getDetalleReporteServicios: mocks.detalleServicios }));
 vi.mock("@/lib/firebase/client", () => ({ dataConnect: {} }));
 import { consultarReporte, todasLasPaginas } from "./consultar";
 const filtros = { desde: "2026-10-01", hasta: "2026-10-05", clienteId: "", empresa: "" };
@@ -10,6 +10,16 @@ beforeEach(() => {
   mocks.detalle.mockReset().mockResolvedValue({ data: { comandas: [] } });
 });
 describe("reportes completos", () => {
+  it("suma líneas por servicio sin duplicar el total de comandas compartidas", async () => {
+    mocks.servicios.mockResolvedValue({ data: { servicios: ["Lavado", "Planchado"].map((nombre) => ({ tipoServicio: { id: nombre, nombre }, comandaId_count: 1, cantidad_sum: 2, subtotal_sum: 1000 })) } });
+    mocks.detalleServicios.mockResolvedValue({ data: { detalles: ["Lavado", "Planchado"].map((nombre) => ({ id: nombre, cantidad: 2, subtotal: 1000, tipoServicio: { nombre }, tipoPrenda: { nombre: "Camisa" }, comanda: { id: "misma-orden", numeroComanda: "001", fechaRecepcion: "2026-10-02T03:00:00Z", estado: "ENTREGADA", cliente: { nombre: "Cliente" } } })) } });
+    const datos = await consultarReporte("servicio", { ...filtros, servicioId: "Lavado" });
+    expect(datos.comandas).toBe(1);
+    expect(datos.resumen.map((s) => s.comandas)).toEqual([1, 1]);
+    expect(datos.prendas).toBe(4);
+    expect(datos.facturado).toBe(2000);
+    expect(mocks.servicios).toHaveBeenCalledWith({}, expect.objectContaining({ servicioId: "Lavado" }), { fetchPolicy: "SERVER_ONLY" });
+  });
   it("un periodo vacío devuelve ceros", async () => {
     expect(await consultarReporte("cliente", filtros)).toEqual({ resumen: [], detalle: [], comandas: 0, prendas: 0, facturado: 0 });
   });
