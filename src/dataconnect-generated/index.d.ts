@@ -100,6 +100,17 @@ export interface ActualizarVehiculoVariables {
   activo: boolean;
 }
 
+export interface AdjuntarFotoInspeccionFlotaData {
+  fotoInspeccionVehiculo_insert: FotoInspeccionVehiculo_Key;
+}
+
+export interface AdjuntarFotoInspeccionFlotaVariables {
+  inspeccionId: UUIDString;
+  rutaStorage: string;
+  descripcion?: string | null;
+  orden?: number | null;
+}
+
 export interface AgregarComandaDetalleData {
   comandaDetalle_insert: ComandaDetalle_Key;
 }
@@ -419,6 +430,20 @@ export interface EditarFichaClienteVariables {
   telefono?: string | null;
   email?: string | null;
   direccion?: string | null;
+}
+
+export interface EditarVehiculoFlotaData {
+  vehiculo_update?: Vehiculo_Key | null;
+}
+
+export interface EditarVehiculoFlotaVariables {
+  id: UUIDString;
+  patente: string;
+  marca: string;
+  modelo: string;
+  anio?: number | null;
+  descripcion?: string | null;
+  activo: boolean;
 }
 
 export interface EliminarDetallesComandaData {
@@ -1022,6 +1047,127 @@ export interface GetFiltrosReportesVariables {
   offset?: number | null;
 }
 
+export interface GetFlotaVehiculosData {
+  vehiculos: ({
+    id: UUIDString;
+    patente: string;
+    marca: string;
+    modelo: string;
+    anio?: number | null;
+    descripcion?: string | null;
+    activo: boolean;
+    creadoEn: TimestampString;
+  } & Vehiculo_Key)[];
+  conductores: ({
+    id: string;
+    rut?: string | null;
+    nombre: string;
+    apellido?: string | null;
+    email: string;
+    telefono?: string | null;
+    rol: {
+      nombre: string;
+    };
+  } & Usuario_Key)[];
+  salidas: ({
+    id: UUIDString;
+    estado: SalidaVehiculoEstado;
+    fechaSalida?: TimestampString | null;
+    fechaRetorno?: TimestampString | null;
+    observaciones?: string | null;
+    creadoEn: TimestampString;
+    vehiculo: {
+      id: UUIDString;
+      patente: string;
+      marca: string;
+      modelo: string;
+      anio?: number | null;
+      activo: boolean;
+    } & Vehiculo_Key;
+    repartidor: {
+      id: string;
+      rut?: string | null;
+      nombre: string;
+      apellido?: string | null;
+      email: string;
+      telefono?: string | null;
+      rol: {
+        nombre: string;
+      };
+    } & Usuario_Key;
+    inspecciones: ({
+      id: UUIDString;
+      momento: MomentoInspeccion;
+      estadoVehiculo: EstadoVehiculo;
+      kilometraje: number;
+      observaciones?: string | null;
+      registradoEn: TimestampString;
+      fotos: ({
+        id: UUIDString;
+        rutaStorage: string;
+        descripcion?: string | null;
+        orden: number;
+        creadoEn: TimestampString;
+      } & FotoInspeccionVehiculo_Key)[];
+    } & InspeccionVehiculo_Key)[];
+  } & SalidaVehiculo_Key)[];
+}
+
+export interface GetHistorialVehiculosData {
+  salidas: ({
+    id: UUIDString;
+    estado: SalidaVehiculoEstado;
+    fechaSalida?: TimestampString | null;
+    fechaRetorno?: TimestampString | null;
+    observaciones?: string | null;
+    creadoEn: TimestampString;
+    vehiculo: {
+      id: UUIDString;
+      patente: string;
+      marca: string;
+      modelo: string;
+      anio?: number | null;
+      activo: boolean;
+    } & Vehiculo_Key;
+    repartidor: {
+      id: string;
+      rut?: string | null;
+      nombre: string;
+      apellido?: string | null;
+      email: string;
+      telefono?: string | null;
+      rol: {
+        nombre: string;
+      };
+    } & Usuario_Key;
+    inspecciones: ({
+      id: UUIDString;
+      momento: MomentoInspeccion;
+      estadoVehiculo: EstadoVehiculo;
+      kilometraje: number;
+      observaciones?: string | null;
+      registradoEn: TimestampString;
+      fotos: ({
+        id: UUIDString;
+        rutaStorage: string;
+        descripcion?: string | null;
+        orden: number;
+        creadoEn: TimestampString;
+      } & FotoInspeccionVehiculo_Key)[];
+    } & InspeccionVehiculo_Key)[];
+  } & SalidaVehiculo_Key)[];
+}
+
+export interface GetHistorialVehiculosVariables {
+  vehiculoId?: UUIDString | null;
+  repartidorId?: string | null;
+  estado?: SalidaVehiculoEstado | null;
+  desde?: TimestampString | null;
+  hasta?: TimestampString | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetIncidenciasData {
   incidenciaComandas: ({
     id: UUIDString;
@@ -1060,6 +1206,23 @@ export interface GetInsumoPorQrData {
 
 export interface GetInsumoPorQrVariables {
   codigoQr: UUIDString;
+}
+
+export interface GetInsumosOperarioData {
+  insumos: ({
+    id: UUIDString;
+    codigoQr: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+    stockMinimo: number;
+    activo: boolean;
+  } & Insumo_Key)[];
+}
+
+export interface GetInsumosOperarioVariables {
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetInventarioData {
@@ -1631,6 +1794,33 @@ export interface RegistrarInspeccionDespuesVariables {
   observaciones?: string | null;
 }
 
+export interface RegistrarRetornoFlotaData {
+  inspeccion: InspeccionVehiculo_Key;
+  salidaVehiculo_update?: SalidaVehiculo_Key | null;
+}
+
+export interface RegistrarRetornoFlotaVariables {
+  salidaId: UUIDString;
+  kilometraje: number;
+  estadoVehiculo: EstadoVehiculo;
+  observacionesRetorno?: string | null;
+  observacionesInspeccion?: string | null;
+}
+
+export interface RegistrarSalidaFlotaData {
+  salida: SalidaVehiculo_Key;
+  inspeccion: InspeccionVehiculo_Key;
+}
+
+export interface RegistrarSalidaFlotaVariables {
+  vehiculoId: UUIDString;
+  repartidorId: string;
+  kilometraje: number;
+  estadoVehiculo: EstadoVehiculo;
+  observaciones?: string | null;
+  observacionesInspeccion?: string | null;
+}
+
 export interface RegistrarSalidaInventarioData {
   insumo_update?: Insumo_Key | null;
   movimientoInventario_insert: MovimientoInventario_Key;
@@ -1640,6 +1830,18 @@ export interface RegistrarSalidaInventarioVariables {
   insumoId: UUIDString;
   cantidad: number;
   motivo?: string | null;
+}
+
+export interface RegistrarVehiculoFlotaData {
+  vehiculo_insert: Vehiculo_Key;
+}
+
+export interface RegistrarVehiculoFlotaVariables {
+  patente: string;
+  marca: string;
+  modelo: string;
+  anio?: number | null;
+  descripcion?: string | null;
 }
 
 export interface RegistrarseComoClienteData {
@@ -1767,6 +1969,18 @@ export const getMisComandasAsignadasRef: GetMisComandasAsignadasRef;
 
 export function getMisComandasAsignadas(vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
 export function getMisComandasAsignadas(dc: DataConnect, vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
+
+interface GetInsumosOperarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetInsumosOperarioVariables): QueryRef<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetInsumosOperarioVariables): QueryRef<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+  operationName: string;
+}
+export const getInsumosOperarioRef: GetInsumosOperarioRef;
+
+export function getInsumosOperario(vars?: GetInsumosOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+export function getInsumosOperario(dc: DataConnect, vars?: GetInsumosOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetInsumosOperarioData, GetInsumosOperarioVariables>;
 
 interface CrearAvisoRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2547,3 +2761,87 @@ export const getComandaOperativaPorQrRef: GetComandaOperativaPorQrRef;
 
 export function getComandaOperativaPorQr(vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
 export function getComandaOperativaPorQr(dc: DataConnect, vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+
+interface RegistrarVehiculoFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarVehiculoFlotaVariables): MutationRef<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarVehiculoFlotaVariables): MutationRef<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+  operationName: string;
+}
+export const registrarVehiculoFlotaRef: RegistrarVehiculoFlotaRef;
+
+export function registrarVehiculoFlota(vars: RegistrarVehiculoFlotaVariables): MutationPromise<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+export function registrarVehiculoFlota(dc: DataConnect, vars: RegistrarVehiculoFlotaVariables): MutationPromise<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+
+interface EditarVehiculoFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EditarVehiculoFlotaVariables): MutationRef<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EditarVehiculoFlotaVariables): MutationRef<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+  operationName: string;
+}
+export const editarVehiculoFlotaRef: EditarVehiculoFlotaRef;
+
+export function editarVehiculoFlota(vars: EditarVehiculoFlotaVariables): MutationPromise<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+export function editarVehiculoFlota(dc: DataConnect, vars: EditarVehiculoFlotaVariables): MutationPromise<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+
+interface RegistrarSalidaFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarSalidaFlotaVariables): MutationRef<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarSalidaFlotaVariables): MutationRef<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+  operationName: string;
+}
+export const registrarSalidaFlotaRef: RegistrarSalidaFlotaRef;
+
+export function registrarSalidaFlota(vars: RegistrarSalidaFlotaVariables): MutationPromise<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+export function registrarSalidaFlota(dc: DataConnect, vars: RegistrarSalidaFlotaVariables): MutationPromise<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+
+interface RegistrarRetornoFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarRetornoFlotaVariables): MutationRef<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarRetornoFlotaVariables): MutationRef<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+  operationName: string;
+}
+export const registrarRetornoFlotaRef: RegistrarRetornoFlotaRef;
+
+export function registrarRetornoFlota(vars: RegistrarRetornoFlotaVariables): MutationPromise<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+export function registrarRetornoFlota(dc: DataConnect, vars: RegistrarRetornoFlotaVariables): MutationPromise<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+
+interface AdjuntarFotoInspeccionFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdjuntarFotoInspeccionFlotaVariables): MutationRef<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdjuntarFotoInspeccionFlotaVariables): MutationRef<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+  operationName: string;
+}
+export const adjuntarFotoInspeccionFlotaRef: AdjuntarFotoInspeccionFlotaRef;
+
+export function adjuntarFotoInspeccionFlota(vars: AdjuntarFotoInspeccionFlotaVariables): MutationPromise<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+export function adjuntarFotoInspeccionFlota(dc: DataConnect, vars: AdjuntarFotoInspeccionFlotaVariables): MutationPromise<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+
+interface GetFlotaVehiculosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetFlotaVehiculosData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetFlotaVehiculosData, undefined>;
+  operationName: string;
+}
+export const getFlotaVehiculosRef: GetFlotaVehiculosRef;
+
+export function getFlotaVehiculos(options?: ExecuteQueryOptions): QueryPromise<GetFlotaVehiculosData, undefined>;
+export function getFlotaVehiculos(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetFlotaVehiculosData, undefined>;
+
+interface GetHistorialVehiculosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetHistorialVehiculosVariables): QueryRef<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetHistorialVehiculosVariables): QueryRef<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;
+  operationName: string;
+}
+export const getHistorialVehiculosRef: GetHistorialVehiculosRef;
+
+export function getHistorialVehiculos(vars?: GetHistorialVehiculosVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;
+export function getHistorialVehiculos(dc: DataConnect, vars?: GetHistorialVehiculosVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;

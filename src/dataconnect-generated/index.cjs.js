@@ -128,6 +128,21 @@ exports.getMisComandasAsignadas = function getMisComandasAsignadas(dcOrVars, var
 }
 ;
 
+const getInsumosOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInsumosOperario', inputVars);
+}
+getInsumosOperarioRef.operationName = 'GetInsumosOperario';
+exports.getInsumosOperarioRef = getInsumosOperarioRef;
+
+exports.getInsumosOperario = function getInsumosOperario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getInsumosOperarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const crearAvisoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -1066,5 +1081,105 @@ exports.getComandaOperativaPorQr = function getComandaOperativaPorQr(dcOrVars, v
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getComandaOperativaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const registrarVehiculoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarVehiculoFlota', inputVars);
+}
+registrarVehiculoFlotaRef.operationName = 'RegistrarVehiculoFlota';
+exports.registrarVehiculoFlotaRef = registrarVehiculoFlotaRef;
+
+exports.registrarVehiculoFlota = function registrarVehiculoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarVehiculoFlotaRef(dcInstance, inputVars));
+}
+;
+
+const editarVehiculoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EditarVehiculoFlota', inputVars);
+}
+editarVehiculoFlotaRef.operationName = 'EditarVehiculoFlota';
+exports.editarVehiculoFlotaRef = editarVehiculoFlotaRef;
+
+exports.editarVehiculoFlota = function editarVehiculoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(editarVehiculoFlotaRef(dcInstance, inputVars));
+}
+;
+
+const registrarSalidaFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarSalidaFlota', inputVars);
+}
+registrarSalidaFlotaRef.operationName = 'RegistrarSalidaFlota';
+exports.registrarSalidaFlotaRef = registrarSalidaFlotaRef;
+
+exports.registrarSalidaFlota = function registrarSalidaFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarSalidaFlotaRef(dcInstance, inputVars));
+}
+;
+
+const registrarRetornoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarRetornoFlota', inputVars);
+}
+registrarRetornoFlotaRef.operationName = 'RegistrarRetornoFlota';
+exports.registrarRetornoFlotaRef = registrarRetornoFlotaRef;
+
+exports.registrarRetornoFlota = function registrarRetornoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarRetornoFlotaRef(dcInstance, inputVars));
+}
+;
+
+const adjuntarFotoInspeccionFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdjuntarFotoInspeccionFlota', inputVars);
+}
+adjuntarFotoInspeccionFlotaRef.operationName = 'AdjuntarFotoInspeccionFlota';
+exports.adjuntarFotoInspeccionFlotaRef = adjuntarFotoInspeccionFlotaRef;
+
+exports.adjuntarFotoInspeccionFlota = function adjuntarFotoInspeccionFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adjuntarFotoInspeccionFlotaRef(dcInstance, inputVars));
+}
+;
+
+const getFlotaVehiculosRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetFlotaVehiculos');
+}
+getFlotaVehiculosRef.operationName = 'GetFlotaVehiculos';
+exports.getFlotaVehiculosRef = getFlotaVehiculosRef;
+
+exports.getFlotaVehiculos = function getFlotaVehiculos(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getFlotaVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getHistorialVehiculosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHistorialVehiculos', inputVars);
+}
+getHistorialVehiculosRef.operationName = 'GetHistorialVehiculos';
+exports.getHistorialVehiculosRef = getHistorialVehiculosRef;
+
+exports.getHistorialVehiculos = function getHistorialVehiculos(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getHistorialVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

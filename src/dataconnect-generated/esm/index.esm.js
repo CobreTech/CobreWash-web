@@ -109,6 +109,19 @@ export function getMisComandasAsignadas(dcOrVars, varsOrOptions, options) {
   return executeQuery(getMisComandasAsignadasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
+export const getInsumosOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInsumosOperario', inputVars);
+}
+getInsumosOperarioRef.operationName = 'GetInsumosOperario';
+
+export function getInsumosOperario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getInsumosOperarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
 export const crearAvisoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -918,4 +931,90 @@ export function getComandaOperativaPorQr(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getComandaOperativaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const registrarVehiculoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarVehiculoFlota', inputVars);
+}
+registrarVehiculoFlotaRef.operationName = 'RegistrarVehiculoFlota';
+
+export function registrarVehiculoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarVehiculoFlotaRef(dcInstance, inputVars));
+}
+
+export const editarVehiculoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EditarVehiculoFlota', inputVars);
+}
+editarVehiculoFlotaRef.operationName = 'EditarVehiculoFlota';
+
+export function editarVehiculoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(editarVehiculoFlotaRef(dcInstance, inputVars));
+}
+
+export const registrarSalidaFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarSalidaFlota', inputVars);
+}
+registrarSalidaFlotaRef.operationName = 'RegistrarSalidaFlota';
+
+export function registrarSalidaFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarSalidaFlotaRef(dcInstance, inputVars));
+}
+
+export const registrarRetornoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarRetornoFlota', inputVars);
+}
+registrarRetornoFlotaRef.operationName = 'RegistrarRetornoFlota';
+
+export function registrarRetornoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarRetornoFlotaRef(dcInstance, inputVars));
+}
+
+export const adjuntarFotoInspeccionFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdjuntarFotoInspeccionFlota', inputVars);
+}
+adjuntarFotoInspeccionFlotaRef.operationName = 'AdjuntarFotoInspeccionFlota';
+
+export function adjuntarFotoInspeccionFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adjuntarFotoInspeccionFlotaRef(dcInstance, inputVars));
+}
+
+export const getFlotaVehiculosRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetFlotaVehiculos');
+}
+getFlotaVehiculosRef.operationName = 'GetFlotaVehiculos';
+
+export function getFlotaVehiculos(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getFlotaVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getHistorialVehiculosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHistorialVehiculos', inputVars);
+}
+getHistorialVehiculosRef.operationName = 'GetHistorialVehiculos';
+
+export function getHistorialVehiculos(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getHistorialVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }

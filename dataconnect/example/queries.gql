@@ -82,7 +82,7 @@ query GetComandaPorQr($codigoQr: UUID!)
 # Los códigos QR de inventario solo pueden ser consultados por producción
 # o administración; escanear un código no evita la autorización.
 query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
-  yo: usuario(id_expr: "auth.uid") @redact {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(

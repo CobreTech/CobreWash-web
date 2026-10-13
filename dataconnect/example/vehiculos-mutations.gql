@@ -1,0 +1,230 @@
+# RF-VE01: Registro administrativo de vehículos con validación de campos y patente.
+mutation RegistrarVehiculoFlota(
+  $patente: String!
+  $marca: String!
+  $modelo: String!
+  $anio: Int
+  $descripcion: String
+) @auth(level: USER) @transaction {
+  query @redact
+    @check(
+      expr: "vars.patente.size() >= 5 && vars.patente.size() <= 10 && vars.patente.matches('^[A-Z0-9-]+$') && vars.marca.size() >= 2 && vars.marca.size() <= 50 && vars.marca.matches('[^[:space:]]') && vars.modelo.size() >= 1 && vars.modelo.size() <= 50 && vars.modelo.matches('[^[:space:]]') && (vars.anio == null || (vars.anio >= 1980 && vars.anio <= 2100)) && (vars.descripcion == null || vars.descripcion.size() <= 200)"
+      message: "Datos de vehículo inválidos: verifica patente (5 a 10 caracteres alfanuméricos), marca, modelo y año"
+    ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden registrar vehículos")
+      }
+    }
+    existente: vehiculo(first: { where: { patente: { eq: $patente } } })
+      @check(expr: "this == null", message: "Ya existe un vehículo registrado con esa patente") {
+      id
+    }
+  }
+  vehiculo_insert(data: {
+    patente: $patente
+    marca: $marca
+    modelo: $modelo
+    anio: $anio
+    descripcion: $descripcion
+    activo: true
+  })
+}
+
+# RF-VE01: Actualización de datos y estado operativo de un vehículo.
+# Impide desactivar un vehículo que tenga una salida en curso.
+mutation EditarVehiculoFlota(
+  $id: UUID!
+  $patente: String!
+  $marca: String!
+  $modelo: String!
+  $anio: Int
+  $descripcion: String
+  $activo: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact
+    @check(
+      expr: "vars.patente.size() >= 5 && vars.patente.size() <= 10 && vars.patente.matches('^[A-Z0-9-]+$') && vars.marca.size() >= 2 && vars.marca.size() <= 50 && vars.marca.matches('[^[:space:]]') && vars.modelo.size() >= 1 && vars.modelo.size() <= 50 && vars.modelo.matches('[^[:space:]]') && (vars.anio == null || (vars.anio >= 1980 && vars.anio <= 2100)) && (vars.descripcion == null || vars.descripcion.size() <= 200)"
+      message: "Datos de vehículo inválidos: verifica patente, marca, modelo y año"
+    ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar vehículos")
+      }
+    }
+    actual: vehiculo(id: $id) @check(expr: "this != null", message: "Vehículo no encontrado") {
+      id
+    }
+    duplicado: vehiculo(first: { where: { patente: { eq: $patente }, id: { ne: $id } } })
+      @check(expr: "this == null", message: "Ya existe otro vehículo con esa patente") {
+      id
+    }
+    salidaActiva: salidaVehiculo(first: { where: {
+      vehiculoId: { eq: $id }
+      estado: { in: [PROGRAMADA, EN_SERVICIO] }
+    } }) @check(
+      expr: "vars.activo == true || this == null"
+      message: "No se puede desactivar un vehículo con una salida en curso"
+    ) {
+      id
+    }
+  }
+  vehiculo_update(
+    id: $id
+    data: {
+      patente: $patente
+      marca: $marca
+      modelo: $modelo
+      anio: $anio
+      descripcion: $descripcion
+      activo: $activo
+    }
+  )
+}
+
+# RF-VE02: Registra la salida a terreno de un vehículo junto con su inspección inicial (ANTES).
+mutation RegistrarSalidaFlota(
+  $vehiculoId: UUID!
+  $repartidorId: String!
+  $kilometraje: Float!
+  $estadoVehiculo: EstadoVehiculo!
+  $observaciones: String
+  $observacionesInspeccion: String
+) @auth(level: USER) @transaction {
+  query @redact
+    @check(
+      expr: "vars.kilometraje >= 0 && (vars.observaciones == null || vars.observaciones.size() <= 300) && (vars.observacionesInspeccion == null || vars.observacionesInspeccion.size() <= 500)"
+      message: "El kilometraje debe ser mayor o igual a cero y las observaciones no deben exceder el límite permitido"
+    )
+    @check(
+      expr: "vars.estadoVehiculo != 'NO_APTO'"
+      message: "No se puede autorizar la salida de un vehículo calificado como NO_APTO"
+    ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden registrar salidas de flota")
+      }
+    }
+    vehiculo(id: $vehiculoId) @check(expr: "this != null", message: "Vehículo no encontrado") {
+      activo @check(expr: "this == true", message: "El vehículo está inactivo o en mantención")
+    }
+    conductor: usuario(id: $repartidorId) @check(expr: "this != null", message: "Conductor no encontrado") {
+      activo @check(expr: "this == true", message: "El conductor seleccionado está inactivo")
+      rol {
+        nombre @check(
+          expr: "this in ['admin', 'operario', 'recepcionista', 'repartidor']"
+          message: "El usuario asignado no pertenece al personal interno"
+        )
+      }
+    }
+    salidaActiva: salidaVehiculo(first: { where: {
+      vehiculoId: { eq: $vehiculoId }
+      estado: { in: [PROGRAMADA, EN_SERVICIO] }
+    } }) @check(expr: "this == null", message: "El vehículo ya se encuentra en ruta o con una salida activa") {
+      id
+    }
+  }
+  salida: salidaVehiculo_insert(data: {
+    vehiculo: { id: $vehiculoId }
+    repartidor: { id: $repartidorId }
+    estado: EN_SERVICIO
+    fechaSalida_expr: "request.time"
+    observaciones: $observaciones
+  })
+  inspeccion: inspeccionVehiculo_insert(data: {
+    salidaId_expr: "response.salida.id"
+    momento: ANTES
+    estadoVehiculo: $estadoVehiculo
+    kilometraje: $kilometraje
+    observaciones: $observacionesInspeccion
+  })
+}
+
+# RF-VE03: Registra el regreso del vehículo con su inspección posterior (DESPUES) y cierra la salida.
+mutation RegistrarRetornoFlota(
+  $salidaId: UUID!
+  $kilometraje: Float!
+  $estadoVehiculo: EstadoVehiculo!
+  $observacionesRetorno: String
+  $observacionesInspeccion: String
+) @auth(level: USER) @transaction {
+  query @redact
+    @check(
+      expr: "vars.kilometraje >= 0 && (vars.observacionesRetorno == null || vars.observacionesRetorno.size() <= 300) && (vars.observacionesInspeccion == null || vars.observacionesInspeccion.size() <= 500)"
+      message: "El kilometraje debe ser válido y las observaciones no deben superar el límite permitido"
+    ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden registrar el regreso de vehículos")
+      }
+    }
+    salidaActual: salidaVehiculo(first: { where: {
+      id: { eq: $salidaId }
+      estado: { eq: EN_SERVICIO }
+    } }) @check(expr: "this != null", message: "La salida no existe o ya fue finalizada") {
+      id
+    }
+    inspeccionAntes: inspeccionVehiculo(first: { where: {
+      salidaId: { eq: $salidaId }
+      momento: { eq: ANTES }
+    } }) @check(expr: "this != null", message: "La salida no cuenta con inspección inicial registrada") {
+      kilometraje @check(
+        expr: "this <= vars.kilometraje"
+        message: "El kilometraje de retorno no puede ser menor al kilometraje de salida"
+      )
+    }
+  }
+  inspeccion: inspeccionVehiculo_insert(data: {
+    salida: { id: $salidaId }
+    momento: DESPUES
+    estadoVehiculo: $estadoVehiculo
+    kilometraje: $kilometraje
+    observaciones: $observacionesInspeccion
+  })
+  salidaVehiculo_update(
+    id: $salidaId
+    data: {
+      estado: FINALIZADA
+      fechaRetorno_expr: "request.time"
+      observaciones: $observacionesRetorno
+    }
+  )
+}
+
+# Adjunta evidencia fotográfica a una inspección de salida o retorno.
+mutation AdjuntarFotoInspeccionFlota(
+  $inspeccionId: UUID!
+  $rutaStorage: String!
+  $descripcion: String
+  $orden: Int = 1
+) @auth(level: USER) @transaction {
+  query @redact
+    @check(
+      expr: "vars.rutaStorage.size() >= 5 && vars.rutaStorage.size() <= 500 && vars.rutaStorage.matches('[^[:space:]]') && vars.orden >= 1 && vars.orden <= 20 && (vars.descripcion == null || vars.descripcion.size() <= 200)"
+      message: "La ruta de la fotografía o el orden de evidencia no son válidos"
+    ) {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol {
+        nombre @check(
+          expr: "this in ['admin', 'repartidor']"
+          message: "Solo administración o reparto pueden adjuntar fotografías de inspección"
+        )
+      }
+    }
+    inspeccionVehiculo(id: $inspeccionId)
+      @check(expr: "this != null", message: "Inspección no encontrada") {
+      id
+    }
+  }
+  fotoInspeccionVehiculo_insert(data: {
+    inspeccion: { id: $inspeccionId }
+    rutaStorage: $rutaStorage
+    descripcion: $descripcion
+    orden: $orden
+  })
+}

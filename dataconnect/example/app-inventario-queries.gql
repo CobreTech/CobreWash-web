@@ -1,0 +1,10 @@
+# Consulta operativa: no concede permisos para editar inventario ni ver bitácoras ajenas.
+query GetInsumosOperario($limit: Int = 50, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'operario']", message: "Acceso reservado a administración y operarios") }
+  }
+  insumos(where: { activo: { eq: true } }, orderBy: [{ nombre: ASC }, { id: ASC }], limit: $limit, offset: $offset) {
+    id codigoQr nombre unidadMedida stockActual stockMinimo activo
+  }
+}
