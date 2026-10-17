@@ -1,7 +1,6 @@
 import type {
   EstadoVehiculo,
   GetFlotaVehiculosData,
-  MomentoInspeccion,
   SalidaVehiculoEstado,
 } from "@/src/dataconnect-generated";
 
@@ -10,6 +9,7 @@ export type ConductorFlota = GetFlotaVehiculosData["conductores"][number];
 export type SalidaFlota = GetFlotaVehiculosData["salidas"][number];
 export type InspeccionFlota = SalidaFlota["inspecciones"][number];
 export type FotoInspeccionFlota = InspeccionFlota["fotos"][number];
+export type MomentoInspeccion = InspeccionFlota["momento"];
 
 export type EstadoOperativoVehiculo = "Disponible" | "En ruta" | "Inactivo";
 
@@ -68,4 +68,4 @@ export interface RetornoFormState {
 
 export type VistaVehiculos = "flota" | "en-ruta" | "historial";
 
-export type { EstadoVehiculo, MomentoInspeccion, SalidaVehiculoEstado };
+export type { EstadoVehiculo, SalidaVehiculoEstado };

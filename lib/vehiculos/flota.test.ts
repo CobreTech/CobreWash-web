@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   EstadoVehiculo,
   SalidaVehiculoEstado,
-  type MomentoInspeccion,
 } from "@/src/dataconnect-generated";
 import { construirResumenFlota } from "./validaciones";
 import {
@@ -13,7 +12,7 @@ import {
   formatearDuracionRuta,
   mapearErrorVehiculos,
 } from "./flota";
-import type { SalidaFlota, VehiculoFlota } from "./modelo";
+import type { MomentoInspeccion, SalidaFlota, VehiculoFlota } from "./modelo";
 
 const vehiculosFixture: VehiculoFlota[] = [
   {

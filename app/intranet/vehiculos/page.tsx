@@ -9,7 +9,11 @@ import {
   Camera,
   CheckCircle2,
   Clock,
+  Download,
+  Eye,
+  FileText,
   Gauge,
+  History,
   Loader2,
   Navigation,
   Pencil,
@@ -35,6 +39,7 @@ import {
   registrarRetornoFlota,
   registrarSalidaFlota,
   registrarVehiculoFlota,
+  SalidaVehiculoEstado,
   type GetFlotaVehiculosData,
 } from "@/src/dataconnect-generated";
 import type {
@@ -45,16 +50,21 @@ import type {
   SalidaFormState,
   VehiculoFlota,
   VehiculoFormState,
+  VistaVehiculos,
 } from "@/lib/vehiculos/modelo";
 import {
   calcularMinutosEnRuta,
+  crearCsvHistorialVehiculos,
   filtrarResumenFlota,
+  filtrarSalidasHistorial,
   formatearDuracionRuta,
   formatearFechaHoraVehiculo,
   mapearErrorVehiculos,
   UMBRAL_DEMORA_MINUTOS,
+  type FiltrosHistorialVehiculo,
 } from "@/lib/vehiculos/flota";
 import {
+  calcularKilometrosRecorridos,
   construirResumenFlota,
   normalizarPatente,
   obtenerInspeccionMomento,
@@ -64,7 +74,6 @@ import {
 } from "@/lib/vehiculos/validaciones";
 
 type Notice = { text: string; tipo: "success" | "warning" | "error" };
-type TabActiva = "flota" | "en-ruta";
 
 const FORM_VEHICULO_VACIO: VehiculoFormState = {
   patente: "",
@@ -73,6 +82,14 @@ const FORM_VEHICULO_VACIO: VehiculoFormState = {
   anio: String(new Date().getFullYear()),
   descripcion: "",
   activo: true,
+};
+
+const FILTROS_HISTORIAL_VACIOS: FiltrosHistorialVehiculo = {
+  vehiculoId: "",
+  repartidorId: "",
+  estado: "TODOS",
+  desde: "",
+  hasta: "",
 };
 
 const noticeStyle: Record<Notice["tipo"], string> = {
@@ -108,6 +125,15 @@ const estadoTecnicoLabels: Record<EstadoVehiculo, string> = {
   [EstadoVehiculo.NO_APTO]: "No apto (bloquea salida)",
 };
 
+const estadoTecnicoChip: Record<EstadoVehiculo, string> = {
+  [EstadoVehiculo.APTO]:
+    "bg-green-500/10 text-green-700 dark:text-green-400",
+  [EstadoVehiculo.CON_OBSERVACIONES]:
+    "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  [EstadoVehiculo.NO_APTO]:
+    "bg-red-500/15 text-red-700 dark:text-red-300",
+};
+
 export default function VehiculosPage() {
   const permitido = useRoleGuard(["admin"]);
   const usuarioActual = useUsuarioActualContext();
@@ -117,18 +143,21 @@ export default function VehiculosPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [tab, setTab] = useState<TabActiva>("flota");
+  const [tab, setTab] = useState<VistaVehiculos>("flota");
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<
     "Todos" | EstadoOperativoVehiculo
   >("Todos");
+  const [filtrosHistorial, setFiltrosHistorial] =
+    useState<FiltrosHistorialVehiculo>(FILTROS_HISTORIAL_VACIOS);
 
-  // Modales RF-VE01, RF-VE02, RF-VE03
+  // Modales RF-VE01, RF-VE02, RF-VE03, RF-VE04
   const [formVehiculo, setFormVehiculo] = useState<VehiculoFormState | null>(
     null,
   );
   const [formSalida, setFormSalida] = useState<SalidaFormState | null>(null);
   const [formRetorno, setFormRetorno] = useState<RetornoFormState | null>(null);
+  const [salidaDetalle, setSalidaDetalle] = useState<SalidaFlota | null>(null);
   const [nuevaFotoDesc, setNuevaFotoDesc] = useState("");
   const [formError, setFormError] = useState("");
   const solicitudActual = useRef(0);
@@ -193,18 +222,19 @@ export default function VehiculosPage() {
   }, [notice]);
 
   useEffect(() => {
-    if (!formVehiculo && !formSalida && !formRetorno) return;
+    if (!formVehiculo && !formSalida && !formRetorno && !salidaDetalle) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !saving) {
         setFormVehiculo(null);
         setFormSalida(null);
         setFormRetorno(null);
+        setSalidaDetalle(null);
         setFormError("");
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [formVehiculo, formSalida, formRetorno, saving]);
+  }, [formVehiculo, formSalida, formRetorno, salidaDetalle, saving]);
 
   const { resumen, kpis } = useMemo(
     () => construirResumenFlota(vehiculos, salidas),
@@ -223,6 +253,32 @@ export default function VehiculosPage() {
       ),
     [salidas],
   );
+
+  const salidasHistorialFiltradas = useMemo(
+    () => filtrarSalidasHistorial(salidas, filtrosHistorial),
+    [salidas, filtrosHistorial],
+  );
+
+  const metricasHistorial = useMemo(() => {
+    let kmTotales = 0;
+    let conObservaciones = 0;
+    for (const s of salidasHistorialFiltradas) {
+      const km = calcularKilometrosRecorridos(s);
+      if (km !== null) kmTotales += km;
+      if (
+        s.inspecciones.some(
+          (i) => i.estadoVehiculo !== EstadoVehiculo.APTO || Boolean(i.observaciones),
+        )
+      ) {
+        conObservaciones++;
+      }
+    }
+    return {
+      totalViajes: salidasHistorialFiltradas.length,
+      kmTotales: Number(kmTotales.toFixed(1)),
+      conObservaciones,
+    };
+  }, [salidasHistorialFiltradas]);
 
   const vehiculosDisponibles = useMemo(
     () => resumen.filter((r) => r.estadoOperativo === "Disponible"),
@@ -245,6 +301,27 @@ export default function VehiculosPage() {
       descripcion: v.descripcion ?? "",
       activo: v.activo,
     });
+  };
+
+  const abrirHistorialDeVehiculo = (vehiculoId: string) => {
+    setFiltrosHistorial({
+      ...FILTROS_HISTORIAL_VACIOS,
+      vehiculoId,
+    });
+    setTab("historial");
+  };
+
+  const exportarHistorialCsv = () => {
+    const csv = crearCsvHistorialVehiculos(salidasHistorialFiltradas);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `historial-vehiculos-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   const abrirModalSalida = (vehiculoIdPreseleccionado?: string) => {
@@ -568,7 +645,7 @@ export default function VehiculosPage() {
             Control de Vehículos
           </h1>
           <p className="text-sm text-stone-600 dark:text-stone-400">
-            Gestión de unidades de transporte, despacho a terreno y monitoreo de salidas activas.
+            Gestión de unidades de transporte, despacho a terreno, monitoreo en vivo y auditoría de inspecciones.
           </p>
         </div>
 
@@ -706,6 +783,19 @@ export default function VehiculosPage() {
         >
           <Navigation className="h-4 w-4" />
           Monitor en Ruta ({salidasEnCurso.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("historial")}
+          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+            tab === "historial"
+              ? "bg-brand-500 text-white shadow-sm"
+              : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+          }`}
+        >
+          <History className="h-4 w-4" />
+          Historial e Inspecciones ({salidas.length})
         </button>
       </div>
 
@@ -883,6 +973,14 @@ export default function VehiculosPage() {
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
+                          onClick={() => abrirHistorialDeVehiculo(vehiculo.id)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 dark:border-white/10 dark:text-stone-300 dark:hover:bg-stone-800"
+                        >
+                          <History className="h-3.5 w-3.5" />
+                          Historial
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => abrirEditarVehiculo(vehiculo)}
                           className="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-100 dark:border-white/10 dark:text-stone-300 dark:hover:bg-stone-800"
                         >
@@ -1029,6 +1127,288 @@ export default function VehiculosPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VISTA 3: HISTORIAL Y AUDITORÍA DE INSPECCIONES (RF-VE04) */}
+      {tab === "historial" && (
+        <div className="space-y-4">
+          {/* Barra de filtros de historial */}
+          <div className="grid grid-cols-1 gap-3 rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-6 dark:border-white/10 dark:bg-stone-900/70">
+            <div>
+              <label
+                htmlFor="hist-vehiculo"
+                className="block text-xs font-semibold text-stone-600 dark:text-stone-400"
+              >
+                Vehículo
+              </label>
+              <select
+                id="hist-vehiculo"
+                value={filtrosHistorial.vehiculoId}
+                onChange={(e) =>
+                  setFiltrosHistorial({
+                    ...filtrosHistorial,
+                    vehiculoId: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-900 dark:border-white/10 dark:bg-stone-800 dark:text-stone-100"
+              >
+                <option value="">Todas las patentes</option>
+                {vehiculos.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.patente} — {v.marca} {v.modelo}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="hist-conductor"
+                className="block text-xs font-semibold text-stone-600 dark:text-stone-400"
+              >
+                Conductor
+              </label>
+              <select
+                id="hist-conductor"
+                value={filtrosHistorial.repartidorId}
+                onChange={(e) =>
+                  setFiltrosHistorial({
+                    ...filtrosHistorial,
+                    repartidorId: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-900 dark:border-white/10 dark:bg-stone-800 dark:text-stone-100"
+              >
+                <option value="">Todos los conductores</option>
+                {conductores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre} {c.apellido ?? ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="hist-estado"
+                className="block text-xs font-semibold text-stone-600 dark:text-stone-400"
+              >
+                Estado del viaje
+              </label>
+              <select
+                id="hist-estado"
+                value={filtrosHistorial.estado}
+                onChange={(e) =>
+                  setFiltrosHistorial({
+                    ...filtrosHistorial,
+                    estado: e.target
+                      .value as FiltrosHistorialVehiculo["estado"],
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-900 dark:border-white/10 dark:bg-stone-800 dark:text-stone-100"
+              >
+                <option value="TODOS">Todos</option>
+                <option value={SalidaVehiculoEstado.EN_SERVICIO}>
+                  En ruta
+                </option>
+                <option value={SalidaVehiculoEstado.FINALIZADA}>
+                  Finalizados
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="hist-desde"
+                className="block text-xs font-semibold text-stone-600 dark:text-stone-400"
+              >
+                Desde
+              </label>
+              <input
+                id="hist-desde"
+                type="date"
+                value={filtrosHistorial.desde}
+                onChange={(e) =>
+                  setFiltrosHistorial({
+                    ...filtrosHistorial,
+                    desde: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-900 dark:border-white/10 dark:bg-stone-800 dark:text-stone-100"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="hist-hasta"
+                className="block text-xs font-semibold text-stone-600 dark:text-stone-400"
+              >
+                Hasta
+              </label>
+              <input
+                id="hist-hasta"
+                type="date"
+                value={filtrosHistorial.hasta}
+                onChange={(e) =>
+                  setFiltrosHistorial({
+                    ...filtrosHistorial,
+                    hasta: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-900 dark:border-white/10 dark:bg-stone-800 dark:text-stone-100"
+              />
+            </div>
+
+            <div className="flex items-end gap-2">
+              <button
+                type="button"
+                onClick={() => setFiltrosHistorial(FILTROS_HISTORIAL_VACIOS)}
+                className="flex-1 rounded-xl border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 dark:border-white/10 dark:text-stone-300 dark:hover:bg-stone-800"
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                disabled={salidasHistorialFiltradas.length === 0}
+                onClick={exportarHistorialCsv}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 px-3 py-2 text-xs font-semibold text-white hover:bg-stone-800 disabled:opacity-40 dark:bg-stone-100 dark:text-stone-900"
+              >
+                <Download className="h-3.5 w-3.5" />
+                CSV
+              </button>
+            </div>
+          </div>
+
+          {/* Resumen rápido del historial filtrado */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-stone-200/80 bg-white px-4 py-3 dark:border-white/10 dark:bg-stone-900/70">
+              <span className="text-xs text-stone-500 dark:text-stone-400">
+                Salidas en el periodo
+              </span>
+              <p className="mt-0.5 font-display text-xl font-bold text-stone-900 dark:text-stone-50">
+                {metricasHistorial.totalViajes}
+              </p>
+            </div>
+            <div className="rounded-xl border border-stone-200/80 bg-white px-4 py-3 dark:border-white/10 dark:bg-stone-900/70">
+              <span className="text-xs text-stone-500 dark:text-stone-400">
+                Distancia total acumulada
+              </span>
+              <p className="mt-0.5 font-display text-xl font-bold text-brand-600 dark:text-brand-400">
+                {metricasHistorial.kmTotales.toLocaleString("es-CL")} km
+              </p>
+            </div>
+            <div className="rounded-xl border border-stone-200/80 bg-white px-4 py-3 dark:border-white/10 dark:bg-stone-900/70">
+              <span className="text-xs text-stone-500 dark:text-stone-400">
+                Viajes con observaciones / hallazgos
+              </span>
+              <p className="mt-0.5 font-display text-xl font-bold text-amber-600 dark:text-amber-400">
+                {metricasHistorial.conObservaciones}
+              </p>
+            </div>
+          </div>
+
+          {/* Listado detallado de salidas e inspecciones */}
+          {salidasHistorialFiltradas.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-stone-300 bg-white/60 p-10 text-center dark:border-white/10 dark:bg-stone-900/40">
+              <History className="mx-auto h-10 w-10 text-stone-400" />
+              <p className="mt-3 font-semibold text-stone-800 dark:text-stone-200">
+                No hay registros de salidas para los filtros seleccionados
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-stone-900/70">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-stone-200 bg-stone-50 text-[11px] font-semibold uppercase tracking-wider text-stone-500 dark:border-white/10 dark:bg-stone-800/60 dark:text-stone-400">
+                    <tr>
+                      <th className="px-4 py-3">Vehículo</th>
+                      <th className="px-4 py-3">Conductor</th>
+                      <th className="px-4 py-3">Salida</th>
+                      <th className="px-4 py-3">Retorno</th>
+                      <th className="px-4 py-3">Kilometraje</th>
+                      <th className="px-4 py-3">Evidencia</th>
+                      <th className="px-4 py-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100 dark:divide-white/5">
+                    {salidasHistorialFiltradas.map((s) => {
+                      const antes = obtenerInspeccionMomento(s, "ANTES");
+                      const despues = obtenerInspeccionMomento(s, "DESPUES");
+                      const recorridos = calcularKilometrosRecorridos(s);
+                      const fotosTotal =
+                        (antes?.fotos.length ?? 0) +
+                        (despues?.fotos.length ?? 0);
+
+                      return (
+                        <tr
+                          key={s.id}
+                          className="hover:bg-stone-50/80 dark:hover:bg-stone-800/40"
+                        >
+                          <td className="px-4 py-3">
+                            <span className="font-mono font-bold text-stone-900 dark:text-stone-100">
+                              {s.vehiculo.patente}
+                            </span>
+                            <p className="text-stone-500 dark:text-stone-400">
+                              {s.vehiculo.marca} {s.vehiculo.modelo}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3 font-medium text-stone-800 dark:text-stone-200">
+                            {s.repartidor.nombre} {s.repartidor.apellido ?? ""}
+                          </td>
+                          <td className="px-4 py-3 text-stone-600 dark:text-stone-300">
+                            {formatearFechaHoraVehiculo(
+                              s.fechaSalida ?? s.creadoEn,
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-stone-600 dark:text-stone-300">
+                            {s.estado === "FINALIZADA" ? (
+                              formatearFechaHoraVehiculo(s.fechaRetorno)
+                            ) : (
+                              <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                                En ruta
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-stone-800 dark:text-stone-200">
+                              {antes
+                                ? `${antes.kilometraje.toLocaleString("es-CL")} km`
+                                : "—"}
+                              {despues
+                                ? ` → ${despues.kilometraje.toLocaleString("es-CL")} km`
+                                : ""}
+                            </div>
+                            {recorridos !== null && (
+                              <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400">
+                                +{recorridos.toLocaleString("es-CL")} km recorridos
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center gap-1 text-stone-600 dark:text-stone-300">
+                              <Camera className="h-3.5 w-3.5 text-brand-500" />
+                              {fotosTotal} {fotosTotal === 1 ? "foto" : "fotos"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSalidaDetalle(s)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-white/10 dark:text-stone-200 dark:hover:bg-stone-800"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              Ver inspección
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
@@ -1449,7 +1829,6 @@ export default function VehiculosPage() {
                   />
                 </div>
 
-                {/* Evidencia fotográfica */}
                 <div className="rounded-xl border border-stone-200/80 bg-stone-50/70 p-3.5 dark:border-white/10 dark:bg-stone-800/40">
                   <p className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Fotografías del estado inicial ({formSalida.fotos.length})
@@ -1665,7 +2044,6 @@ export default function VehiculosPage() {
                   />
                 </div>
 
-                {/* Evidencia fotográfica de retorno */}
                 <div className="rounded-xl border border-stone-200/80 bg-stone-50/70 p-3.5 dark:border-white/10 dark:bg-stone-800/40">
                   <p className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Fotografías del estado al regresar ({formRetorno.fotos.length})
@@ -1750,6 +2128,210 @@ export default function VehiculosPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Detalle y Auditoría Comparativa de Inspección (RF-VE04) */}
+      <AnimatePresence>
+        {salidaDetalle && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-auditoria-titulo"
+              className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-stone-200 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-stone-900"
+            >
+              {(() => {
+                const antes = obtenerInspeccionMomento(salidaDetalle, "ANTES");
+                const despues = obtenerInspeccionMomento(
+                  salidaDetalle,
+                  "DESPUES",
+                );
+                const recorridos = calcularKilometrosRecorridos(salidaDetalle);
+
+                return (
+                  <>
+                    <div className="flex items-start justify-between border-b border-stone-100 pb-4 dark:border-white/10">
+                      <div>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-brand-500">
+                          <FileText className="h-3.5 w-3.5" />
+                          Ficha de Auditoría de Viaje
+                        </span>
+                        <h2
+                          id="modal-auditoria-titulo"
+                          className="mt-1 font-display text-lg font-bold text-stone-900 dark:text-stone-50"
+                        >
+                          {salidaDetalle.vehiculo.patente} —{" "}
+                          {salidaDetalle.vehiculo.marca}{" "}
+                          {salidaDetalle.vehiculo.modelo}
+                        </h2>
+                        <p className="text-xs text-stone-500 dark:text-stone-400">
+                          Conductor: {salidaDetalle.repartidor.nombre}{" "}
+                          {salidaDetalle.repartidor.apellido ?? ""}
+                          {recorridos !== null
+                            ? ` · Distancia recorrida: ${recorridos.toLocaleString("es-CL")} km`
+                            : ""}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSalidaDetalle(null)}
+                        aria-label="Cerrar auditoría"
+                        className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {salidaDetalle.observaciones && (
+                      <div className="mt-4 rounded-xl bg-stone-50 px-4 py-2.5 text-xs text-stone-700 dark:bg-stone-800/60 dark:text-stone-300">
+                        <span className="font-semibold">
+                          Observaciones de la jornada:
+                        </span>{" "}
+                        {salidaDetalle.observaciones}
+                      </div>
+                    )}
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {/* Columna Inspección ANTES */}
+                      <div className="rounded-2xl border border-stone-200 p-4 dark:border-white/10">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-display text-sm font-bold text-stone-900 dark:text-stone-100">
+                            Inspección de Salida (ANTES)
+                          </h3>
+                          {antes && (
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${estadoTecnicoChip[antes.estadoVehiculo]}`}
+                            >
+                              {antes.estadoVehiculo}
+                            </span>
+                          )}
+                        </div>
+                        {antes ? (
+                          <div className="mt-3 space-y-2 text-xs text-stone-600 dark:text-stone-300">
+                            <p>
+                              <span className="font-semibold">Fecha/Hora:</span>{" "}
+                              {formatearFechaHoraVehiculo(antes.registradoEn)}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Odómetro:</span>{" "}
+                              {antes.kilometraje.toLocaleString("es-CL")} km
+                            </p>
+                            <p>
+                              <span className="font-semibold">Notas:</span>{" "}
+                              {antes.observaciones || "Sin observaciones"}
+                            </p>
+                            <div className="pt-2">
+                              <p className="font-semibold text-stone-800 dark:text-stone-200">
+                                Evidencia fotográfica ({antes.fotos.length})
+                              </p>
+                              {antes.fotos.length === 0 ? (
+                                <p className="mt-1 text-stone-400">
+                                  Sin fotografías adjuntas.
+                                </p>
+                              ) : (
+                                <ul className="mt-1.5 space-y-1.5">
+                                  {antes.fotos.map((f) => (
+                                    <li
+                                      key={f.id}
+                                      className="rounded-lg bg-stone-50 p-2 dark:bg-stone-800"
+                                    >
+                                      <p className="font-medium text-stone-800 dark:text-stone-200">
+                                        #{f.orden} ·{" "}
+                                        {f.descripcion || "Fotografía"}
+                                      </p>
+                                      <p className="truncate font-mono text-[11px] text-stone-400">
+                                        {f.rutaStorage}
+                                      </p>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-3 text-xs text-stone-400">
+                            Sin registro de inspección inicial.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Columna Inspección DESPUES */}
+                      <div className="rounded-2xl border border-stone-200 p-4 dark:border-white/10">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-display text-sm font-bold text-stone-900 dark:text-stone-100">
+                            Inspección de Retorno (DESPUÉS)
+                          </h3>
+                          {despues && (
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${estadoTecnicoChip[despues.estadoVehiculo]}`}
+                            >
+                              {despues.estadoVehiculo}
+                            </span>
+                          )}
+                        </div>
+                        {despues ? (
+                          <div className="mt-3 space-y-2 text-xs text-stone-600 dark:text-stone-300">
+                            <p>
+                              <span className="font-semibold">Fecha/Hora:</span>{" "}
+                              {formatearFechaHoraVehiculo(despues.registradoEn)}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Odómetro:</span>{" "}
+                              {despues.kilometraje.toLocaleString("es-CL")} km
+                            </p>
+                            <p>
+                              <span className="font-semibold">Notas:</span>{" "}
+                              {despues.observaciones || "Sin observaciones"}
+                            </p>
+                            <div className="pt-2">
+                              <p className="font-semibold text-stone-800 dark:text-stone-200">
+                                Evidencia fotográfica ({despues.fotos.length})
+                              </p>
+                              {despues.fotos.length === 0 ? (
+                                <p className="mt-1 text-stone-400">
+                                  Sin fotografías adjuntas.
+                                </p>
+                              ) : (
+                                <ul className="mt-1.5 space-y-1.5">
+                                  {despues.fotos.map((f) => (
+                                    <li
+                                      key={f.id}
+                                      className="rounded-lg bg-stone-50 p-2 dark:bg-stone-800"
+                                    >
+                                      <p className="font-medium text-stone-800 dark:text-stone-200">
+                                        #{f.orden} ·{" "}
+                                        {f.descripcion || "Fotografía"}
+                                      </p>
+                                      <p className="truncate font-mono text-[11px] text-stone-400">
+                                        {f.rutaStorage}
+                                      </p>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                            El vehículo aún se encuentra en ruta (retorno pendiente).
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
           </motion.div>
         )}
