@@ -33,6 +33,9 @@ export interface EvidenciaFotoInput {
   id: string;
   rutaStorage: string;
   descripcion: string;
+  nombreArchivo?: string;
+  previewUrl?: string;
+  archivo?: File;
 }
 
 export interface VehiculoFormState {

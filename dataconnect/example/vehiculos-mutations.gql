@@ -115,8 +115,8 @@ mutation RegistrarSalidaFlota(
       activo @check(expr: "this == true", message: "El conductor seleccionado está inactivo")
       rol {
         nombre @check(
-          expr: "this in ['admin', 'operario', 'recepcionista', 'repartidor']"
-          message: "El usuario asignado no pertenece al personal interno"
+          expr: "this in ['conductor', 'repartidor']"
+          message: "El usuario asignado debe tener rol de conductor o repartidor"
         )
       }
     }
@@ -211,7 +211,7 @@ mutation AdjuntarFotoInspeccionFlota(
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol {
         nombre @check(
-          expr: "this in ['admin', 'repartidor']"
+          expr: "this in ['admin', 'repartidor', 'conductor']"
           message: "Solo administración o reparto pueden adjuntar fotografías de inspección"
         )
       }

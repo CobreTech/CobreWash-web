@@ -93,8 +93,25 @@ await check("RF-VE01: registra vehículo en la flota y rechaza patentes duplicad
   );
 });
 
-await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y bloquea NO_APTO o doble salida", async () => {
+await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y bloquea NO_APTO, rol no conductor o doble salida", async () => {
   // Rechaza salida si estadoVehiculo es NO_APTO
+  await assert.rejects(
+    execute(
+      mutations,
+      "RegistrarSalidaFlota",
+      {
+        vehiculoId,
+        repartidorId: "test-repartidor",
+        kilometraje: 15200,
+        estadoVehiculo: "NO_APTO",
+        observaciones: "Falla de frenos",
+        observacionesInspeccion: "No apto para circular",
+      },
+      "test-admin",
+    ),
+  );
+
+  // Rechaza asignar un usuario cuyo rol no sea conductor o repartidor
   await assert.rejects(
     execute(
       mutations,
@@ -103,9 +120,7 @@ await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y b
         vehiculoId,
         repartidorId: "test-operario",
         kilometraje: 15200,
-        estadoVehiculo: "NO_APTO",
-        observaciones: "Falla de frenos",
-        observacionesInspeccion: "No apto para circular",
+        estadoVehiculo: "APTO",
       },
       "test-admin",
     ),
@@ -116,7 +131,7 @@ await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y b
     "RegistrarSalidaFlota",
     {
       vehiculoId,
-      repartidorId: "test-operario",
+      repartidorId: "test-repartidor",
       kilometraje: 15200,
       estadoVehiculo: "APTO",
       observaciones: "Ruta Hotelera Calama",
@@ -149,7 +164,7 @@ await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y b
       "RegistrarSalidaFlota",
       {
         vehiculoId,
-        repartidorId: "test-admin",
+        repartidorId: "test-conductor",
         kilometraje: 15210,
         estadoVehiculo: "APTO",
       },
@@ -239,6 +254,10 @@ await check("RF-VE04: consulta historial completo con inspecciones ANTES/DESPUES
   const encontrado = flota.vehiculos.find((v) => v.id === vehiculoId);
   assert.ok(encontrado);
   assert.equal(encontrado.patente, patente);
+  assert.ok(
+    flota.conductores.length >= 2 &&
+      flota.conductores.every((c) => ["conductor", "repartidor"].includes(c.rol.nombre)),
+  );
 
   const hist = await execute(
     queries,
@@ -249,7 +268,7 @@ await check("RF-VE04: consulta historial completo con inspecciones ANTES/DESPUES
   assert.equal(hist.salidas.length, 1);
   const registro = hist.salidas[0];
   assert.equal(registro.estado, "FINALIZADA");
-  assert.equal(registro.repartidor.id, "test-operario");
+  assert.equal(registro.repartidor.id, "test-repartidor");
   assert.equal(registro.inspecciones.length, 2);
 
   const antes = registro.inspecciones.find((i) => i.momento === "ANTES");

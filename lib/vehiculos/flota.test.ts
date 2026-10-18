@@ -3,7 +3,11 @@ import {
   EstadoVehiculo,
   SalidaVehiculoEstado,
 } from "@/src/dataconnect-generated";
-import { construirResumenFlota } from "./validaciones";
+import {
+  construirResumenFlota,
+  esRolConductorORepartidor,
+  filtrarConductoresFlota,
+} from "./validaciones";
 import {
   calcularMinutosEnRuta,
   crearCsvHistorialVehiculos,
@@ -12,7 +16,12 @@ import {
   formatearDuracionRuta,
   mapearErrorVehiculos,
 } from "./flota";
-import type { MomentoInspeccion, SalidaFlota, VehiculoFlota } from "./modelo";
+import type {
+  ConductorFlota,
+  MomentoInspeccion,
+  SalidaFlota,
+  VehiculoFlota,
+} from "./modelo";
 
 const vehiculosFixture: VehiculoFlota[] = [
   {
@@ -60,7 +69,7 @@ const salidasFixture: SalidaFlota[] = [
       apellido: "Rojas",
       email: "carlos@elcobre.cl",
       telefono: "+56911111111",
-      rol: { nombre: "operario" },
+      rol: { nombre: "repartidor" },
     },
     inspecciones: [
       {
@@ -121,6 +130,41 @@ describe("resumen, filtros y utilidades de flota", () => {
     expect(csv).toContain("HLRT-24");
     expect(csv).toContain("Carlos Rojas");
     expect(csv).toContain("42150");
+  });
+
+  it("filtra únicamente usuarios con rol conductor o repartidor", () => {
+    expect(esRolConductorORepartidor("conductor")).toBe(true);
+    expect(esRolConductorORepartidor("Repartidor")).toBe(true);
+    expect(esRolConductorORepartidor("operario")).toBe(false);
+    expect(esRolConductorORepartidor("admin")).toBe(false);
+
+    const usuarios: ConductorFlota[] = [
+      {
+        id: "1",
+        rut: "1-9",
+        nombre: "Carlos",
+        apellido: "Rojas",
+        email: "c@elcobre.cl",
+        rol: { nombre: "repartidor" },
+      },
+      {
+        id: "2",
+        rut: "2-7",
+        nombre: "Miguel",
+        apellido: "Soto",
+        email: "m@elcobre.cl",
+        rol: { nombre: "conductor" },
+      },
+      {
+        id: "3",
+        rut: "3-5",
+        nombre: "Ana",
+        apellido: "Díaz",
+        email: "a@elcobre.cl",
+        rol: { nombre: "operario" },
+      },
+    ];
+    expect(filtrarConductoresFlota(usuarios).map((u) => u.id)).toEqual(["1", "2"]);
   });
 
   it("traduce errores de Data Connect a mensajes claros en español", () => {

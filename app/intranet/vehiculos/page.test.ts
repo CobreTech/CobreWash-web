@@ -29,6 +29,15 @@ vi.mock("@/components/intranet/AuthGuard", () => ({
 
 vi.mock("@/lib/firebase/client", () => ({
   dataConnect: {},
+  storage: {},
+}));
+
+vi.mock("firebase/storage", () => ({
+  ref: (_storage: unknown, path: string) => ({ fullPath: path }),
+  uploadBytes: vi.fn().mockResolvedValue({}),
+  getDownloadURL: vi
+    .fn()
+    .mockResolvedValue("https://storage.elcobre.cl/evidencia.jpg"),
 }));
 
 vi.mock("firebase/data-connect", () => ({
@@ -92,12 +101,30 @@ const fixtureData = {
   ],
   conductores: [
     {
-      id: "u-operario",
+      id: "u-repartidor",
       rut: "12345678-9",
       nombre: "Carlos",
       apellido: "Rojas",
       email: "carlos@elcobre.cl",
       telefono: "+56911111111",
+      rol: { nombre: "repartidor" },
+    },
+    {
+      id: "u-conductor",
+      rut: "98765432-1",
+      nombre: "Miguel",
+      apellido: "Soto",
+      email: "miguel@elcobre.cl",
+      telefono: "+56922222222",
+      rol: { nombre: "conductor" },
+    },
+    {
+      id: "u-operario-excluido",
+      rut: "11223344-5",
+      nombre: "Pedro",
+      apellido: "Operario",
+      email: "pedro@elcobre.cl",
+      telefono: "+56933333333",
       rol: { nombre: "operario" },
     },
   ],

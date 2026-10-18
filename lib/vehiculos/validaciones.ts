@@ -1,11 +1,31 @@
 import { EstadoVehiculo } from "@/src/dataconnect-generated";
 import type {
+  ConductorFlota,
   InspeccionFlota,
   KpisFlota,
   ResumenVehiculo,
   SalidaFlota,
   VehiculoFlota,
 } from "./modelo";
+
+const ROLES_CONDUCTOR_PERMITIDOS = new Set(["conductor", "repartidor"]);
+
+/**
+ * Verifica que el rol pertenezca exclusivamente a "conductor" o "repartidor".
+ */
+export function esRolConductorORepartidor(rolNombre?: string | null): boolean {
+  if (!rolNombre) return false;
+  return ROLES_CONDUCTOR_PERMITIDOS.has(rolNombre.trim().toLowerCase());
+}
+
+/**
+ * Filtra la lista de usuarios dejando únicamente aquellos con rol "conductor" o "repartidor".
+ */
+export function filtrarConductoresFlota<
+  T extends Pick<ConductorFlota, "rol">,
+>(conductores: T[]): T[] {
+  return conductores.filter((c) => esRolConductorORepartidor(c.rol?.nombre));
+}
 
 const PATENTE_CHILENA_REGEX = /^([A-Z]{4}-?\d{2}|[A-Z]{2}-?\d{4}|[A-Z]{3}-?\d{3})$/;
 

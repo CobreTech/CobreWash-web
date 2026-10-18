@@ -23,7 +23,7 @@ query GetFlotaVehiculos @auth(level: USER) @refresh(every: { seconds: 15 }) {
   conductores: usuarios(
     where: {
       activo: { eq: true }
-      rol: { nombre: { in: ["admin", "operario", "recepcionista"] } }
+      rol: { nombre: { in: ["conductor", "repartidor"] } }
     }
     orderBy: [{ nombre: ASC }, { id: ASC }]
   ) {
