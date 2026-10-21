@@ -1,4 +1,4 @@
-import type { TipoCliente } from "@/src/dataconnect-generated";
+import { TipoCliente } from "@/src/dataconnect-generated";
 import { isValidRut, validatePassword } from "@/lib/validators";
 
 export interface ClientRegistrationInput {
@@ -18,6 +18,10 @@ export interface PublicClientRegistrationInput extends ClientRegistrationInput {
 
 export interface ManagedUserRegistrationInput extends ClientRegistrationInput {
   rolId: string;
+}
+
+export function isPublicClientType(value: unknown): value is TipoCliente {
+  return value === TipoCliente.PARTICULAR || value === TipoCliente.HOTEL;
 }
 
 export function validateLogin(email: string, password: string): string | null {
@@ -45,7 +49,7 @@ export function validatePublicClientRegistration(
   ) {
     return "Todos los campos son obligatorios.";
   }
-  if (!input.tipoCliente) return "Selecciona el tipo de cliente.";
+  if (!isPublicClientType(input.tipoCliente)) return "Selecciona el tipo de cliente.";
   if (!isValidRut(input.rut)) return "El RUT ingresado no es válido.";
 
   const passwordCheck = validatePassword(input.password);

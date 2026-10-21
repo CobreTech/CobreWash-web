@@ -23,7 +23,7 @@ import GlassSelect from "@/components/ui/GlassSelect";
 
 const tipoClienteOptions = [
   { value: TipoCliente.PARTICULAR, label: "Particular" },
-  { value: TipoCliente.HOTEL, label: "Hotel" },
+  { value: TipoCliente.HOTEL, label: "Empresa / Hotel" },
 ];
 
 export default function Navbar() {
@@ -183,7 +183,8 @@ export default function Navbar() {
         setAuthLoading(false);
         setAuthSuccess(true);
         setTimeout(() => {
-          setAuthView("login");
+          setIsLoginOpen(false);
+          router.push("/cuenta");
           setAuthSuccess(false);
           resetRegisterFields();
         }, 1550);
@@ -472,12 +473,12 @@ export default function Navbar() {
                   />
                   <h3 className="text-xl font-extrabold text-stone-900 font-display">
                     {authView === "login" && "Iniciar Sesión"}
-                    {authView === "register" && "Crear una Cuenta"}
+                    {authView === "register" && "Crear cuenta de cliente"}
                     {authView === "forgot" && "Recuperar Contraseña"}
                   </h3>
                   <p className="text-xs text-stone-500 max-w-xs leading-normal">
                     {authView === "login" && "Ingresa tus datos para acceder a tu intranet de lavandería."}
-                    {authView === "register" && "Regístrate para solicitar retiros express y revisar tu historial."}
+                    {authView === "register" && "Crea tu cuenta de cliente particular o empresa para revisar tus pedidos e historial."}
                     {authView === "forgot" && "Ingresa tu correo y te enviaremos un enlace de recuperación."}
                   </p>
                 </div>

@@ -63,6 +63,16 @@ describe("validación del registro público de clientes", () => {
   it("acepta un registro válido y deja teléfono/dirección como opcionales", () => {
     expect(validatePublicClientRegistration(validRegistration)).toBeNull();
   });
+
+  it.each(["admin", "recepcionista", "operario", "conductor", "repartidor"])(
+    "rechaza %s como tipo de cuenta en el registro público",
+    (tipo) => {
+      expect(validatePublicClientRegistration({
+        ...validRegistration,
+        tipoCliente: tipo as PublicClientRegistrationInput["tipoCliente"],
+      })).toBe("Selecciona el tipo de cliente.");
+    },
+  );
 });
 
 describe("validación de usuarios creados por administración", () => {
