@@ -9,6 +9,7 @@ const endpoint = `http://${host}/v1/projects/demo-production/locations/southamer
 
 const queries = await readFile("dataconnect/example/vehiculos-queries.gql", "utf8");
 const mutations = await readFile("dataconnect/example/vehiculos-mutations.gql", "utf8");
+const evidencias = await readFile("dataconnect/example/evidencias.gql", "utf8");
 
 async function execute(query, operationName, variables = {}, user = undefined) {
   const impersonate =
@@ -144,8 +145,8 @@ await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y b
   assert.ok(salidaId);
   assert.ok(inspeccionAntesId);
 
-  // Adjunta fotografía a la inspección de salida
-  await execute(
+  // El cliente no puede insertar metadatos sin que la API confirme el archivo.
+  await assert.rejects(execute(
     mutations,
     "AdjuntarFotoInspeccionFlota",
     {
@@ -155,7 +156,11 @@ await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y b
       orden: 1,
     },
     "test-admin",
-  );
+  ));
+  await execute(evidencias, "RegistrarEvidenciaGuardada", {
+    id: randomUUID(), inspeccionId: inspeccionAntesId,
+    rutaStorage: "fixture-servidor/antes.jpg", descripcion: "Vista frontal", orden: 1,
+  });
 
   // Impide registrar una segunda salida simultánea para el mismo vehículo
   await assert.rejects(
@@ -223,15 +228,15 @@ await check("RF-VE03: valida odómetro no decreciente al regresar y cierra la sa
   assert.ok(inspeccionDespuesId);
 
   await execute(
-    mutations,
-    "AdjuntarFotoInspeccionFlota",
+    evidencias,
+    "RegistrarEvidenciaGuardada",
     {
+      id: randomUUID(),
       inspeccionId: inspeccionDespuesId,
       rutaStorage: `vehiculos/${patente}/despues-${randomUUID()}.jpg`,
       descripcion: "Vista trasera al retornar",
       orden: 1,
     },
-    "test-admin",
   );
 
   // Rechaza cerrar una salida que ya está FINALIZADA

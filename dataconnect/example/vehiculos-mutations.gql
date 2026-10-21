@@ -86,6 +86,8 @@ mutation EditarVehiculoFlota(
 
 # RF-VE02: Registra la salida a terreno de un vehículo junto con su inspección inicial (ANTES).
 mutation RegistrarSalidaFlota(
+  $salidaId: UUID = null
+  $inspeccionId: UUID = null
   $vehiculoId: UUID!
   $repartidorId: String!
   $kilometraje: Float!
@@ -127,7 +129,16 @@ mutation RegistrarSalidaFlota(
       id
     }
   }
+  bloqueo: vehiculo_update(id: $vehiculoId, data: { revision_update: { inc: 1 } })
+  revision: query @redact {
+    vehiculo(id: $vehiculoId) { activo @check(expr: "this == true", message: "El vehículo está inactivo") }
+    salidaVehiculo(first: { where: { vehiculoId: { eq: $vehiculoId }, estado: { in: [PROGRAMADA, EN_SERVICIO] } } })
+      @check(expr: "this == null", message: "El vehículo ya tiene una salida activa") { id }
+    previas: inspeccionVehiculos(where: { salida: { vehiculoId: { eq: $vehiculoId } } }, orderBy: [{ kilometraje: DESC }], limit: 1)
+      @check(expr: "this.all(i, i.kilometraje <= vars.kilometraje)", message: "El kilometraje no puede ser menor al último registrado") { kilometraje }
+  }
   salida: salidaVehiculo_insert(data: {
+    id_expr: "vars.salidaId != null ? vars.salidaId : uuidV4()"
     vehiculo: { id: $vehiculoId }
     repartidor: { id: $repartidorId }
     estado: EN_SERVICIO
@@ -135,6 +146,7 @@ mutation RegistrarSalidaFlota(
     observaciones: $observaciones
   })
   inspeccion: inspeccionVehiculo_insert(data: {
+    id_expr: "vars.inspeccionId != null ? vars.inspeccionId : uuidV4()"
     salidaId_expr: "response.salida.id"
     momento: ANTES
     estadoVehiculo: $estadoVehiculo
@@ -145,6 +157,7 @@ mutation RegistrarSalidaFlota(
 
 # RF-VE03: Registra el regreso del vehículo con su inspección posterior (DESPUES) y cierra la salida.
 mutation RegistrarRetornoFlota(
+  $inspeccionId: UUID = null
   $salidaId: UUID!
   $kilometraje: Float!
   $estadoVehiculo: EstadoVehiculo!
@@ -166,7 +179,7 @@ mutation RegistrarRetornoFlota(
       id: { eq: $salidaId }
       estado: { eq: EN_SERVICIO }
     } }) @check(expr: "this != null", message: "La salida no existe o ya fue finalizada") {
-      id
+      id vehiculoId
     }
     inspeccionAntes: inspeccionVehiculo(first: { where: {
       salidaId: { eq: $salidaId }
@@ -178,7 +191,9 @@ mutation RegistrarRetornoFlota(
       )
     }
   }
+  bloqueo: vehiculo_update(first: { where: { id: { eq_expr: "response.query.salidaActual.vehiculoId" } } }, data: { revision_update: { inc: 1 } })
   inspeccion: inspeccionVehiculo_insert(data: {
+    id_expr: "vars.inspeccionId != null ? vars.inspeccionId : uuidV4()"
     salida: { id: $salidaId }
     momento: DESPUES
     estadoVehiculo: $estadoVehiculo
@@ -201,7 +216,7 @@ mutation AdjuntarFotoInspeccionFlota(
   $rutaStorage: String!
   $descripcion: String
   $orden: Int = 1
-) @auth(level: USER) @transaction {
+) @auth(level: NO_ACCESS) @transaction {
   query @redact
     @check(
       expr: "vars.rutaStorage.size() >= 5 && vars.rutaStorage.size() <= 500 && vars.rutaStorage.matches('[^[:space:]]') && vars.orden >= 1 && vars.orden <= 20 && (vars.descripcion == null || vars.descripcion.size() <= 200)"

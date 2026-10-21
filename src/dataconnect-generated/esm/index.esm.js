@@ -20,11 +20,22 @@ export const IncidenciaEstado = {
   RESUELTA: "RESUELTA",
 }
 
+export const MomentoInspeccion = {
+  ANTES: "ANTES",
+  DESPUES: "DESPUES",
+}
+
 export const SalidaVehiculoEstado = {
   PROGRAMADA: "PROGRAMADA",
   EN_SERVICIO: "EN_SERVICIO",
   FINALIZADA: "FINALIZADA",
   CANCELADA: "CANCELADA",
+}
+
+export const SolicitudContactoEstado = {
+  RECIBIDA: "RECIBIDA",
+  EN_REVISION: "EN_REVISION",
+  ATENDIDA: "ATENDIDA",
 }
 
 export const TipoCliente = {
@@ -158,6 +169,131 @@ export function getAvisosParaEquipo(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getAvisosParaEquipoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getSolicitudContactoConfirmadaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSolicitudContactoConfirmada', inputVars);
+}
+getSolicitudContactoConfirmadaRef.operationName = 'GetSolicitudContactoConfirmada';
+
+export function getSolicitudContactoConfirmada(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getSolicitudContactoConfirmadaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const prepararLimiteContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'PrepararLimiteContacto', inputVars);
+}
+prepararLimiteContactoRef.operationName = 'PrepararLimiteContacto';
+
+export function prepararLimiteContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(prepararLimiteContactoRef(dcInstance, inputVars));
+}
+
+export const getLimiteContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetLimiteContacto', inputVars);
+}
+getLimiteContactoRef.operationName = 'GetLimiteContacto';
+
+export function getLimiteContacto(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getLimiteContactoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const registrarSolicitudContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarSolicitudContacto', inputVars);
+}
+registrarSolicitudContactoRef.operationName = 'RegistrarSolicitudContacto';
+
+export function registrarSolicitudContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarSolicitudContactoRef(dcInstance, inputVars));
+}
+
+export const getSolicitudesContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSolicitudesContacto', inputVars);
+}
+getSolicitudesContactoRef.operationName = 'GetSolicitudesContacto';
+
+export function getSolicitudesContacto(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getSolicitudesContactoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const actualizarEstadoSolicitudContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ActualizarEstadoSolicitudContacto', inputVars);
+}
+actualizarEstadoSolicitudContactoRef.operationName = 'ActualizarEstadoSolicitudContacto';
+
+export function actualizarEstadoSolicitudContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(actualizarEstadoSolicitudContactoRef(dcInstance, inputVars));
+}
+
+export const getInspeccionParaEvidenciasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInspeccionParaEvidencias', inputVars);
+}
+getInspeccionParaEvidenciasRef.operationName = 'GetInspeccionParaEvidencias';
+
+export function getInspeccionParaEvidencias(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getInspeccionParaEvidenciasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getMovimientoFlotaPorInspeccionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMovimientoFlotaPorInspeccion', inputVars);
+}
+getMovimientoFlotaPorInspeccionRef.operationName = 'GetMovimientoFlotaPorInspeccion';
+
+export function getMovimientoFlotaPorInspeccion(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getMovimientoFlotaPorInspeccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const registrarEvidenciaGuardadaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarEvidenciaGuardada', inputVars);
+}
+registrarEvidenciaGuardadaRef.operationName = 'RegistrarEvidenciaGuardada';
+
+export function registrarEvidenciaGuardada(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarEvidenciaGuardadaRef(dcInstance, inputVars));
+}
+
+export const vincularMiFichaVerificadaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'VincularMiFichaVerificada');
+}
+vincularMiFichaVerificadaRef.operationName = 'VincularMiFichaVerificada';
+
+export function vincularMiFichaVerificada(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(vincularMiFichaVerificadaRef(dcInstance, inputVars));
 }
 
 export const registrarseRef = (dcOrVars, vars) => {
@@ -470,6 +606,31 @@ registrarSalidaInventarioRef.operationName = 'RegistrarSalidaInventario';
 export function registrarSalidaInventario(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(registrarSalidaInventarioRef(dcInstance, inputVars));
+}
+
+export const getMisComandasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMisComandas', inputVars);
+}
+getMisComandasRef.operationName = 'GetMisComandas';
+
+export function getMisComandas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getMisComandasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const vincularMiComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'VincularMiComanda', inputVars);
+}
+vincularMiComandaRef.operationName = 'VincularMiComanda';
+
+export function vincularMiComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(vincularMiComandaRef(dcInstance, inputVars));
 }
 
 export const asociarFlujoComandaPendienteRef = (dcOrVars, vars) => {
@@ -993,16 +1154,16 @@ export function adjuntarFotoInspeccionFlota(dcOrVars, vars) {
   return executeMutation(adjuntarFotoInspeccionFlotaRef(dcInstance, inputVars));
 }
 
-export const getFlotaVehiculosRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+export const getFlotaVehiculosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'GetFlotaVehiculos');
+  return queryRef(dcInstance, 'GetFlotaVehiculos', inputVars);
 }
 getFlotaVehiculosRef.operationName = 'GetFlotaVehiculos';
 
-export function getFlotaVehiculos(dcOrOptions, options) {
+export function getFlotaVehiculos(dcOrVars, varsOrOptions, options) {
 
-  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(getFlotaVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 

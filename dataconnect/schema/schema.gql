@@ -24,6 +24,27 @@ enum MomentoInspeccion { ANTES DESPUES }
 enum EstadoVehiculo { APTO CON_OBSERVACIONES NO_APTO }
 enum SalidaVehiculoEstado { PROGRAMADA EN_SERVICIO FINALIZADA CANCELADA }
 
+enum SolicitudContactoEstado { RECIBIDA EN_REVISION ATENDIDA }
+
+type SolicitudContacto @table(name: "solicitud_contacto") {
+  id: UUID!
+  nombre: String! @col(dataType: "varchar(100)")
+  email: String! @col(dataType: "varchar(120)")
+  telefono: String! @col(dataType: "varchar(20)")
+  servicio: String! @col(dataType: "varchar(30)")
+  mensaje: String! @col(dataType: "varchar(2000)")
+  hashContenido: String! @col(dataType: "varchar(64)")
+  estado: SolicitudContactoEstado! @default(value: RECIBIDA)
+  creadoEn: Timestamp! @default(expr: "request.time")
+  actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Contador por origen y hora; no conserva IPs en texto claro.
+type LimiteContacto @table(name: "limite_contacto") {
+  id: String!
+  contador: Int! @default(value: 0)
+}
+
 # ====================== MÓDULO 1: IDENTIDAD Y ACCESO ==========================
 
 # Catálogo de perfiles (admin, recepcionista, operario, cliente).
@@ -119,6 +140,13 @@ type Comanda @table(name: "comanda") {
   fechaEntregaReal: Timestamp
   creadoEn: Timestamp! @default(expr: "request.time")
   actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Historial de la cuenta sin reasignar la ficha de recepción. La clave impide duplicados.
+type ComandaVinculada @table(name: "comanda_vinculada", key: ["usuario", "comanda"]) {
+  usuario: Usuario!
+  comanda: Comanda!
+  vinculadaEn: Timestamp! @default(expr: "request.time")
 }
 
 # Línea de detalle: cada prenda con su servicio, cantidad y subtotal (RF09/RF10).
@@ -290,6 +318,7 @@ type Vehiculo @table(name: "vehiculo") {
   anio: Int
   descripcion: String @col(dataType: "varchar(200)")
   activo: Boolean! @default(value: true)
+  revision: Int! @default(value: 0)
   creadoEn: Timestamp! @default(expr: "request.time")
 }
 

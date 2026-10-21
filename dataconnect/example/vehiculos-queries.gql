@@ -1,6 +1,6 @@
 # Panel administrativo de flota: vehículos registrados, personal habilitado como
 # conductor y bitácora de salidas con sus inspecciones ANTES y DESPUES.
-query GetFlotaVehiculos @auth(level: USER) @refresh(every: { seconds: 15 }) {
+query GetFlotaVehiculos($limit: Int = 200, $offset: Int = 0) @auth(level: USER) @refresh(every: { seconds: 15 }) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
@@ -37,7 +37,7 @@ query GetFlotaVehiculos @auth(level: USER) @refresh(every: { seconds: 15 }) {
       nombre
     }
   }
-  salidas: salidaVehiculos(orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: 200) {
+  salidas: salidaVehiculos(orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
     id
     estado
     fechaSalida

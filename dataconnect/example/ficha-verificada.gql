@@ -1,0 +1,16 @@
+mutation VincularMiFichaVerificada @auth(level: USER) @transaction {
+  identidad: query @redact {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null") {
+      activo @check(expr: "this == true")
+      rol { nombre @check(expr: "this == 'cliente'") }
+      rut @check(expr: "this != null && this.size() > 0")
+    }
+  }
+  ficha: query @redact {
+    cliente(first: { where: { rut: { eq_expr: "response.identidad.usuario.rut" } } })
+      @check(expr: "this != null && (this.usuarioId == auth.uid || (this.usuarioId == null && auth.token.email_verified == true && this.email != null && this.email == auth.token.email))", message: "Verifica el correo de la cuenta; debe coincidir con el registrado en recepción") {
+      id usuarioId email
+    }
+  }
+  cliente_update(first: { where: { id: { eq_expr: "response.ficha.cliente.id" } } }, data: { usuarioId_expr: "auth.uid" })
+}
