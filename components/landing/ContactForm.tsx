@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Send, CheckCircle2, Clock, ShieldCheck, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassSelect from "@/components/ui/GlassSelect";
@@ -13,6 +13,8 @@ export default function ContactForm() {
     servicio: "",
     mensaje: "",
   });
+  const solicitudId = useRef<string | null>(null);
+  const enviando = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -25,28 +27,34 @@ export default function ContactForm() {
     if (error) setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (enviando.current) return;
     if (!formData.nombre || !formData.correo || !formData.telefono || !formData.servicio || !formData.mensaje) {
       setError("Por favor, completa todos los campos del formulario.");
       return;
     }
 
+    enviando.current = true;
     setIsSubmitting(true);
     setError("");
 
-    // Simulate sending message
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-      setFormData({
-        nombre: "",
-        correo: "",
-        telefono: "",
-        servicio: "",
-        mensaje: "",
+    solicitudId.current ??= crypto.randomUUID();
+    try {
+      const response = await fetch("/api/contacto", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, id: solicitudId.current }),
       });
-    }, 1500);
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) solicitudId.current = null;
+        throw new Error(result.error || "No se pudo guardar la solicitud.");
+      }
+      setSubmitted(true);
+      solicitudId.current = null;
+      setFormData({ nombre: "", correo: "", telefono: "", servicio: "", mensaje: "" });
+    } catch (error) { setError(error instanceof Error ? error.message : "No se pudo enviar la solicitud. Revisa tu conexión y reintenta."); }
+    finally { enviando.current = false; setIsSubmitting(false); }
   };
 
   const serviceOptions = [
