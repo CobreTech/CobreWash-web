@@ -15,20 +15,27 @@ export function useUsuarioActual() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    let version = 0;
+    let montado = true;
+    const actualizar = (user: typeof auth.currentUser) => {
+      const solicitud = ++version;
+      setUsuario(null);
       if (!user) {
         setUsuario(null);
         setLoading(false);
         return;
       }
-
+      setLoading(true);
       void loadActiveUserProfile({ auth, dataConnect })
-        .then(setUsuario)
-        .catch(() => setUsuario(null))
-        .finally(() => setLoading(false));
-    });
+        .then(perfil => { if (montado && solicitud === version && auth.currentUser?.uid === user.uid) setUsuario(perfil); })
+        .catch(() => { if (montado && solicitud === version) setUsuario(null); })
+        .finally(() => { if (montado && solicitud === version) setLoading(false); });
+    };
+    const unsubscribe = onAuthStateChanged(auth, actualizar);
+    const refrescar = () => actualizar(auth.currentUser);
+    window.addEventListener("cobre:perfil-actualizado", refrescar);
 
-    return () => unsubscribe();
+    return () => { montado = false; version++; unsubscribe(); window.removeEventListener("cobre:perfil-actualizado", refrescar); };
   }, []);
 
   return { usuario, loading };
