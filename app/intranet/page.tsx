@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, CheckCircle2, Clock3, Loader2, Package, RefreshCw, Search, ShieldAlert, Users } from "lucide-react";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
-import { dataConnect } from "@/lib/firebase/client";
-import { ComandaEstado, getPanelProduccion, type GetPanelProduccionData } from "@/src/dataconnect-generated";
+import { consultarPanelProduccion } from "@/lib/produccion/consultar-panel";
+import { ComandaEstado, type GetPanelProduccionData } from "@/src/dataconnect-generated";
 import { alertaComanda } from "@/lib/produccion/alertas";
 import { useAlertasRetraso } from "@/components/intranet/AlertasRetraso";
 
@@ -40,7 +40,7 @@ export default function DashboardPage() {
     if (!permitido) return;
     if (!silencioso) setLoading(true);
     try {
-      const result = await getPanelProduccion(dataConnect, { limit: 100 }, { fetchPolicy: "SERVER_ONLY" });
+      const result = { data: await consultarPanelProduccion() };
       setData(result.data); setAhora(Date.now()); setError("");
     } catch {
       if (!silencioso) setError("No se pudo cargar el panel de producción.");
