@@ -30,17 +30,18 @@ import {
   User,
   X,
 } from "lucide-react";
-import { QueryFetchPolicy, subscribe } from "firebase/data-connect";
-import { getDownloadURL, ref as storageRef, uploadBytes } from "firebase/storage";
+import { consultarFlotaCompleta } from "@/lib/vehiculos/consultar";
+import AdjuntarEvidencia from "@/components/intranet/AdjuntarEvidencia";
+import FotoEvidencia from "@/components/intranet/FotoEvidencia";
+import { subirEvidencia } from "@/lib/vehiculos/evidencias";
+import { normalizarCodigoQr } from "@/lib/seguimiento/qr";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
-import { dataConnect, storage } from "@/lib/firebase/client";
+import { dataConnect } from "@/lib/firebase/client";
 import {
-  adjuntarFotoInspeccionFlota,
+  getMovimientoFlotaPorInspeccion,
   editarVehiculoFlota,
   EstadoVehiculo,
-  getFlotaVehiculos,
-  getFlotaVehiculosRef,
   registrarRetornoFlota,
   registrarSalidaFlota,
   registrarVehiculoFlota,
@@ -50,7 +51,6 @@ import {
 import type {
   ConductorFlota,
   EstadoOperativoVehiculo,
-  EvidenciaFotoInput,
   RetornoFormState,
   SalidaFlota,
   SalidaFormState,
@@ -160,27 +160,6 @@ function leerArchivoComoDataUrl(file: File): Promise<string> {
   });
 }
 
-async function subirFotoConRespaldo(foto: EvidenciaFotoInput): Promise<string> {
-  if (!foto.archivo) return foto.rutaStorage;
-  try {
-    const referencia = storageRef(storage, foto.rutaStorage);
-    const subida = uploadBytes(referencia, foto.archivo, {
-      contentType: foto.archivo.type || "image/jpeg",
-    });
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), 3500),
-    );
-    await Promise.race([subida, timeout]);
-    const url = await getDownloadURL(referencia);
-    if (url && url.length <= 500 && !/\s/.test(url)) {
-      return url;
-    }
-  } catch {
-    // Si Firebase Storage no está habilitado en el entorno actual, se conserva rutaStorage.
-  }
-  return foto.rutaStorage;
-}
-
 export default function VehiculosPage() {
   const permitido = useRoleGuard(["admin"]);
   const usuarioActual = useUsuarioActualContext();
@@ -189,6 +168,8 @@ export default function VehiculosPage() {
   const [salidas, setSalidas] = useState<SalidaFlota[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [salidaConfirmada, setSalidaConfirmada] = useState(false);
+  const [retornoConfirmado, setRetornoConfirmado] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tab, setTab] = useState<VistaVehiculos>("flota");
   const [busqueda, setBusqueda] = useState("");
@@ -212,6 +193,8 @@ export default function VehiculosPage() {
   >({});
 
   const solicitudActual = useRef(0);
+  const operacionSalida = useRef({ salidaId: "", inspeccionId: "" });
+  const operacionRetorno = useRef({ inspeccionId: "" });
   const inputFotoSalidaRef = useRef<HTMLInputElement | null>(null);
   const inputFotoRetornoRef = useRef<HTMLInputElement | null>(null);
 
@@ -224,6 +207,7 @@ export default function VehiculosPage() {
     setVehiculos(data.vehiculos);
     setConductores(filtrarConductoresFlota(data.conductores));
     setSalidas(data.salidas);
+    setSalidaDetalle(prev => prev ? (data.salidas.find(s => s.id === prev.id) ?? prev) : null);
     setLoading(false);
   }, []);
 
@@ -232,9 +216,7 @@ export default function VehiculosPage() {
       const solicitud = ++solicitudActual.current;
       if (!silencioso) setLoading(true);
       try {
-        const result = await getFlotaVehiculos(dataConnect, {
-          fetchPolicy: QueryFetchPolicy.SERVER_ONLY,
-        });
+        const result = { data: await consultarFlotaCompleta() };
         if (solicitud === solicitudActual.current) aplicarDatos(result.data);
       } catch (error) {
         console.error("No se pudo cargar la flota de vehículos:", error);
@@ -253,21 +235,16 @@ export default function VehiculosPage() {
 
   useEffect(() => {
     if (!permitido) return;
-    const query = getFlotaVehiculosRef(dataConnect);
-    const cancelar = subscribe(
-      query,
-      (result) => aplicarDatos(result.data),
-      () => {
-        void cargarFlota(true);
-      },
-    );
+    const inicial = window.setTimeout(() => void cargarFlota(), 0);
     const refrescar = () => void cargarFlota(true);
     const alVolver = () =>
       document.visibilityState === "visible" && refrescar();
+    const timer = window.setInterval(alVolver, 30_000);
     window.addEventListener("focus", refrescar);
     document.addEventListener("visibilitychange", alVolver);
     return () => {
-      cancelar();
+      window.clearInterval(timer);
+      window.clearTimeout(inicial);
       window.removeEventListener("focus", refrescar);
       document.removeEventListener("visibilitychange", alVolver);
     };
@@ -385,6 +362,8 @@ export default function VehiculosPage() {
   };
 
   const abrirModalSalida = (vehiculoIdPreseleccionado?: string) => {
+    setSalidaConfirmada(false);
+    operacionSalida.current = { salidaId: crypto.randomUUID(), inspeccionId: crypto.randomUUID() };
     const candidato =
       resumen.find(
         (r) =>
@@ -411,6 +390,8 @@ export default function VehiculosPage() {
   };
 
   const abrirModalRetorno = (salida: SalidaFlota) => {
+    setRetornoConfirmado(false);
+    operacionRetorno.current = { inspeccionId: crypto.randomUUID() };
     const antes = obtenerInspeccionMomento(salida, "ANTES");
     const kmBase = antes?.kilometraje ?? 0;
     setFormError("");
@@ -433,7 +414,7 @@ export default function VehiculosPage() {
     archivo?: File,
   ) => {
     setFormSalida((prev) => {
-      if (!prev) return prev;
+      if (!prev || !archivo || prev.fotos.length >= 20) return prev;
       const itemVehiculo = resumen.find(
         (r) => r.vehiculo.id === prev.vehiculoId,
       );
@@ -451,7 +432,7 @@ export default function VehiculosPage() {
         fotos: [
           ...prev.fotos,
           {
-            id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+            id: crypto.randomUUID(),
             rutaStorage: ruta,
             descripcion:
               nuevaFotoDesc.trim() ||
@@ -474,7 +455,7 @@ export default function VehiculosPage() {
     archivo?: File,
   ) => {
     setFormRetorno((prev) => {
-      if (!prev) return prev;
+      if (!prev || !archivo || prev.fotos.length >= 20) return prev;
       const idx = prev.fotos.length + 1;
       const base = nombreArchivo
         ? nombreArchivo.replace(/[^a-zA-Z0-9._-]/g, "_")
@@ -488,7 +469,7 @@ export default function VehiculosPage() {
         fotos: [
           ...prev.fotos,
           {
-            id: `${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
+            id: crypto.randomUUID(),
             rutaStorage: ruta,
             descripcion:
               nuevaFotoDesc.trim() ||
@@ -616,8 +597,11 @@ export default function VehiculosPage() {
     const kmNum = Number(formSalida.kilometraje.trim().replace(",", "."));
     setSaving(true);
     setFormError("");
+    let movimientoGuardado = salidaConfirmada;
     try {
-      const resultado = await registrarSalidaFlota(dataConnect, {
+      const previa = await getMovimientoFlotaPorInspeccion(dataConnect, { id: operacionSalida.current.inspeccionId }, { fetchPolicy: "SERVER_ONLY" });
+      const resultado = previa.data.inspeccionVehiculo ? { data: { inspeccion: { id: previa.data.inspeccionVehiculo.id } } } : await registrarSalidaFlota(dataConnect, {
+        ...operacionSalida.current,
         vehiculoId: formSalida.vehiculoId,
         repartidorId: formSalida.repartidorId,
         kilometraje: kmNum,
@@ -627,22 +611,13 @@ export default function VehiculosPage() {
           formSalida.observacionesInspeccion.trim() || null,
       });
 
-      const inspeccionId = resultado.data.inspeccion.id;
+      movimientoGuardado = true;
+      setSalidaConfirmada(true);
+      const inspeccionId = normalizarCodigoQr(resultado.data.inspeccion.id);
       for (let i = 0; i < formSalida.fotos.length; i++) {
         const foto = formSalida.fotos[i];
-        const rutaFinal = await subirFotoConRespaldo(foto);
-        if (foto.previewUrl) {
-          setPreviewsLocales((actual) => ({
-            ...actual,
-            [rutaFinal]: foto.previewUrl!,
-          }));
-        }
-        await adjuntarFotoInspeccionFlota(dataConnect, {
-          inspeccionId,
-          rutaStorage: rutaFinal,
-          descripcion: foto.descripcion || null,
-          orden: i + 1,
-        });
+        const rutaFinal = await subirEvidencia(inspeccionId, foto, i + 1);
+        if (foto.previewUrl) setPreviewsLocales(actual => ({ ...actual, [rutaFinal]: foto.previewUrl! }));
       }
 
       const patente = itemVehiculo?.vehiculo.patente ?? "Vehículo";
@@ -653,7 +628,7 @@ export default function VehiculosPage() {
       setFormSalida(null);
       await cargarFlota(true);
     } catch (error) {
-      setFormError(mapearErrorVehiculos(error));
+      setFormError(movimientoGuardado ? "El movimiento ya se guardó. Solo quedan fotografías pendientes: reintenta aquí o adjúntalas desde el historial. " + (error instanceof Error ? error.message : "") : mapearErrorVehiculos(error));
     } finally {
       setSaving(false);
     }
@@ -678,8 +653,11 @@ export default function VehiculosPage() {
     );
     setSaving(true);
     setFormError("");
+    let movimientoGuardado = retornoConfirmado;
     try {
-      const resultado = await registrarRetornoFlota(dataConnect, {
+      const previa = await getMovimientoFlotaPorInspeccion(dataConnect, { id: operacionRetorno.current.inspeccionId }, { fetchPolicy: "SERVER_ONLY" });
+      const resultado = previa.data.inspeccionVehiculo ? { data: { inspeccion: { id: previa.data.inspeccionVehiculo.id } } } : await registrarRetornoFlota(dataConnect, {
+        ...operacionRetorno.current,
         salidaId: formRetorno.salidaId,
         kilometraje: kmNum,
         estadoVehiculo: formRetorno.estadoVehiculo,
@@ -688,22 +666,13 @@ export default function VehiculosPage() {
           formRetorno.observacionesInspeccion.trim() || null,
       });
 
-      const inspeccionId = resultado.data.inspeccion.id;
+      movimientoGuardado = true;
+      setRetornoConfirmado(true);
+      const inspeccionId = normalizarCodigoQr(resultado.data.inspeccion.id);
       for (let i = 0; i < formRetorno.fotos.length; i++) {
         const foto = formRetorno.fotos[i];
-        const rutaFinal = await subirFotoConRespaldo(foto);
-        if (foto.previewUrl) {
-          setPreviewsLocales((actual) => ({
-            ...actual,
-            [rutaFinal]: foto.previewUrl!,
-          }));
-        }
-        await adjuntarFotoInspeccionFlota(dataConnect, {
-          inspeccionId,
-          rutaStorage: rutaFinal,
-          descripcion: foto.descripcion || null,
-          orden: i + 1,
-        });
+        const rutaFinal = await subirEvidencia(inspeccionId, foto, i + 1);
+        if (foto.previewUrl) setPreviewsLocales(actual => ({ ...actual, [rutaFinal]: foto.previewUrl! }));
       }
 
       const recorridos = Math.max(
@@ -717,7 +686,7 @@ export default function VehiculosPage() {
       setFormRetorno(null);
       await cargarFlota(true);
     } catch (error) {
-      setFormError(mapearErrorVehiculos(error));
+      setFormError(movimientoGuardado ? "El movimiento ya se guardó. Solo quedan fotografías pendientes: reintenta aquí o adjúntalas desde el historial. " + (error instanceof Error ? error.message : "") : mapearErrorVehiculos(error));
     } finally {
       setSaving(false);
     }
@@ -1897,7 +1866,7 @@ export default function VehiculosPage() {
                     Vehículo *
                   </label>
                   <select
-                    id="salida-vehiculo"
+                    id="salida-vehiculo" disabled={saving || salidaConfirmada}
                     value={formSalida.vehiculoId}
                     onChange={(e) => {
                       const sel = resumen.find(
@@ -1931,7 +1900,7 @@ export default function VehiculosPage() {
                     Conductor / Repartidor asignado *
                   </label>
                   <select
-                    id="salida-conductor"
+                    id="salida-conductor" disabled={saving || salidaConfirmada}
                     value={formSalida.repartidorId}
                     onChange={(e) =>
                       setFormSalida({
@@ -1966,7 +1935,7 @@ export default function VehiculosPage() {
                     Kilometraje de salida (km) *
                   </label>
                   <input
-                    id="salida-km"
+                    id="salida-km" disabled={saving || salidaConfirmada}
                     type="number"
                     step="0.1"
                     required
@@ -1989,7 +1958,7 @@ export default function VehiculosPage() {
                     Estado de inspección inicial *
                   </label>
                   <select
-                    id="salida-estado-vehiculo"
+                    id="salida-estado-vehiculo" disabled={saving || salidaConfirmada}
                     value={formSalida.estadoVehiculo}
                     onChange={(e) =>
                       setFormSalida({
@@ -2017,7 +1986,7 @@ export default function VehiculosPage() {
                   Destino / Observaciones de ruta
                 </label>
                 <input
-                  id="salida-observaciones"
+                  id="salida-observaciones" disabled={saving || salidaConfirmada}
                   type="text"
                   maxLength={300}
                   value={formSalida.observaciones}
@@ -2037,7 +2006,7 @@ export default function VehiculosPage() {
                   Observaciones técnicas de la inspección
                 </label>
                 <input
-                  id="salida-obs-inspeccion"
+                  id="salida-obs-inspeccion" disabled={saving || salidaConfirmada}
                   type="text"
                   maxLength={500}
                   value={formSalida.observacionesInspeccion}
@@ -2093,7 +2062,7 @@ export default function VehiculosPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => agregarEvidenciaSalida()}
+                    onClick={() => inputFotoSalidaRef.current?.click()}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500/15 px-3.5 py-2 text-xs font-bold text-brand-600 transition hover:bg-brand-500/25 dark:text-brand-400 cursor-pointer"
                   >
                     <Camera className="h-3.5 w-3.5" />
@@ -2248,7 +2217,7 @@ export default function VehiculosPage() {
                     Kilometraje de retorno (km) *
                   </label>
                   <input
-                    id="retorno-km"
+                    id="retorno-km" disabled={saving || retornoConfirmado}
                     type="number"
                     step="0.1"
                     required
@@ -2272,7 +2241,7 @@ export default function VehiculosPage() {
                     Estado al retornar *
                   </label>
                   <select
-                    id="retorno-estado-vehiculo"
+                    id="retorno-estado-vehiculo" disabled={saving || retornoConfirmado}
                     value={formRetorno.estadoVehiculo}
                     onChange={(e) =>
                       setFormRetorno({
@@ -2312,7 +2281,7 @@ export default function VehiculosPage() {
                   Novedades o comentarios de inspección final
                 </label>
                 <input
-                  id="retorno-obs-inspeccion"
+                  id="retorno-obs-inspeccion" disabled={saving || retornoConfirmado}
                   type="text"
                   maxLength={500}
                   value={formRetorno.observacionesInspeccion}
@@ -2368,7 +2337,7 @@ export default function VehiculosPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => agregarEvidenciaRetorno()}
+                    onClick={() => inputFotoRetornoRef.current?.click()}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500/15 px-3.5 py-2 text-xs font-bold text-brand-600 transition hover:bg-brand-500/25 dark:text-brand-400 cursor-pointer"
                   >
                     <Camera className="h-3.5 w-3.5" />
@@ -2491,6 +2460,7 @@ export default function VehiculosPage() {
                 );
                 const recorridos = calcularKilometrosRecorridos(salidaDetalle);
                 const resolverPreview = (ruta: string) => {
+                  if (ruta.startsWith("vehiculos/inspecciones/")) return null;
                   if (previewsLocales[ruta]) return previewsLocales[ruta];
                   if (
                     ruta.startsWith("http://") ||
@@ -2582,6 +2552,7 @@ export default function VehiculosPage() {
                               <p className="font-bold text-stone-800 dark:text-stone-200">
                                 Evidencia fotográfica ({antes.fotos.length})
                               </p>
+                              <AdjuntarEvidencia inspeccionId={antes.id} siguienteOrden={Math.max(0, ...antes.fotos.map(f => f.orden)) + 1} alGuardar={() => cargarFlota(true)} />
                               {antes.fotos.length === 0 ? (
                                 <p className="mt-1 text-stone-400">
                                   Sin fotografías adjuntas.
@@ -2607,9 +2578,7 @@ export default function VehiculosPage() {
                                             className="h-12 w-12 shrink-0 rounded-lg object-cover border border-stone-200 dark:border-white/10"
                                           />
                                         ) : (
-                                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400">
-                                            <Camera className="h-4 w-4" />
-                                          </span>
+                                          <FotoEvidencia ruta={f.rutaStorage} descripcion={f.descripcion || "Fotografía"} />
                                         )}
                                         <div className="min-w-0">
                                           <p className="font-bold text-stone-800 dark:text-stone-200">
@@ -2666,6 +2635,7 @@ export default function VehiculosPage() {
                               <p className="font-bold text-stone-800 dark:text-stone-200">
                                 Evidencia fotográfica ({despues.fotos.length})
                               </p>
+                              <AdjuntarEvidencia inspeccionId={despues.id} siguienteOrden={Math.max(0, ...despues.fotos.map(f => f.orden)) + 1} alGuardar={() => cargarFlota(true)} />
                               {despues.fotos.length === 0 ? (
                                 <p className="mt-1 text-stone-400">
                                   Sin fotografías adjuntas.
@@ -2691,9 +2661,7 @@ export default function VehiculosPage() {
                                             className="h-12 w-12 shrink-0 rounded-lg object-cover border border-stone-200 dark:border-white/10"
                                           />
                                         ) : (
-                                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400">
-                                            <Camera className="h-4 w-4" />
-                                          </span>
+                                          <FotoEvidencia ruta={f.rutaStorage} descripcion={f.descripcion || "Fotografía"} />
                                         )}
                                         <div className="min-w-0">
                                           <p className="font-bold text-stone-800 dark:text-stone-200">

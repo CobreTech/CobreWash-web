@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Las evidencias solo pasan por la API, que consulta permisos en Data Connect.
+    match /{path=**} { allow read, write: if false; }
+  }
+}

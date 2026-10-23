@@ -16,7 +16,8 @@ const mocks = vi.hoisted(() => ({
   editarVehiculoFlota: vi.fn(),
   registrarSalidaFlota: vi.fn(),
   registrarRetornoFlota: vi.fn(),
-  adjuntarFotoInspeccionFlota: vi.fn(),
+  subirEvidencia: vi.fn(),
+  getMovimiento: vi.fn(),
 }));
 
 vi.mock("@/components/intranet/useRoleGuard", () => ({
@@ -30,6 +31,11 @@ vi.mock("@/components/intranet/AuthGuard", () => ({
 vi.mock("@/lib/firebase/client", () => ({
   dataConnect: {},
   storage: {},
+}));
+
+vi.mock("@/lib/vehiculos/evidencias", () => ({
+  subirEvidencia: (...args: unknown[]) => mocks.subirEvidencia(...args),
+  endpointEvidencia: () => null,
 }));
 
 vi.mock("firebase/storage", () => ({
@@ -70,8 +76,7 @@ vi.mock("@/src/dataconnect-generated", () => ({
     mocks.registrarSalidaFlota(...args),
   registrarRetornoFlota: (...args: unknown[]) =>
     mocks.registrarRetornoFlota(...args),
-  adjuntarFotoInspeccionFlota: (...args: unknown[]) =>
-    mocks.adjuntarFotoInspeccionFlota(...args),
+  getMovimientoFlotaPorInspeccion: (...args: unknown[]) => mocks.getMovimiento(...args),
 }));
 
 import VehiculosPage from "./page";
@@ -231,15 +236,16 @@ beforeEach(() => {
   mocks.registrarSalidaFlota.mockReset().mockResolvedValue({
     data: {
       salida: { id: "s-nueva" },
-      inspeccion: { id: "i-nueva" },
+      inspeccion: { id: "10000000-0000-4000-8000-000000000001" },
     },
   });
   mocks.registrarRetornoFlota.mockReset().mockResolvedValue({
     data: {
-      inspeccion: { id: "i-retorno" },
+      inspeccion: { id: "10000000-0000-4000-8000-000000000002" },
     },
   });
-  mocks.adjuntarFotoInspeccionFlota.mockReset().mockResolvedValue({ data: {} });
+  mocks.subirEvidencia.mockReset().mockResolvedValue("vehiculos/inspecciones/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001.jpg");
+  mocks.getMovimiento.mockReset().mockResolvedValue({ data: { inspeccionVehiculo: null } });
 });
 
 afterEach(cleanup);
@@ -284,7 +290,8 @@ describe("página administrativa de control de vehículos (Sprint 08)", () => {
     fireEvent.change(screen.getByLabelText(/Kilometraje de salida/i), {
       target: { value: "12100" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Adjuntar evidencia/i }));
+    fireEvent.change(document.getElementById("salida-input-fotos")!, { target: { files: [new File(["jpeg"], "foto.jpg", { type: "image/jpeg" })] } });
+    await waitFor(() => expect(screen.getByText(/foto.jpg/)).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: /Confirmar salida/i }));
 
     await waitFor(() => {
@@ -295,7 +302,7 @@ describe("página administrativa de control de vehículos (Sprint 08)", () => {
           kilometraje: 12100,
         }),
       );
-      expect(mocks.adjuntarFotoInspeccionFlota).toHaveBeenCalledTimes(1);
+      expect(mocks.subirEvidencia).toHaveBeenCalledTimes(1);
     });
   });
 
