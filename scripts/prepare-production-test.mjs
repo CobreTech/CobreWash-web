@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 const root = resolve("scratch/production-test");
 const generarSdk = process.argv.includes("--sdk");
+const generarAndroid = process.argv.includes("--android-sdk");
 for (const dir of ["schema", "example", "produccion"]) {
   await mkdir(root + "/dataconnect/" + dir, {recursive:true});
   for (const file of await readdir("dataconnect/" + dir)) {
@@ -11,7 +12,8 @@ for (const dir of ["schema", "example", "produccion"]) {
     const config = dir === "example" && generarSdk
       ? "connectorId: example\ngenerate:\n  javascriptSdk:\n    - outputDir: " + JSON.stringify(resolve("src/dataconnect-generated")) + "\n      package: \"@dataconnect/generated\"\n      packageJsonDir: " + JSON.stringify(resolve(".")) + "\n      react: true\n      angular: false\n"
       : "connectorId: " + dir + "\n";
-    await writeFile(root + "/dataconnect/" + dir + "/connector.yaml", config);
+    const kotlin = generarAndroid && dir === "example" ? "  kotlinSdk:\n    - outputDir: " + JSON.stringify(resolve("../CobreWash-App/shared/dataconnect-generated")) + "\n      package: com.elcobre.lavanderiaelcobre.dataconnect\n" : "";
+    await writeFile(root + "/dataconnect/" + dir + "/connector.yaml", config + kotlin);
   }
 }
 await writeFile(root + "/dataconnect/dataconnect.yaml", await readFile("dataconnect/dataconnect.yaml"));

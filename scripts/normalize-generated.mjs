@@ -5,7 +5,7 @@ async function normalize(dir) {
     if (entry.isDirectory()) await normalize(path);
     else if (/\.(js|ts|md)$/.test(entry.name)) {
       const text = await readFile(path, "utf8");
-      await writeFile(path, text.replace(/[ \t]+$/gm, "").trimEnd() + "\n");
+      await writeFile(path, text.replace(/\r\n?/g, "\n").replace(/[ \t]+$/gm, "").trimEnd() + "\n");
     }
   }
 }

@@ -64,3 +64,26 @@ jobs:
 
       - name: Build production bundle
         run: pnpm build
+
+  backend:
+    name: Data Connect / ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [production, vehiculos, reportes, avisos, portal, estabilizacion]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Compile schema and verify generated SDK
+        run: |
+          pnpm dataconnect:compile:web
+          git diff --exit-code -- src/dataconnect-generated ':(glob,exclude)src/dataconnect-generated/**/*.md'
+      - name: Integration suite with an isolated PostgreSQL database
+        run: pnpm test:${{ matrix.suite }}
