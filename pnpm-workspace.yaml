@@ -13,6 +13,11 @@ packages:
   - '.'
 
 overrides:
+  # Patched transitive dependencies used by Firebase CLI and the test toolchain.
+  basic-ftp: "^6.2.1"
+  vite: "~8.2.4"
+  zod: "^4.6.6"
+  undici: "^8.12.2"
   next: "^16.4.1"
   browserslist: "4.28.7"
   sharp: ">=0.35.5"
