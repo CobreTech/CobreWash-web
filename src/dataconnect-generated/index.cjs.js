@@ -9,6 +9,32 @@ const ComandaEstado = {
 }
 exports.ComandaEstado = ComandaEstado;
 
+const DerechoPrivacidad = {
+  ACCESO: "ACCESO",
+  RECTIFICACION: "RECTIFICACION",
+  SUPRESION: "SUPRESION",
+  OPOSICION: "OPOSICION",
+  BLOQUEO: "BLOQUEO",
+  PORTABILIDAD: "PORTABILIDAD",
+  REVOCACION: "REVOCACION",
+}
+exports.DerechoPrivacidad = DerechoPrivacidad;
+
+const EstadoConteoInventario = {
+  PENDIENTE: "PENDIENTE",
+  APROBADO: "APROBADO",
+  RECHAZADO: "RECHAZADO",
+}
+exports.EstadoConteoInventario = EstadoConteoInventario;
+
+const EstadoDerecho = {
+  RECIBIDA: "RECIBIDA",
+  VERIFICACION: "VERIFICACION",
+  EN_GESTION: "EN_GESTION",
+  RESPONDIDA: "RESPONDIDA",
+}
+exports.EstadoDerecho = EstadoDerecho;
+
 const EstadoVehiculo = {
   APTO: "APTO",
   CON_OBSERVACIONES: "CON_OBSERVACIONES",
@@ -23,6 +49,12 @@ const IncidenciaEstado = {
 }
 exports.IncidenciaEstado = IncidenciaEstado;
 
+const MomentoInspeccion = {
+  ANTES: "ANTES",
+  DESPUES: "DESPUES",
+}
+exports.MomentoInspeccion = MomentoInspeccion;
+
 const SalidaVehiculoEstado = {
   PROGRAMADA: "PROGRAMADA",
   EN_SERVICIO: "EN_SERVICIO",
@@ -30,6 +62,13 @@ const SalidaVehiculoEstado = {
   CANCELADA: "CANCELADA",
 }
 exports.SalidaVehiculoEstado = SalidaVehiculoEstado;
+
+const SolicitudContactoEstado = {
+  RECIBIDA: "RECIBIDA",
+  EN_REVISION: "EN_REVISION",
+  ATENDIDA: "ATENDIDA",
+}
+exports.SolicitudContactoEstado = SolicitudContactoEstado;
 
 const TipoCliente = {
   HOTEL: "HOTEL",
@@ -128,6 +167,21 @@ exports.getMisComandasAsignadas = function getMisComandasAsignadas(dcOrVars, var
 }
 ;
 
+const getInsumosOperarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInsumosOperario', inputVars);
+}
+getInsumosOperarioRef.operationName = 'GetInsumosOperario';
+exports.getInsumosOperarioRef = getInsumosOperarioRef;
+
+exports.getInsumosOperario = function getInsumosOperario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getInsumosOperarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const crearAvisoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -169,6 +223,268 @@ exports.getAvisosParaEquipo = function getAvisosParaEquipo(dcOrVars, varsOrOptio
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getAvisosParaEquipoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getSolicitudContactoConfirmadaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSolicitudContactoConfirmada', inputVars);
+}
+getSolicitudContactoConfirmadaRef.operationName = 'GetSolicitudContactoConfirmada';
+exports.getSolicitudContactoConfirmadaRef = getSolicitudContactoConfirmadaRef;
+
+exports.getSolicitudContactoConfirmada = function getSolicitudContactoConfirmada(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getSolicitudContactoConfirmadaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const prepararLimiteContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'PrepararLimiteContacto', inputVars);
+}
+prepararLimiteContactoRef.operationName = 'PrepararLimiteContacto';
+exports.prepararLimiteContactoRef = prepararLimiteContactoRef;
+
+exports.prepararLimiteContacto = function prepararLimiteContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(prepararLimiteContactoRef(dcInstance, inputVars));
+}
+;
+
+const getLimiteContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetLimiteContacto', inputVars);
+}
+getLimiteContactoRef.operationName = 'GetLimiteContacto';
+exports.getLimiteContactoRef = getLimiteContactoRef;
+
+exports.getLimiteContacto = function getLimiteContacto(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getLimiteContactoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const registrarSolicitudContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarSolicitudContacto', inputVars);
+}
+registrarSolicitudContactoRef.operationName = 'RegistrarSolicitudContacto';
+exports.registrarSolicitudContactoRef = registrarSolicitudContactoRef;
+
+exports.registrarSolicitudContacto = function registrarSolicitudContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarSolicitudContactoRef(dcInstance, inputVars));
+}
+;
+
+const getSolicitudesContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetSolicitudesContacto', inputVars);
+}
+getSolicitudesContactoRef.operationName = 'GetSolicitudesContacto';
+exports.getSolicitudesContactoRef = getSolicitudesContactoRef;
+
+exports.getSolicitudesContacto = function getSolicitudesContacto(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getSolicitudesContactoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const actualizarEstadoSolicitudContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ActualizarEstadoSolicitudContacto', inputVars);
+}
+actualizarEstadoSolicitudContactoRef.operationName = 'ActualizarEstadoSolicitudContacto';
+exports.actualizarEstadoSolicitudContactoRef = actualizarEstadoSolicitudContactoRef;
+
+exports.actualizarEstadoSolicitudContacto = function actualizarEstadoSolicitudContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(actualizarEstadoSolicitudContactoRef(dcInstance, inputVars));
+}
+;
+
+const getInspeccionParaEvidenciasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInspeccionParaEvidencias', inputVars);
+}
+getInspeccionParaEvidenciasRef.operationName = 'GetInspeccionParaEvidencias';
+exports.getInspeccionParaEvidenciasRef = getInspeccionParaEvidenciasRef;
+
+exports.getInspeccionParaEvidencias = function getInspeccionParaEvidencias(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getInspeccionParaEvidenciasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getMovimientoFlotaPorInspeccionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMovimientoFlotaPorInspeccion', inputVars);
+}
+getMovimientoFlotaPorInspeccionRef.operationName = 'GetMovimientoFlotaPorInspeccion';
+exports.getMovimientoFlotaPorInspeccionRef = getMovimientoFlotaPorInspeccionRef;
+
+exports.getMovimientoFlotaPorInspeccion = function getMovimientoFlotaPorInspeccion(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getMovimientoFlotaPorInspeccionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const registrarEvidenciaGuardadaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarEvidenciaGuardada', inputVars);
+}
+registrarEvidenciaGuardadaRef.operationName = 'RegistrarEvidenciaGuardada';
+exports.registrarEvidenciaGuardadaRef = registrarEvidenciaGuardadaRef;
+
+exports.registrarEvidenciaGuardada = function registrarEvidenciaGuardada(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarEvidenciaGuardadaRef(dcInstance, inputVars));
+}
+;
+
+const vincularMiFichaVerificadaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'VincularMiFichaVerificada');
+}
+vincularMiFichaVerificadaRef.operationName = 'VincularMiFichaVerificada';
+exports.vincularMiFichaVerificadaRef = vincularMiFichaVerificadaRef;
+
+exports.vincularMiFichaVerificada = function vincularMiFichaVerificada(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(vincularMiFichaVerificadaRef(dcInstance, inputVars));
+}
+;
+
+const registrarConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarConteoInventario', inputVars);
+}
+registrarConteoInventarioRef.operationName = 'RegistrarConteoInventario';
+exports.registrarConteoInventarioRef = registrarConteoInventarioRef;
+
+exports.registrarConteoInventario = function registrarConteoInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarConteoInventarioRef(dcInstance, inputVars));
+}
+;
+
+const getMiConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMiConteoInventario', inputVars);
+}
+getMiConteoInventarioRef.operationName = 'GetMiConteoInventario';
+exports.getMiConteoInventarioRef = getMiConteoInventarioRef;
+
+exports.getMiConteoInventario = function getMiConteoInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getMiConteoInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getMisConteosInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMisConteosInventario', inputVars);
+}
+getMisConteosInventarioRef.operationName = 'GetMisConteosInventario';
+exports.getMisConteosInventarioRef = getMisConteosInventarioRef;
+
+exports.getMisConteosInventario = function getMisConteosInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getMisConteosInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getConteosInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetConteosInventario', inputVars);
+}
+getConteosInventarioRef.operationName = 'GetConteosInventario';
+exports.getConteosInventarioRef = getConteosInventarioRef;
+
+exports.getConteosInventario = function getConteosInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getConteosInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const aprobarConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AprobarConteoInventario', inputVars);
+}
+aprobarConteoInventarioRef.operationName = 'AprobarConteoInventario';
+exports.aprobarConteoInventarioRef = aprobarConteoInventarioRef;
+
+exports.aprobarConteoInventario = function aprobarConteoInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(aprobarConteoInventarioRef(dcInstance, inputVars));
+}
+;
+
+const rechazarConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RechazarConteoInventario', inputVars);
+}
+rechazarConteoInventarioRef.operationName = 'RechazarConteoInventario';
+exports.rechazarConteoInventarioRef = rechazarConteoInventarioRef;
+
+exports.rechazarConteoInventario = function rechazarConteoInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(rechazarConteoInventarioRef(dcInstance, inputVars));
+}
+;
+
+const getStockInventarioRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetStockInventario');
+}
+getStockInventarioRef.operationName = 'GetStockInventario';
+exports.getStockInventarioRef = getStockInventarioRef;
+
+exports.getStockInventario = function getStockInventario(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getStockInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getHistorialInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHistorialInventario', inputVars);
+}
+getHistorialInventarioRef.operationName = 'GetHistorialInventario';
+exports.getHistorialInventarioRef = getHistorialInventarioRef;
+
+exports.getHistorialInventario = function getHistorialInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getHistorialInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
@@ -533,6 +849,137 @@ exports.registrarSalidaInventarioRef = registrarSalidaInventarioRef;
 exports.registrarSalidaInventario = function registrarSalidaInventario(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(registrarSalidaInventarioRef(dcInstance, inputVars));
+}
+;
+
+const getMisComandasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMisComandas', inputVars);
+}
+getMisComandasRef.operationName = 'GetMisComandas';
+exports.getMisComandasRef = getMisComandasRef;
+
+exports.getMisComandas = function getMisComandas(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getMisComandasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const vincularMiComandaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'VincularMiComanda', inputVars);
+}
+vincularMiComandaRef.operationName = 'VincularMiComanda';
+exports.vincularMiComandaRef = vincularMiComandaRef;
+
+exports.vincularMiComanda = function vincularMiComanda(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(vincularMiComandaRef(dcInstance, inputVars));
+}
+;
+
+const autorizarGestionPrivacidadRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'AutorizarGestionPrivacidad');
+}
+autorizarGestionPrivacidadRef.operationName = 'AutorizarGestionPrivacidad';
+exports.autorizarGestionPrivacidadRef = autorizarGestionPrivacidadRef;
+
+exports.autorizarGestionPrivacidad = function autorizarGestionPrivacidad(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(autorizarGestionPrivacidadRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getComprobanteDerechoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetComprobanteDerecho', inputVars);
+}
+getComprobanteDerechoRef.operationName = 'GetComprobanteDerecho';
+exports.getComprobanteDerechoRef = getComprobanteDerechoRef;
+
+exports.getComprobanteDerecho = function getComprobanteDerecho(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getComprobanteDerechoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const recibirSolicitudDerechoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RecibirSolicitudDerecho', inputVars);
+}
+recibirSolicitudDerechoRef.operationName = 'RecibirSolicitudDerecho';
+exports.recibirSolicitudDerechoRef = recibirSolicitudDerechoRef;
+
+exports.recibirSolicitudDerecho = function recibirSolicitudDerecho(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(recibirSolicitudDerechoRef(dcInstance, inputVars));
+}
+;
+
+const listarSolicitudesDerechoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListarSolicitudesDerecho', inputVars);
+}
+listarSolicitudesDerechoRef.operationName = 'ListarSolicitudesDerecho';
+exports.listarSolicitudesDerechoRef = listarSolicitudesDerechoRef;
+
+exports.listarSolicitudesDerecho = function listarSolicitudesDerecho(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(listarSolicitudesDerechoRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const gestionarSolicitudDerechoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'GestionarSolicitudDerecho', inputVars);
+}
+gestionarSolicitudDerechoRef.operationName = 'GestionarSolicitudDerecho';
+exports.gestionarSolicitudDerechoRef = gestionarSolicitudDerechoRef;
+
+exports.gestionarSolicitudDerecho = function gestionarSolicitudDerecho(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(gestionarSolicitudDerechoRef(dcInstance, inputVars));
+}
+;
+
+const contarLimitesContactoVencidosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ContarLimitesContactoVencidos', inputVars);
+}
+contarLimitesContactoVencidosRef.operationName = 'ContarLimitesContactoVencidos';
+exports.contarLimitesContactoVencidosRef = contarLimitesContactoVencidosRef;
+
+exports.contarLimitesContactoVencidos = function contarLimitesContactoVencidos(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(contarLimitesContactoVencidosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const purgarLimitesContactoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'PurgarLimitesContacto', inputVars);
+}
+purgarLimitesContactoRef.operationName = 'PurgarLimitesContacto';
+exports.purgarLimitesContactoRef = purgarLimitesContactoRef;
+
+exports.purgarLimitesContacto = function purgarLimitesContacto(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(purgarLimitesContactoRef(dcInstance, inputVars));
 }
 ;
 
@@ -1066,5 +1513,105 @@ exports.getComandaOperativaPorQr = function getComandaOperativaPorQr(dcOrVars, v
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getComandaOperativaPorQrRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const registrarVehiculoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarVehiculoFlota', inputVars);
+}
+registrarVehiculoFlotaRef.operationName = 'RegistrarVehiculoFlota';
+exports.registrarVehiculoFlotaRef = registrarVehiculoFlotaRef;
+
+exports.registrarVehiculoFlota = function registrarVehiculoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarVehiculoFlotaRef(dcInstance, inputVars));
+}
+;
+
+const editarVehiculoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EditarVehiculoFlota', inputVars);
+}
+editarVehiculoFlotaRef.operationName = 'EditarVehiculoFlota';
+exports.editarVehiculoFlotaRef = editarVehiculoFlotaRef;
+
+exports.editarVehiculoFlota = function editarVehiculoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(editarVehiculoFlotaRef(dcInstance, inputVars));
+}
+;
+
+const registrarSalidaFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarSalidaFlota', inputVars);
+}
+registrarSalidaFlotaRef.operationName = 'RegistrarSalidaFlota';
+exports.registrarSalidaFlotaRef = registrarSalidaFlotaRef;
+
+exports.registrarSalidaFlota = function registrarSalidaFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarSalidaFlotaRef(dcInstance, inputVars));
+}
+;
+
+const registrarRetornoFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarRetornoFlota', inputVars);
+}
+registrarRetornoFlotaRef.operationName = 'RegistrarRetornoFlota';
+exports.registrarRetornoFlotaRef = registrarRetornoFlotaRef;
+
+exports.registrarRetornoFlota = function registrarRetornoFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarRetornoFlotaRef(dcInstance, inputVars));
+}
+;
+
+const adjuntarFotoInspeccionFlotaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdjuntarFotoInspeccionFlota', inputVars);
+}
+adjuntarFotoInspeccionFlotaRef.operationName = 'AdjuntarFotoInspeccionFlota';
+exports.adjuntarFotoInspeccionFlotaRef = adjuntarFotoInspeccionFlotaRef;
+
+exports.adjuntarFotoInspeccionFlota = function adjuntarFotoInspeccionFlota(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adjuntarFotoInspeccionFlotaRef(dcInstance, inputVars));
+}
+;
+
+const getFlotaVehiculosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetFlotaVehiculos', inputVars);
+}
+getFlotaVehiculosRef.operationName = 'GetFlotaVehiculos';
+exports.getFlotaVehiculosRef = getFlotaVehiculosRef;
+
+exports.getFlotaVehiculos = function getFlotaVehiculos(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getFlotaVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getHistorialVehiculosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHistorialVehiculos', inputVars);
+}
+getHistorialVehiculosRef.operationName = 'GetHistorialVehiculos';
+exports.getHistorialVehiculosRef = getHistorialVehiculosRef;
+
+exports.getHistorialVehiculos = function getHistorialVehiculos(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getHistorialVehiculosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

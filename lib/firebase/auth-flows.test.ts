@@ -31,6 +31,7 @@ vi.mock("firebase/data-connect", () => ({
 }));
 
 vi.mock("@/src/dataconnect-generated", () => ({
+  TipoCliente: { PARTICULAR: "PARTICULAR", HOTEL: "HOTEL" },
   actualizarUsuario: mocks.updateUser,
   crearClienteAdministrado: mocks.createAdminClient,
   crearUsuarioAdministrado: mocks.createAdminUser,
@@ -55,7 +56,8 @@ import {
 
 const auth = {} as Auth;
 const dataConnect = {} as DataConnect;
-const clientInput: ClientRegistrationInput = {
+const clientInput: ClientRegistrationInput & { autorizaDatos: boolean; versionPrivacidad: string } = {
+  autorizaDatos: true, versionPrivacidad: "2026-10-25",
   nombre: " Ana ",
   apellido: " Pérez ",
   rut: "123456785",
@@ -131,6 +133,32 @@ describe("registro público de clientes", () => {
     vi.resetAllMocks();
   });
 
+  it.each(["admin", "recepcionista", "operario", "conductor", "repartidor"])(
+    "no crea ni Auth ni perfil si se inyecta el tipo interno %s",
+    async (tipo) => {
+      await expect(registerPublicClient({ auth, dataConnect }, {
+        ...clientInput, tipoCliente: tipo as ClientRegistrationInput["tipoCliente"],
+      })).rejects.toThrow("Selecciona el tipo de cliente.");
+      expect(mocks.createUser).not.toHaveBeenCalled();
+      expect(mocks.registerClient).not.toHaveBeenCalled();
+      expect(mocks.createAdminUser).not.toHaveBeenCalled();
+    },
+  );
+
+  it("descarta roles inyectados y solo llama a la operación de clientes", async () => {
+    mocks.createUser.mockResolvedValue({ user: { delete: vi.fn() } });
+    mocks.registerClient.mockResolvedValue({});
+    await registerPublicClient({ auth, dataConnect }, {
+      ...clientInput, rolId: "rol-admin", rol: "admin", activo: true,
+    } as typeof clientInput);
+    const variables = mocks.registerClient.mock.calls[0][1];
+    expect(variables).not.toHaveProperty("rolId");
+    expect(variables).not.toHaveProperty("rol");
+    expect(variables).not.toHaveProperty("activo");
+    expect(mocks.createAdminUser).not.toHaveBeenCalled();
+    expect(mocks.createAdminClient).not.toHaveBeenCalled();
+  });
+
   it("crea Auth y luego Usuario+Cliente con datos normalizados", async () => {
     const deleteUser = vi.fn();
     mocks.createUser.mockResolvedValue({ user: { delete: deleteUser } });
@@ -140,6 +168,7 @@ describe("registro público de clientes", () => {
 
     expect(mocks.createUser).toHaveBeenCalledWith(auth, "ana@example.com", "clave1");
     expect(mocks.registerClient).toHaveBeenCalledWith(dataConnect, {
+      versionPrivacidad: "2026-10-25",
       rut: "12.345.678-5",
       nombre: "Ana",
       apellido: "Pérez",
@@ -149,6 +178,11 @@ describe("registro público de clientes", () => {
       tipoCliente: "PARTICULAR",
     });
     expect(deleteUser).not.toHaveBeenCalled();
+  });
+  it("no crea una identidad Firebase sin autorización de datos de la versión vigente", async () => {
+    await expect(registerPublicClient({ auth, dataConnect }, { ...clientInput, autorizaDatos: false })).rejects.toThrow("autoriza");
+    await expect(registerPublicClient({ auth, dataConnect }, { ...clientInput, versionPrivacidad: "anterior" })).rejects.toThrow("vigente");
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
   it("elimina la cuenta Auth si falla la transacción de Usuario+Cliente", async () => {

@@ -62,6 +62,7 @@ mutation CrearUsuarioAdministrado(
 # en una sola transacción (Cliente.usuario solo se llena si el cliente creó cuenta).
 mutation RegistrarseComoCliente(
   $rolId: UUID @retired(reason: "El rol cliente ahora se resuelve en el servidor")
+  $crearFicha: Boolean! = true
   $rut: String!
   $nombre: String!
   $apellido: String!
@@ -69,16 +70,22 @@ mutation RegistrarseComoCliente(
   $email: String!
   $direccion: String
   $tipoCliente: TipoCliente!
+  $versionPrivacidad: String!
 ) @auth(level: USER) @transaction {
   query @redact {
+    previa: cliente(first: { where: { rut: { eq: $rut } } })
+      @check(expr: "vars.crearFicha == (this == null)", message: "FICHA_RUT_EXISTENTE: vuelve a preparar la cuenta sin duplicar la ficha") { id }
+
     rolCliente: rol(first: { where: { nombre: { eq: "cliente" } } })
       @check(expr: "this != null", message: "El rol cliente no está configurado") {
-      id
+      id @check(expr: "vars.versionPrivacidad == '2026-10-25'", message: "Debes autorizar el aviso de privacidad vigente")
     }
   }
   usuario_insert(data: {
     id_expr: "auth.uid"
     rolId_expr: "response.query.rolCliente.id"
+    versionPrivacidad: $versionPrivacidad
+    autorizadaEn_expr: "request.time"
     rut: $rut
     nombre: $nombre
     apellido: $apellido
@@ -86,19 +93,21 @@ mutation RegistrarseComoCliente(
     email: $email
   })
   cliente_insert(data: {
+    rut: $rut
     usuario: { id_expr: "auth.uid" }
     nombre: $nombre
     tipoCliente: $tipoCliente
     telefono: $telefono
     email: $email
     direccion: $direccion
-  })
+  }) @include(if: $crearFicha)
 }
 
 # Alta de cliente realizada desde la intranet. La autorización corresponde a
 # la sesión principal del administrador y el rol cliente se resuelve en servidor.
 mutation CrearClienteAdministrado(
   $id: String!
+  $crearFicha: Boolean! = true
   $rut: String!
   $nombre: String!
   $apellido: String!
@@ -108,6 +117,9 @@ mutation CrearClienteAdministrado(
   $tipoCliente: TipoCliente!
 ) @auth(level: USER) @transaction {
   query @redact {
+    previa: cliente(first: { where: { rut: { eq: $rut } } })
+      @check(expr: "vars.crearFicha == (this == null)", message: "FICHA_RUT_EXISTENTE: vuelve a preparar la cuenta sin duplicar la ficha") { id }
+
     administrador: usuario(id_expr: "auth.uid")
       @check(expr: "this != null", message: "Administrador no encontrado") {
       activo @check(expr: "this == true", message: "La cuenta administradora está inactiva")
@@ -130,13 +142,14 @@ mutation CrearClienteAdministrado(
     email: $email
   })
   cliente_insert(data: {
+    rut: $rut
     usuario: { id: $id }
     nombre: $nombre
     tipoCliente: $tipoCliente
     telefono: $telefono
     email: $email
     direccion: $direccion
-  })
+  }) @include(if: $crearFicha)
 }
 
 # Edita una cuenta existente (rol, datos y estado activo/inactivo). Solo
@@ -249,6 +262,11 @@ mutation CrearSalidaVehiculo(
       activo @check(expr: "this == true", message: "El vehículo está inactivo")
     }
   }
+  bloqueo: vehiculo_update(id: $vehiculoId, data: { revision_update: { inc: 1 } })
+  revision: query @redact {
+    salidaVehiculo(first: { where: { vehiculoId: { eq: $vehiculoId }, estado: { in: [PROGRAMADA, EN_SERVICIO] } } })
+      @check(expr: "this == null", message: "El vehículo ya tiene una salida activa") { id }
+  }
   salidaVehiculo_insert(data: {
     vehiculo: { id: $vehiculoId }
     repartidor: { id: $repartidorId }
@@ -278,8 +296,13 @@ mutation RegistrarInspeccionAntes(
         estado: { eq: PROGRAMADA }
       } }
     ) @check(expr: "this != null", message: "La salida no está asignada al repartidor o ya fue iniciada") {
-      id
+      id vehiculoId
     }
+  }
+  bloqueo: vehiculo_update(first: { where: { id: { eq_expr: "response.query.salidaVehiculo.vehiculoId" } } }, data: { revision_update: { inc: 1 } })
+  revision: query @redact @check(expr: "vars.kilometraje >= 0") {
+    previas: inspeccionVehiculos(where: { salida: { vehiculoId: { eq_expr: "response.query.salidaVehiculo.vehiculoId" } } }, orderBy: [{ kilometraje: DESC }], limit: 1)
+      @check(expr: "this.all(i, i.kilometraje <= vars.kilometraje)", message: "El kilometraje no puede ser menor al último registrado") { kilometraje }
   }
   inspeccionVehiculo_insert(data: {
     salida: { id: $salidaId }
@@ -371,7 +394,7 @@ mutation AgregarFotoInspeccionVehiculo(
   $rutaStorage: String!
   $descripcion: String
   $orden: Int!
-) @auth(level: USER) @transaction {
+) @auth(level: NO_ACCESS) @transaction {
   query @redact {
     usuario(id_expr: "auth.uid") {
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
@@ -761,6 +784,7 @@ mutation ActualizarInsumo(
       unidadMedida: $unidadMedida
       stockMinimo: $stockMinimo
       activo: $activo
+      revisionStock_update: { inc: 1 }
     }
   ) @check(expr: "this != null", message: "Insumo no encontrado")
 }
@@ -781,7 +805,7 @@ mutation RegistrarEntradaInventario(
   }
   insumo_update(
     id: $insumoId
-    data: { stockActual_update: { inc: $cantidad } }
+    data: { stockActual_update: { inc: $cantidad }, revisionStock_update: { inc: 1 } }
   ) @check(expr: "this != null", message: "Insumo no encontrado")
   movimientoInventario_insert(data: {
     insumo: { id: $insumoId }
@@ -812,7 +836,7 @@ mutation RegistrarSalidaInventario(
   }
   insumo_update(
     id: $insumoId
-    data: { stockActual_update: { dec: $cantidad } }
+    data: { stockActual_update: { dec: $cantidad }, revisionStock_update: { inc: 1 } }
   ) @check(expr: "this != null", message: "Insumo no encontrado")
   movimientoInventario_insert(data: {
     insumo: { id: $insumoId }

@@ -1,5 +1,9 @@
 import Image from "next/image";
-import { Phone, Mail, MapPin, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { connection } from "next/server";
+import { Phone, Mail, MapPin, ExternalLink, ShieldCheck } from "lucide-react";
+import { configuracionLegal } from "@/lib/privacidad/configuracion";
+import { formatRut } from "@/lib/validators";
 
 // Inline Custom SVG Icons for Facebook and LinkedIn to bypass missing brand icons in certain lucide-react versions
 const FacebookIcon = ({ className }: { className?: string }) => (
@@ -16,7 +20,10 @@ const LinkedinIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export default function Footer() {
+export default async function Footer() {
+  // Leer la configuración del servidor también al atender la página de inicio.
+  await connection();
+  const legal = configuracionLegal();
   const socialLinks = [
     {
       name: "Facebook",
@@ -28,7 +35,7 @@ export default function Footer() {
       name: "LinkedIn",
       href: "https://linkedin.com/company/lavanderia-el-cobre",
       icon: LinkedinIcon,
-      label: "Lavandería El Cobre SpA",
+      label: "Lavandería El Cobre",
     },
   ];
 
@@ -116,6 +123,7 @@ export default function Footer() {
               <li className="flex items-center gap-3 text-stone-600 text-sm">
                 <Mail className="w-4 h-4 text-brand-600 shrink-0" />
                 <div>
+                  <p className="mb-1 text-xs text-stone-550">Consultas comerciales</p>
                   <a
                     href="mailto:ventas@lavanderiaelcobrespa.com"
                     className="hover:text-brand-650 font-bold transition-colors text-stone-800 break-all"
@@ -129,12 +137,29 @@ export default function Footer() {
 
         </div>
 
+        <section aria-labelledby="identificacion-legal" className="glass-card mb-8 rounded-3xl bg-white/55 p-5 text-sm text-stone-600 shadow-premium backdrop-blur-lg sm:p-7">
+          <h4 id="identificacion-legal" className="mb-4 flex items-center gap-3 text-xs font-extrabold uppercase tracking-wider text-brand-700"><span className="rounded-xl bg-brand-50 p-2.5"><ShieldCheck className="h-5 w-5" /></span>Identificación y datos personales</h4>
+          {legal.identidadCompleta ? (
+            <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+              <div><dt className="font-semibold text-stone-850">Razón social</dt><dd className="break-words">{legal.razonSocial}</dd></div>
+              <div><dt className="font-semibold text-stone-850">RUT</dt><dd>{formatRut(legal.rut)}</dd></div>
+              <div><dt className="font-semibold text-stone-850">Domicilio legal</dt><dd className="break-words">{legal.domicilio}</dd></div>
+              <div><dt className="font-semibold text-stone-850">Representante legal</dt><dd className="break-words">{legal.representante}</dd></div>
+            </dl>
+          ) : <p>La identificación legal del responsable está pendiente de completar. Puedes revisar la <Link href="/terminos" className="font-semibold text-brand-700 underline">información del portal</Link>.</p>}
+          <p className="mt-4">Para solicitudes sobre tus datos personales, utiliza el <Link href="/privacidad/derechos" className="font-semibold text-brand-700 underline">formulario de derechos</Link>. No necesitas una cuenta.</p>
+          {legal.email && <p className="mt-2 break-words">Contacto adicional de privacidad: <a href={`mailto:${legal.email}`} className="font-semibold text-brand-700 underline">{legal.email}</a>.</p>}
+        </section>
+
         {/* Footer Bottom (Copyright) */}
         <div className="pt-8 border-t border-stone-250 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-stone-500 font-medium">
-          <p>
-            © {new Date().getFullYear()} Lavandería El Cobre SpA. Todos los derechos reservados.
+          <p className="text-center sm:text-left">
+            © {new Date().getFullYear()} {legal.identidadCompleta ? legal.razonSocial : "Lavandería El Cobre"}. Todos los derechos reservados.
           </p>
-          <div className="flex gap-4">
+          <nav aria-label="Información legal y ayuda" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:justify-end">
+            <Link href="/privacidad" className="hover:text-brand-650 underline">Privacidad</Link>
+            <Link href="/privacidad/derechos" className="hover:text-brand-650 underline">Mis datos personales</Link>
+            <Link href="/terminos" className="hover:text-brand-650 underline">Información del portal</Link>
             <a
               href="https://maps.google.com/?q=Avenida+Balmaceda+1276,+Calama"
               target="_blank"
@@ -144,7 +169,7 @@ export default function Footer() {
               <span>Cómo llegar</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
+          </nav>
         </div>
 
       </div>

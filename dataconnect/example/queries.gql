@@ -82,7 +82,7 @@ query GetComandaPorQr($codigoQr: UUID!)
 # Los códigos QR de inventario solo pueden ser consultados por producción
 # o administración; escanear un código no evita la autorización.
 query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
-  yo: usuario(id_expr: "auth.uid") @redact {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol {
       nombre @check(
@@ -98,6 +98,7 @@ query GetInsumoPorQr($codigoQr: UUID!) @auth(level: USER) {
     unidadMedida
     stockActual
     stockMinimo
+    revisionStock
     activo
   }
 }
@@ -277,6 +278,7 @@ query GetComandasPaginadas(
   $cliente: String
   $fechaDesde: Timestamp
   $fechaHasta: Timestamp
+  $fechaHastaExclusiva: Timestamp
 ) @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
@@ -288,7 +290,7 @@ query GetComandasPaginadas(
     where: {
       estado: { eq: $estado, in: $estados }
       cliente: { nombre: { contains: $cliente } }
-      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta, lt: $fechaHastaExclusiva }
     }
     orderBy: [{ creadoEn: DESC }]
     limit: $limit
@@ -334,7 +336,7 @@ query GetComandasPaginadas(
     where: {
       estado: { eq: $estado, in: $estados }
       cliente: { nombre: { contains: $cliente } }
-      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta }
+      fechaRecepcion: { ge: $fechaDesde, le: $fechaHasta, lt: $fechaHastaExclusiva }
     }
   ) {
     _count

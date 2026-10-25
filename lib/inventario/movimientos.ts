@@ -1,3 +1,5 @@
+import { limitesFechasInclusivos } from "@/lib/reportes/fechas";
+
 export type EstadoStock = "OK" | "Bajo" | "Crítico" | "Inactivo";
 
 export interface StockEvaluable {
@@ -30,20 +32,13 @@ export function obtenerEstadoStock(item: StockEvaluable): EstadoStock {
   return "OK";
 }
 
-function inicioDia(fecha: string) {
-  return fecha ? new Date(`${fecha}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
-}
-
-function finDia(fecha: string) {
-  return fecha ? new Date(`${fecha}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
-}
-
 export function filtrarMovimientos<T extends MovimientoExportable>(
   movimientos: T[],
   filtros: FiltrosMovimiento,
 ): T[] {
-  const desde = filtros.fechaDesde ? inicioDia(filtros.fechaDesde) : Number.NEGATIVE_INFINITY;
-  const hasta = filtros.fechaHasta ? finDia(filtros.fechaHasta) : Number.POSITIVE_INFINITY;
+  const limites = limitesFechasInclusivos(filtros.fechaDesde || "", filtros.fechaHasta || "");
+  const desde = limites.fechaDesde ? Date.parse(limites.fechaDesde) : Number.NEGATIVE_INFINITY;
+  const hasta = limites.fechaHasta ? Date.parse(limites.fechaHasta) : Number.POSITIVE_INFINITY;
 
   return movimientos.filter((movimiento) => {
     const fecha = new Date(movimiento.fecha).getTime();
@@ -55,14 +50,15 @@ export function filtrarMovimientos<T extends MovimientoExportable>(
 }
 
 function celdaCsv(valor: string | number) {
-  const texto = String(valor).replaceAll('"', '""');
+  const seguro = typeof valor === "string" && /^\s*[=+@-]/.test(valor) ? `'${valor}` : String(valor);
+  const texto = seguro.replaceAll('"', '""');
   return `"${texto}"`;
 }
 
 export function crearCsvMovimientos(movimientos: MovimientoExportable[]) {
   const encabezado = ["Fecha", "Tipo", "Insumo", "Cantidad", "Unidad", "Motivo", "Usuario"];
   const filas = movimientos.map((movimiento) => [
-    new Date(movimiento.fecha).toLocaleString("es-CL"),
+    new Date(movimiento.fecha).toLocaleString("es-CL", { timeZone: "America/Santiago" }),
     movimiento.tipoMovimiento,
     movimiento.insumo.nombre,
     movimiento.cantidad,

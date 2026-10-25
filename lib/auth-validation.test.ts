@@ -37,6 +37,7 @@ describe("validación del registro público de clientes", () => {
   const validRegistration: PublicClientRegistrationInput = {
     ...validClient,
     confirmPassword: "clave1",
+    autorizaDatos: true, versionPrivacidad: "2026-10-25",
   };
 
   it("exige los datos personales y credenciales obligatorios", () => {
@@ -63,6 +64,20 @@ describe("validación del registro público de clientes", () => {
   it("acepta un registro válido y deja teléfono/dirección como opcionales", () => {
     expect(validatePublicClientRegistration(validRegistration)).toBeNull();
   });
+  it("requiere autorización específica de la versión vigente", () => {
+    expect(validatePublicClientRegistration({ ...validRegistration, autorizaDatos: false })).toContain("autoriza");
+    expect(validatePublicClientRegistration({ ...validRegistration, versionPrivacidad: "anterior" })).toContain("vigente");
+  });
+
+  it.each(["admin", "recepcionista", "operario", "conductor", "repartidor"])(
+    "rechaza %s como tipo de cuenta en el registro público",
+    (tipo) => {
+      expect(validatePublicClientRegistration({
+        ...validRegistration,
+        tipoCliente: tipo as PublicClientRegistrationInput["tipoCliente"],
+      })).toBe("Selecciona el tipo de cliente.");
+    },
+  );
 });
 
 describe("validación de usuarios creados por administración", () => {

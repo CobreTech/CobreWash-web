@@ -20,13 +20,15 @@ import {
   validatePublicClientRegistration,
 } from "@/lib/auth-validation";
 import GlassSelect from "@/components/ui/GlassSelect";
+import AutorizacionDatos, { useAvisoPublicado } from "@/components/privacidad/AutorizacionDatos";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 const tipoClienteOptions = [
   { value: TipoCliente.PARTICULAR, label: "Particular" },
-  { value: TipoCliente.HOTEL, label: "Hotel" },
+  { value: TipoCliente.HOTEL, label: "Empresa / Hotel" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ paginaInterior = false }: { paginaInterior?: boolean } = {}) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -65,6 +67,8 @@ export default function Navbar() {
   const [authConfirmPass, setAuthConfirmPass] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
+  const [autorizaDatos, setAutorizaDatos] = useState(false);
+  const avisoPublicado = useAvisoPublicado();
   const [authError, setAuthError] = useState("");
 
   // Register-only fields (Usuario / Cliente). El registro público siempre
@@ -81,6 +85,7 @@ export default function Navbar() {
   const passwordCheck = validatePassword(authPassword);
 
   const resetRegisterFields = () => {
+    setAutorizaDatos(false);
     setAuthName("");
     setAuthApellido("");
     setAuthRut("");
@@ -169,6 +174,7 @@ export default function Navbar() {
         tipoCliente: authTipoCliente,
         password: authPassword,
         confirmPassword: authConfirmPass,
+        autorizaDatos, versionPrivacidad: VERSION_PRIVACIDAD,
       };
       const validationError = validatePublicClientRegistration(registration);
       if (validationError) {
@@ -178,12 +184,16 @@ export default function Navbar() {
 
       setAuthLoading(true);
       try {
+        const aviso = await fetch("/api/privacidad/configuracion", { cache: "no-store" });
+        const legal = aviso.ok ? await aviso.json() : null;
+        if (!legal?.publicada || legal.version !== VERSION_PRIVACIDAD) throw new Error("El aviso de privacidad aún no está publicado.");
         await registerPublicClient({ auth, dataConnect }, registration);
 
         setAuthLoading(false);
         setAuthSuccess(true);
         setTimeout(() => {
-          setAuthView("login");
+          setIsLoginOpen(false);
+          router.push("/cuenta");
           setAuthSuccess(false);
           resetRegisterFields();
         }, 1550);
@@ -215,11 +225,12 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Inicio", href: "#inicio" },
+    { name: "Nosotros", href: "#nosotros" },
     { name: "Servicios", href: "#servicios" },
     { name: "Maquinaria", href: "#maquinaria" },
     { name: "Recepción", href: "#recepcion" },
     { name: "Contacto", href: "#contacto" },
-  ];
+  ].map(link => ({ ...link, href: paginaInterior ? `/${link.href}` : link.href }));
 
   return (
     <>
@@ -235,7 +246,7 @@ export default function Navbar() {
             {/* Logo + Text */}
             <div className="flex-shrink-0 flex items-center">
               <a
-                href="#inicio"
+                href={paginaInterior ? "/#inicio" : "#inicio"}
                 className="flex items-center gap-3"
               >
                 <Image
@@ -472,12 +483,12 @@ export default function Navbar() {
                   />
                   <h3 className="text-xl font-extrabold text-stone-900 font-display">
                     {authView === "login" && "Iniciar Sesión"}
-                    {authView === "register" && "Crear una Cuenta"}
+                    {authView === "register" && "Crear cuenta de cliente"}
                     {authView === "forgot" && "Recuperar Contraseña"}
                   </h3>
                   <p className="text-xs text-stone-500 max-w-xs leading-normal">
                     {authView === "login" && "Ingresa tus datos para acceder a tu intranet de lavandería."}
-                    {authView === "register" && "Regístrate para solicitar retiros express y revisar tu historial."}
+                    {authView === "register" && "Crea tu cuenta de cliente particular o empresa para revisar tus pedidos e historial."}
                     {authView === "forgot" && "Ingresa tu correo y te enviaremos un enlace de recuperación."}
                   </p>
                 </div>
@@ -692,10 +703,11 @@ export default function Navbar() {
                         </div>
                       )}
 
+                      {authView === "register" && <AutorizacionDatos finalidad="cuenta" aceptada={autorizaDatos} onChange={setAutorizaDatos} publicada={avisoPublicado} />}
                       {/* Submit Button */}
                       <button
                         type="submit"
-                        disabled={authLoading}
+                        disabled={authLoading || (authView === "register" && (!avisoPublicado || !autorizaDatos))}
                         className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-white py-3 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg disabled:opacity-50 transition-all duration-200 hover:scale-[1.01] cursor-pointer"
                       >
                         {authLoading ? (

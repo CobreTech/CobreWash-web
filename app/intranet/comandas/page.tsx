@@ -1,5 +1,9 @@
 "use client";
 
+import { limitesFechasConsulta } from "@/lib/reportes/fechas";
+
+import { registrarError } from "@/lib/registro-seguro";
+
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -224,8 +228,7 @@ export default function ComandasPage() {
               offset: (page - 1) * PAGE_SIZE,
               estados: estadosSeleccionados.length ? estadosSeleccionados.map((estado) => ESTADO_DB[estado]) : undefined,
               cliente: search.trim() || undefined,
-              fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
-              fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
+              ...limitesFechasConsulta(fechaDesde, fechaHasta),
             },
           ),
           { fetchPolicy: "SERVER_ONLY" },
@@ -237,7 +240,7 @@ export default function ComandasPage() {
         setCatData(resCatalogos.data);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      registrarError("Error fetching data:", error);
     } finally {
       if (solicitud === solicitudActual.current) setLoading(false);
     }
@@ -515,7 +518,7 @@ export default function ComandasPage() {
       setNotice("Comanda actualizada correctamente.");
       setForm(null);
     } catch (err) {
-      console.error(err);
+      registrarError("Operación de comanda fallida", err);
       setFormError(form?.mode === "editar"
         ? "No se pudo confirmar la edición. Revisa la comanda actualizada antes de reintentar; otra persona pudo modificarla o iniciar su producción."
         : "Error al guardar la comanda.");
@@ -540,7 +543,7 @@ export default function ComandasPage() {
       setMotivo("");
       setDetalle(null);
     } catch (err) {
-      console.error(err);
+      registrarError("Operación de comanda fallida", err);
       setAnularError("Error al anular la comanda. Verifica que la comanda siga activa.");
     } finally {
       setIsSubmitting(false);
@@ -557,7 +560,7 @@ export default function ComandasPage() {
       setNotice(`Comanda ${entregar.id} entregada correctamente. Se registró la fecha y el historial.`);
       setEntregar(null);
     } catch (error) {
-      console.error(error);
+      registrarError("Operación de comanda fallida", error);
       setNotice("No se pudo marcar la comanda como entregada.");
     } finally {
       setEntregarLoading(false);

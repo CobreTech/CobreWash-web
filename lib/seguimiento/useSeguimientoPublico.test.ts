@@ -8,7 +8,7 @@ vi.mock("./consultar", () => ({ consultarSeguimiento: mocks.consultar }));
 import { useSeguimientoPublico } from "./useSeguimientoPublico";
 
 const pedido: PedidoPublico = {
-  numeroComanda: "ELCOBRE-14r3", estado: ComandaEstado.PENDIENTE,
+  codigoQr: "12345678-1234-4234-8234-123456789abc", numeroComanda: "ELCOBRE-14r3", estado: ComandaEstado.PENDIENTE,
   fechaRecepcion: "2026-10-04T12:00:00Z", actualizadoEn: "2026-10-04T12:00:00Z",
   comandaDetalles_on_comanda: [], comandaEtapas_on_comanda: [],
 };

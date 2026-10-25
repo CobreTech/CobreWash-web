@@ -12,6 +12,7 @@ import {
   crearUsuarioAdministrado,
   getMiPerfil,
   registrarseComoCliente,
+  vincularMiFichaVerificada,
   type GetMiPerfilData,
   type TipoCliente,
 } from "@/src/dataconnect-generated";
@@ -20,8 +21,10 @@ import type {
   ManagedUserRegistrationInput,
 } from "@/lib/auth-validation";
 import { formatRut } from "@/lib/validators";
+import { isPublicClientType } from "@/lib/auth-validation";
 import { LANDING_POR_ROL, type Rol } from "@/lib/roles";
 import { createSecondaryFirebaseContext } from "@/lib/firebase/secondary";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 interface FirebaseContext {
   auth: Auth;
@@ -61,13 +64,20 @@ function registrationVariables(input: ClientRegistrationInput) {
 export async function loadActiveUserProfile(
   context: FirebaseContext,
 ): Promise<ActiveUserProfile | null> {
-  const { data } = await getMiPerfil(context.dataConnect, {
+  let { data } = await getMiPerfil(context.dataConnect, {
     fetchPolicy: QueryFetchPolicy.SERVER_ONLY,
   });
-  const profile = data.usuario ?? null;
+  let profile = data.usuario ?? null;
+  if (profile?.rol.nombre === "cliente" && context.auth.currentUser?.emailVerified && profile.clientes_on_usuario.length === 0) {
+    try {
+      await vincularMiFichaVerificada(context.dataConnect);
+      data = (await getMiPerfil(context.dataConnect, { fetchPolicy: QueryFetchPolicy.SERVER_ONLY })).data;
+      profile = data.usuario ?? null;
+    } catch { /* La ficha permanece sin asociar si no coincide el correo verificado. */ }
+  }
 
   if (profile && !profile.activo) {
-    await signOut(context.auth).catch(() => undefined);
+    if (!context.auth.currentUser || context.auth.currentUser.uid === profile.id) await signOut(context.auth).catch(() => undefined);
     throw new InactiveAccountError();
   }
 
@@ -87,8 +97,12 @@ export async function signInAndResolveLanding(
 
 export async function registerPublicClient(
   context: FirebaseContext,
-  input: ClientRegistrationInput,
+  input: ClientRegistrationInput & { autorizaDatos: boolean; versionPrivacidad: string },
 ): Promise<void> {
+  if (!isPublicClientType(input.tipoCliente)) {
+    throw new Error("Selecciona el tipo de cliente.");
+  }
+  if (input.autorizaDatos !== true || input.versionPrivacidad !== VERSION_PRIVACIDAD) throw new Error("Lee el aviso vigente y autoriza el tratamiento para crear tu cuenta.");
   const credential = await createUserWithEmailAndPassword(
     context.auth,
     input.email.trim(),
@@ -96,11 +110,14 @@ export async function registerPublicClient(
   );
 
   try {
-    await registrarseComoCliente(context.dataConnect, {
-      ...registrationVariables(input),
-      direccion: input.direccion.trim() || null,
-      tipoCliente: input.tipoCliente as TipoCliente,
-    });
+    const variables = {
+      ...registrationVariables(input), direccion: input.direccion.trim() || null, tipoCliente: input.tipoCliente as TipoCliente, versionPrivacidad: VERSION_PRIVACIDAD,
+    };
+    try { await registrarseComoCliente(context.dataConnect, variables); }
+    catch (error) {
+      if (!String(error).includes("FICHA_RUT_EXISTENTE")) throw error;
+      await registrarseComoCliente(context.dataConnect, { ...variables, crearFicha: false });
+    }
   } catch (error) {
     await credential.user.delete().catch(() => undefined);
     throw error;
@@ -127,12 +144,12 @@ export async function createManagedUser(
     const variables = registrationVariables(input);
 
     if (roleName === "cliente") {
-      await crearClienteAdministrado(dataConnect, {
-        ...variables,
-        id: credential.user.uid,
-        direccion: input.direccion.trim() || null,
-        tipoCliente: input.tipoCliente as TipoCliente,
-      });
+      const datos = { ...variables, id: credential.user.uid, direccion: input.direccion.trim() || null, tipoCliente: input.tipoCliente as TipoCliente };
+      try { await crearClienteAdministrado(dataConnect, datos); }
+      catch (error) {
+        if (!String(error).includes("FICHA_RUT_EXISTENTE")) throw error;
+        await crearClienteAdministrado(dataConnect, { ...datos, crearFicha: false });
+      }
     } else {
       await crearUsuarioAdministrado(dataConnect, {
         ...variables,

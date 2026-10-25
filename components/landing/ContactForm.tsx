@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Send, CheckCircle2, Clock, ShieldCheck, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassSelect from "@/components/ui/GlassSelect";
+import AutorizacionDatos, { useAvisoPublicado } from "@/components/privacidad/AutorizacionDatos";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -13,9 +15,13 @@ export default function ContactForm() {
     servicio: "",
     mensaje: "",
   });
+  const solicitudId = useRef<string | null>(null);
+  const enviando = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [autorizaDatos, setAutorizaDatos] = useState(false);
+  const avisoPublicado = useAvisoPublicado();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -25,28 +31,36 @@ export default function ContactForm() {
     if (error) setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nombre || !formData.correo || !formData.telefono || !formData.servicio || !formData.mensaje) {
+    if (enviando.current) return;
+    if (!autorizaDatos || !avisoPublicado) { setError("Lee el aviso vigente y autoriza el tratamiento de esta cotización."); return; }
+    if (!formData.nombre || !formData.correo || !formData.servicio || !formData.mensaje) {
       setError("Por favor, completa todos los campos del formulario.");
       return;
     }
 
+    enviando.current = true;
     setIsSubmitting(true);
     setError("");
 
-    // Simulate sending message
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-      setFormData({
-        nombre: "",
-        correo: "",
-        telefono: "",
-        servicio: "",
-        mensaje: "",
+    solicitudId.current ??= crypto.randomUUID();
+    try {
+      const response = await fetch("/api/contacto", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, id: solicitudId.current, autorizaDatos, versionPrivacidad: VERSION_PRIVACIDAD }),
       });
-    }, 1500);
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) solicitudId.current = null;
+        throw new Error(result.error || "No se pudo guardar la solicitud.");
+      }
+      setSubmitted(true);
+      setAutorizaDatos(false);
+      solicitudId.current = null;
+      setFormData({ nombre: "", correo: "", telefono: "", servicio: "", mensaje: "" });
+    } catch (error) { setError(error instanceof Error ? error.message : "No se pudo enviar la solicitud. Revisa tu conexión y reintenta."); }
+    finally { enviando.current = false; setIsSubmitting(false); }
   };
 
   const serviceOptions = [
@@ -176,7 +190,7 @@ export default function ContactForm() {
                       {/* Phone input */}
                       <div className="space-y-2">
                         <label htmlFor="telefono" className="text-xs font-bold uppercase tracking-wider text-stone-600 block">
-                          Teléfono de Contacto
+                          Teléfono de Contacto (opcional)
                         </label>
                         <input
                           type="tel"
@@ -238,10 +252,11 @@ export default function ContactForm() {
                       />
                     </div>
 
+                    <AutorizacionDatos finalidad="cotizacion" aceptada={autorizaDatos} onChange={setAutorizaDatos} publicada={avisoPublicado} />
                     {/* Submit Button */}
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !avisoPublicado || !autorizaDatos}
                       className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-white py-4 rounded-xl font-bold text-base shadow-premium hover:shadow-lg disabled:opacity-50 transition-all duration-300 hover:scale-[1.01]"
                     >
                       {isSubmitting ? (

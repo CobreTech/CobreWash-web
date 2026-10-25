@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Inter } from "next/font/google";
+import Script from "next/script";
+import { INICIALIZAR_TEMA_INTRANET } from "@/lib/intranet/tema-inicial";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -41,6 +43,7 @@ export default function RootLayout({
       className={`${outfit.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#fdfcfb]">
+        <Script id="intranet-theme" strategy="beforeInteractive">{INICIALIZAR_TEMA_INTRANET}</Script>
         {children}
       </body>
     </html>

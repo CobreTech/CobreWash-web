@@ -49,12 +49,12 @@ query GetSeguimientoProduccion($limit: Int = 20, $offset: Int = 0, $buscar: Stri
 }
 
 # Panel real de administración: estado global y cola completa de producción.
-query GetPanelProduccion($limit: Int = 100) @auth(level: USER) {
+query GetPanelProduccion($limit: Int = 100, $offset: Int = 0) @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol { nombre @check(expr: "this == 'admin'", message: "Solo administración puede ver el panel productivo") }
   }
-  comandas(where: { estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } }, orderBy: [{ actualizadoEn: DESC }], limit: $limit) {
+  comandas(where: { estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } }, orderBy: [{ actualizadoEn: DESC }, { id: ASC }], limit: $limit, offset: $offset) {
     id numeroComanda estado valorTotal fechaRecepcion actualizadoEn
     cliente { id nombre tipoCliente }
     comandaDetalles_on_comanda { cantidad }

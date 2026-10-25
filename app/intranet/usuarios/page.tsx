@@ -59,6 +59,8 @@ const roleColors: Record<string, { bg: string; text: string }> = {
   admin: { bg: "bg-brand-500/15", text: "text-brand-600 dark:text-brand-400" },
   recepcionista: { bg: "bg-sky-500/15", text: "text-sky-600 dark:text-sky-400" },
   operario: { bg: "bg-violet-500/15", text: "text-violet-600 dark:text-violet-400" },
+  repartidor: { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400" },
+  conductor: { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400" },
   cliente: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400" },
 };
 

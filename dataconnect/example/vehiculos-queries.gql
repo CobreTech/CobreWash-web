@@ -1,0 +1,155 @@
+# Panel administrativo de flota: vehículos registrados, personal habilitado como
+# conductor y bitácora de salidas con sus inspecciones ANTES y DESPUES.
+query GetFlotaVehiculos($limit: Int = 200, $offset: Int = 0) @auth(level: USER) @refresh(every: { seconds: 15 }) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(
+        expr: "this == 'admin'"
+        message: "Solo administradores pueden gestionar la flota de vehículos"
+      )
+    }
+  }
+  vehiculos(orderBy: [{ patente: ASC }, { id: ASC }]) {
+    id
+    patente
+    marca
+    modelo
+    anio
+    descripcion
+    activo
+    creadoEn
+  }
+  conductores: usuarios(
+    where: {
+      activo: { eq: true }
+      rol: { nombre: { in: ["conductor", "repartidor"] } }
+    }
+    orderBy: [{ nombre: ASC }, { id: ASC }]
+  ) {
+    id
+    rut
+    nombre
+    apellido
+    email
+    telefono
+    rol {
+      nombre
+    }
+  }
+  salidas: salidaVehiculos(orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id
+    estado
+    fechaSalida
+    fechaRetorno
+    observaciones
+    creadoEn
+    vehiculo {
+      id
+      patente
+      marca
+      modelo
+      anio
+      activo
+    }
+    repartidor {
+      id
+      rut
+      nombre
+      apellido
+      email
+      telefono
+      rol {
+        nombre
+      }
+    }
+    inspecciones: inspeccionVehiculos_on_salida(orderBy: [{ registradoEn: ASC }]) {
+      id
+      momento
+      estadoVehiculo
+      kilometraje
+      observaciones
+      registradoEn
+      fotos: fotoInspeccionVehiculos_on_inspeccion(orderBy: [{ orden: ASC }]) {
+        id
+        rutaStorage
+        descripcion
+        orden
+        creadoEn
+      }
+    }
+  }
+}
+
+# Consulta filtrada y paginada para auditoría histórica de salidas e inspecciones (RF-VE04).
+query GetHistorialVehiculos(
+  $vehiculoId: UUID
+  $repartidorId: String
+  $estado: SalidaVehiculoEstado
+  $desde: Timestamp
+  $hasta: Timestamp
+  $limit: Int = 100
+  $offset: Int = 0
+) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol {
+      nombre @check(
+        expr: "this == 'admin'"
+        message: "Solo administradores pueden consultar el historial completo de vehículos"
+      )
+    }
+  }
+  salidas: salidaVehiculos(
+    where: {
+      vehiculoId: { eq: $vehiculoId }
+      repartidorId: { eq: $repartidorId }
+      estado: { eq: $estado }
+      creadoEn: { ge: $desde, lt: $hasta }
+    }
+    orderBy: [{ creadoEn: DESC }, { id: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    estado
+    fechaSalida
+    fechaRetorno
+    observaciones
+    creadoEn
+    vehiculo {
+      id
+      patente
+      marca
+      modelo
+      anio
+      activo
+    }
+    repartidor {
+      id
+      rut
+      nombre
+      apellido
+      email
+      telefono
+      rol {
+        nombre
+      }
+    }
+    inspecciones: inspeccionVehiculos_on_salida(orderBy: [{ registradoEn: ASC }]) {
+      id
+      momento
+      estadoVehiculo
+      kilometraje
+      observaciones
+      registradoEn
+      fotos: fotoInspeccionVehiculos_on_inspeccion(orderBy: [{ orden: ASC }]) {
+        id
+        rutaStorage
+        descripcion
+        orden
+        creadoEn
+      }
+    }
+  }
+}

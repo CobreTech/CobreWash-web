@@ -56,6 +56,25 @@ export function rangoConsulta(desde: string, hasta: string) {
   return { desde: inicioDia(desde), hasta: inicioDia(sumarDias(hasta, 1)) };
 }
 
+/** Filtros opcionales: inicio inclusivo y primer instante del día siguiente exclusivo. */
+export function limitesFechasConsulta(desde: string, hasta: string) {
+  if ((desde && !validarFecha(desde)) || (hasta && !validarFecha(hasta)))
+    throw new Error("Selecciona fechas válidas.");
+  if (desde && hasta && desde > hasta)
+    throw new Error("La fecha inicial debe ser anterior o igual a la final.");
+  return {
+    fechaDesde: desde ? inicioDia(desde) : undefined,
+    fechaHastaExclusiva: hasta ? inicioDia(sumarDias(hasta, 1)) : undefined,
+  };
+}
+
+/** Compatibilidad para filtros en memoria que trabajan con milisegundos. */
+export function limitesFechasInclusivos(desde: string, hasta: string) {
+  const limites = limitesFechasConsulta(desde, hasta);
+  return { fechaDesde: limites.fechaDesde, fechaHasta: limites.fechaHastaExclusiva
+    ? new Date(Date.parse(limites.fechaHastaExclusiva) - 1).toISOString() : undefined };
+}
+
 export function periodoInicial() {
   const hasta = fechaChile();
   return { desde: hasta.slice(0, 7) + "-01", hasta };

@@ -1,0 +1,59 @@
+# El UID se obtiene del token; nunca se acepta un dueño enviado por el navegador.
+query GetMisComandas($estado: ComandaEstado, $estados: [ComandaEstado!], $limit: Int = 10, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'cliente'", message: "Acceso reservado a clientes") }
+  }
+  comandas(
+    where: {
+      _and: [{ _or: [
+        { cliente: { usuarioId: { eq_expr: "auth.uid" } } }
+        { comandaVinculadas_on_comanda: { exist: { usuarioId: { eq_expr: "auth.uid" } } } }
+      ]
+      }, { estado: { eq: $estado } }, { estado: { in: $estados } }]
+    }
+    orderBy: [{ fechaRecepcion: DESC }, { numeroComanda: DESC }]
+    limit: $limit offset: $offset
+  ) {
+    id codigoQr numeroComanda estado valorTotal fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
+    comandaDetalles_on_comanda {
+      id cantidad pesoKg precioUnitario subtotal
+      tipoPrenda { nombre }
+      tipoServicio { nombre }
+    }
+    comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
+      nombreEtapa ordenEtapa estado fechaCompletado
+      etapa { nombre orden }
+    }
+  }
+  total: comandas(where: {
+    _and: [{ _or: [
+      { cliente: { usuarioId: { eq_expr: "auth.uid" } } }
+      { comandaVinculadas_on_comanda: { exist: { usuarioId: { eq_expr: "auth.uid" } } } }
+    ]
+    }, { estado: { eq: $estado } }, { estado: { in: $estados } }]
+  }) { _count }
+}
+
+# Un número público no prueba propiedad. Para pedidos anteriores se exige
+# el correo verificado del comprobante y que la ficha no pertenezca a otra cuenta.
+mutation VincularMiComanda($numeroComanda: String!) @auth(level: USER) @transaction {
+  query @redact {
+    yo: usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'cliente'", message: "Acceso reservado a clientes") }
+    }
+    pedido: comanda(first: { where: { numeroComanda: { eq: $numeroComanda } } })
+      @check(expr: "this != null", message: "No se pudo vincular. Revisa el número y el correo de tu comprobante.") {
+      id
+      cliente @check(
+        expr: "this.usuarioId == auth.uid || (this.usuarioId == null && auth.token.email_verified == true && this.email != null && this.email == auth.token.email)"
+        message: "No se pudo vincular. Verifica tu correo y comprueba que coincide con el registrado al recibir tu pedido."
+      ) { usuarioId email }
+    }
+  }
+  comandaVinculada_upsert(data: {
+    usuarioId_expr: "auth.uid"
+    comandaId_expr: "response.query.pedido.id"
+  })
+}

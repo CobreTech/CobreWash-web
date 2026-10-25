@@ -16,6 +16,29 @@ export enum ComandaEstado {
   ANULADA = "ANULADA",
 };
 
+export enum DerechoPrivacidad {
+  ACCESO = "ACCESO",
+  RECTIFICACION = "RECTIFICACION",
+  SUPRESION = "SUPRESION",
+  OPOSICION = "OPOSICION",
+  BLOQUEO = "BLOQUEO",
+  PORTABILIDAD = "PORTABILIDAD",
+  REVOCACION = "REVOCACION",
+};
+
+export enum EstadoConteoInventario {
+  PENDIENTE = "PENDIENTE",
+  APROBADO = "APROBADO",
+  RECHAZADO = "RECHAZADO",
+};
+
+export enum EstadoDerecho {
+  RECIBIDA = "RECIBIDA",
+  VERIFICACION = "VERIFICACION",
+  EN_GESTION = "EN_GESTION",
+  RESPONDIDA = "RESPONDIDA",
+};
+
 export enum EstadoVehiculo {
   APTO = "APTO",
   CON_OBSERVACIONES = "CON_OBSERVACIONES",
@@ -28,11 +51,22 @@ export enum IncidenciaEstado {
   RESUELTA = "RESUELTA",
 };
 
+export enum MomentoInspeccion {
+  ANTES = "ANTES",
+  DESPUES = "DESPUES",
+};
+
 export enum SalidaVehiculoEstado {
   PROGRAMADA = "PROGRAMADA",
   EN_SERVICIO = "EN_SERVICIO",
   FINALIZADA = "FINALIZADA",
   CANCELADA = "CANCELADA",
+};
+
+export enum SolicitudContactoEstado {
+  RECIBIDA = "RECIBIDA",
+  EN_REVISION = "EN_REVISION",
+  ATENDIDA = "ATENDIDA",
 };
 
 export enum TipoCliente {
@@ -52,6 +86,11 @@ export enum UnidadCobro {
 
 
 
+export interface ActuacionDerecho_Key {
+  id: UUIDString;
+  __typename?: 'ActuacionDerecho_Key';
+}
+
 export interface ActualizarEstadoIncidenciaData {
   incidenciaComanda_update?: IncidenciaComanda_Key | null;
 }
@@ -59,6 +98,15 @@ export interface ActualizarEstadoIncidenciaData {
 export interface ActualizarEstadoIncidenciaVariables {
   id: UUIDString;
   estado: IncidenciaEstado;
+}
+
+export interface ActualizarEstadoSolicitudContactoData {
+  solicitudContacto_update?: SolicitudContacto_Key | null;
+}
+
+export interface ActualizarEstadoSolicitudContactoVariables {
+  id: UUIDString;
+  estado: SolicitudContactoEstado;
 }
 
 export interface ActualizarInsumoData {
@@ -98,6 +146,17 @@ export interface ActualizarVehiculoVariables {
   anio?: number | null;
   descripcion?: string | null;
   activo: boolean;
+}
+
+export interface AdjuntarFotoInspeccionFlotaData {
+  fotoInspeccionVehiculo_insert: FotoInspeccionVehiculo_Key;
+}
+
+export interface AdjuntarFotoInspeccionFlotaVariables {
+  inspeccionId: UUIDString;
+  rutaStorage: string;
+  descripcion?: string | null;
+  orden?: number | null;
 }
 
 export interface AgregarComandaDetalleData {
@@ -149,6 +208,17 @@ export interface AnularComandaVariables {
   motivoAnulacion: string;
 }
 
+export interface AprobarConteoInventarioData {
+  conteoInventario_update?: ConteoInventario_Key | null;
+  insumo_update?: Insumo_Key | null;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+
+export interface AprobarConteoInventarioVariables {
+  id: UUIDString;
+  motivo: string;
+}
+
 export interface AsociarFlujoComandaPendienteData {
   comandaEtapa_insertMany: ComandaEtapa_Key[];
 }
@@ -163,6 +233,9 @@ export interface AutoAsignarComandaOperarioData {
 
 export interface AutoAsignarComandaOperarioVariables {
   comandaId: UUIDString;
+}
+
+export interface AutorizarGestionPrivacidadData {
 }
 
 export interface Aviso_Key {
@@ -194,6 +267,12 @@ export interface ComandaHistorialEstado_Key {
 export interface ComandaNotificacion_Key {
   id: UUIDString;
   __typename?: 'ComandaNotificacion_Key';
+}
+
+export interface ComandaVinculada_Key {
+  usuarioId: string;
+  comandaId: UUIDString;
+  __typename?: 'ComandaVinculada_Key';
 }
 
 export interface Comanda_Key {
@@ -243,6 +322,21 @@ export interface ConfigurarLimitesEtapasVariables {
   entrega: number;
 }
 
+export interface ContarLimitesContactoVencidosData {
+  limiteContactos: ({
+    _count: number;
+  })[];
+}
+
+export interface ContarLimitesContactoVencidosVariables {
+  antesDe: TimestampString;
+}
+
+export interface ConteoInventario_Key {
+  id: UUIDString;
+  __typename?: 'ConteoInventario_Key';
+}
+
 export interface CrearAvisoData {
   aviso_insert: Aviso_Key;
 }
@@ -260,6 +354,7 @@ export interface CrearClienteAdministradoData {
 
 export interface CrearClienteAdministradoVariables {
   id: string;
+  crearFicha?: boolean;
   rut: string;
   nombre: string;
   apellido: string;
@@ -310,6 +405,7 @@ export interface CrearInsumoVariables {
 }
 
 export interface CrearSalidaVehiculoData {
+  bloqueo?: Vehiculo_Key | null;
   salidaVehiculo_insert: SalidaVehiculo_Key;
 }
 
@@ -421,6 +517,20 @@ export interface EditarFichaClienteVariables {
   direccion?: string | null;
 }
 
+export interface EditarVehiculoFlotaData {
+  vehiculo_update?: Vehiculo_Key | null;
+}
+
+export interface EditarVehiculoFlotaVariables {
+  id: UUIDString;
+  patente: string;
+  marca: string;
+  modelo: string;
+  anio?: number | null;
+  descripcion?: string | null;
+  activo: boolean;
+}
+
 export interface EliminarDetallesComandaData {
   comandaDetalle_deleteMany: number;
 }
@@ -448,6 +558,21 @@ export interface EtapaProduccion_Key {
 export interface FotoInspeccionVehiculo_Key {
   id: UUIDString;
   __typename?: 'FotoInspeccionVehiculo_Key';
+}
+
+export interface GestionarSolicitudDerechoData {
+  solicitudDerecho_update?: SolicitudDerecho_Key | null;
+  actuacionDerecho_insert: ActuacionDerecho_Key;
+}
+
+export interface GestionarSolicitudDerechoVariables {
+  id: UUIDString;
+  revision: number;
+  actorId: string;
+  estado: EstadoDerecho;
+  nota: string;
+  evidenciaIdentidad: string;
+  evidenciaEnvio: string;
 }
 
 export interface GetAvisosAdministracionData {
@@ -874,6 +999,7 @@ export interface GetComandasPaginadasVariables {
   cliente?: string | null;
   fechaDesde?: TimestampString | null;
   fechaHasta?: TimestampString | null;
+  fechaHastaExclusiva?: TimestampString | null;
 }
 
 export interface GetComandasParaAlertasData {
@@ -903,6 +1029,61 @@ export interface GetComandasParaAlertasData {
 }
 
 export interface GetComandasParaAlertasVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetComprobanteDerechoData {
+  solicitudDerecho?: {
+    id: UUIDString;
+    secretoHash: string;
+    contenidoHash: string;
+    estado: EstadoDerecho;
+    creadoEn: TimestampString;
+    objetivoAtencion: TimestampString;
+  } & SolicitudDerecho_Key;
+}
+
+export interface GetComprobanteDerechoVariables {
+  id: UUIDString;
+}
+
+export interface GetConteosInventarioData {
+  conteoInventarios: ({
+    id: UUIDString;
+    cantidadContada: number;
+    stockSistema: number;
+    revisionStock: number;
+    estado: EstadoConteoInventario;
+    creadoEn: TimestampString;
+    resueltoEn?: TimestampString | null;
+    motivoResolucion?: string | null;
+    insumo: {
+      id: UUIDString;
+      nombre: string;
+      unidadMedida: string;
+      stockActual: number;
+      revisionStock: number;
+      activo: boolean;
+    } & Insumo_Key;
+    registradoPor: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+    resueltoPor?: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+  } & ConteoInventario_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetConteosInventarioVariables {
+  estado?: EstadoConteoInventario | null;
   limit?: number | null;
   offset?: number | null;
 }
@@ -1022,6 +1203,164 @@ export interface GetFiltrosReportesVariables {
   offset?: number | null;
 }
 
+export interface GetFlotaVehiculosData {
+  vehiculos: ({
+    id: UUIDString;
+    patente: string;
+    marca: string;
+    modelo: string;
+    anio?: number | null;
+    descripcion?: string | null;
+    activo: boolean;
+    creadoEn: TimestampString;
+  } & Vehiculo_Key)[];
+  conductores: ({
+    id: string;
+    rut?: string | null;
+    nombre: string;
+    apellido?: string | null;
+    email: string;
+    telefono?: string | null;
+    rol: {
+      nombre: string;
+    };
+  } & Usuario_Key)[];
+  salidas: ({
+    id: UUIDString;
+    estado: SalidaVehiculoEstado;
+    fechaSalida?: TimestampString | null;
+    fechaRetorno?: TimestampString | null;
+    observaciones?: string | null;
+    creadoEn: TimestampString;
+    vehiculo: {
+      id: UUIDString;
+      patente: string;
+      marca: string;
+      modelo: string;
+      anio?: number | null;
+      activo: boolean;
+    } & Vehiculo_Key;
+    repartidor: {
+      id: string;
+      rut?: string | null;
+      nombre: string;
+      apellido?: string | null;
+      email: string;
+      telefono?: string | null;
+      rol: {
+        nombre: string;
+      };
+    } & Usuario_Key;
+    inspecciones: ({
+      id: UUIDString;
+      momento: MomentoInspeccion;
+      estadoVehiculo: EstadoVehiculo;
+      kilometraje: number;
+      observaciones?: string | null;
+      registradoEn: TimestampString;
+      fotos: ({
+        id: UUIDString;
+        rutaStorage: string;
+        descripcion?: string | null;
+        orden: number;
+        creadoEn: TimestampString;
+      } & FotoInspeccionVehiculo_Key)[];
+    } & InspeccionVehiculo_Key)[];
+  } & SalidaVehiculo_Key)[];
+}
+
+export interface GetFlotaVehiculosVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetHistorialInventarioData {
+  movimientoInventarios: ({
+    id: UUIDString;
+    tipoMovimiento: TipoMovimiento;
+    cantidad: number;
+    motivo?: string | null;
+    fecha: TimestampString;
+    insumo: {
+      id: UUIDString;
+      nombre: string;
+      unidadMedida: string;
+    } & Insumo_Key;
+    usuario?: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+  } & MovimientoInventario_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetHistorialInventarioVariables {
+  insumoId?: UUIDString | null;
+  tipo?: TipoMovimiento | null;
+  fechaDesde?: TimestampString | null;
+  fechaHastaExclusiva?: TimestampString | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetHistorialVehiculosData {
+  salidas: ({
+    id: UUIDString;
+    estado: SalidaVehiculoEstado;
+    fechaSalida?: TimestampString | null;
+    fechaRetorno?: TimestampString | null;
+    observaciones?: string | null;
+    creadoEn: TimestampString;
+    vehiculo: {
+      id: UUIDString;
+      patente: string;
+      marca: string;
+      modelo: string;
+      anio?: number | null;
+      activo: boolean;
+    } & Vehiculo_Key;
+    repartidor: {
+      id: string;
+      rut?: string | null;
+      nombre: string;
+      apellido?: string | null;
+      email: string;
+      telefono?: string | null;
+      rol: {
+        nombre: string;
+      };
+    } & Usuario_Key;
+    inspecciones: ({
+      id: UUIDString;
+      momento: MomentoInspeccion;
+      estadoVehiculo: EstadoVehiculo;
+      kilometraje: number;
+      observaciones?: string | null;
+      registradoEn: TimestampString;
+      fotos: ({
+        id: UUIDString;
+        rutaStorage: string;
+        descripcion?: string | null;
+        orden: number;
+        creadoEn: TimestampString;
+      } & FotoInspeccionVehiculo_Key)[];
+    } & InspeccionVehiculo_Key)[];
+  } & SalidaVehiculo_Key)[];
+}
+
+export interface GetHistorialVehiculosVariables {
+  vehiculoId?: UUIDString | null;
+  repartidorId?: string | null;
+  estado?: SalidaVehiculoEstado | null;
+  desde?: TimestampString | null;
+  hasta?: TimestampString | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetIncidenciasData {
   incidenciaComandas: ({
     id: UUIDString;
@@ -1046,6 +1385,19 @@ export interface GetIncidenciasData {
   } & IncidenciaComanda_Key)[];
 }
 
+export interface GetInspeccionParaEvidenciasData {
+  inspeccionVehiculo?: {
+    id: UUIDString;
+    salida: {
+      repartidorId: string;
+    };
+  } & InspeccionVehiculo_Key;
+}
+
+export interface GetInspeccionParaEvidenciasVariables {
+  id: UUIDString;
+}
+
 export interface GetInsumoPorQrData {
   insumo?: {
     id: UUIDString;
@@ -1054,12 +1406,31 @@ export interface GetInsumoPorQrData {
     unidadMedida: string;
     stockActual: number;
     stockMinimo: number;
+    revisionStock: number;
     activo: boolean;
   } & Insumo_Key;
 }
 
 export interface GetInsumoPorQrVariables {
   codigoQr: UUIDString;
+}
+
+export interface GetInsumosOperarioData {
+  insumos: ({
+    id: UUIDString;
+    codigoQr: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+    stockMinimo: number;
+    activo: boolean;
+    revisionStock: number;
+  } & Insumo_Key)[];
+}
+
+export interface GetInsumosOperarioVariables {
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetInventarioData {
@@ -1092,6 +1463,16 @@ export interface GetInventarioData {
   } & MovimientoInventario_Key)[];
 }
 
+export interface GetLimiteContactoData {
+  limiteContacto?: {
+    id: string;
+  } & LimiteContacto_Key;
+}
+
+export interface GetLimiteContactoVariables {
+  id: string;
+}
+
 export interface GetMiComandaGuardadaData {
   comanda?: {
     id: UUIDString;
@@ -1100,6 +1481,22 @@ export interface GetMiComandaGuardadaData {
 }
 
 export interface GetMiComandaGuardadaVariables {
+  id: UUIDString;
+}
+
+export interface GetMiConteoInventarioData {
+  conteoInventario?: {
+    id: UUIDString;
+    insumoId: UUIDString;
+    cantidadContada: number;
+    stockSistema: number;
+    revisionStock: number;
+    estado: EstadoConteoInventario;
+    creadoEn: TimestampString;
+  } & ConteoInventario_Key;
+}
+
+export interface GetMiConteoInventarioVariables {
   id: UUIDString;
 }
 
@@ -1132,11 +1529,17 @@ export interface GetMisComandasAsignadasData {
     numeroComanda: string;
     estado: ComandaEstado;
     fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    observaciones?: string | null;
     cliente: {
       nombre: string;
     };
     comandaDetalles_on_comanda: ({
       cantidad: number;
+      detalle?: string | null;
+      pesoKg?: number | null;
       tipoPrenda: {
         nombre: string;
       };
@@ -1152,15 +1555,111 @@ export interface GetMisComandasAsignadasData {
       tiempoEstimadoMin?: number | null;
       estado: EtapaEstado;
       fechaInicio?: TimestampString | null;
-      asignadoA?: {
+      fechaCompletado?: TimestampString | null;
+      operario?: {
+        id: string;
         nombre: string;
         apellido?: string | null;
+      } & Usuario_Key;
+      asignadoA?: {
+        id: string;
+        nombre: string;
+        apellido?: string | null;
+      } & Usuario_Key;
+      etapa: {
+        nombre: string;
+        orden: number;
+        descripcion?: string | null;
+        tiempoEstimadoMin?: number | null;
       };
     })[];
+    comandaHistorialEstados_on_comanda: ({
+      estadoNuevo: ComandaEstado;
+      fecha: TimestampString;
+      motivo?: string | null;
+      usuario?: {
+        nombre: string;
+      };
+    })[];
+    incidenciaComandas_on_comanda: ({
+      id: UUIDString;
+      motivo: string;
+      descripcion?: string | null;
+      estado: IncidenciaEstado;
+      fecha: TimestampString;
+      reportadaPor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & IncidenciaComanda_Key)[];
   } & Comanda_Key)[];
 }
 
 export interface GetMisComandasAsignadasVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetMisComandasData {
+  comandas: ({
+    id: UUIDString;
+    codigoQr: UUIDString;
+    numeroComanda: string;
+    estado: ComandaEstado;
+    valorTotal: number;
+    fechaRecepcion: TimestampString;
+    fechaEntregaEstimada?: TimestampString | null;
+    fechaEntregaReal?: TimestampString | null;
+    actualizadoEn: TimestampString;
+    comandaDetalles_on_comanda: ({
+      id: UUIDString;
+      cantidad: number;
+      pesoKg?: number | null;
+      precioUnitario: number;
+      subtotal: number;
+      tipoPrenda: {
+        nombre: string;
+      };
+      tipoServicio: {
+        nombre: string;
+      };
+    } & ComandaDetalle_Key)[];
+    comandaEtapas_on_comanda: ({
+      nombreEtapa?: string | null;
+      ordenEtapa?: number | null;
+      estado: EtapaEstado;
+      fechaCompletado?: TimestampString | null;
+      etapa: {
+        nombre: string;
+        orden: number;
+      };
+    })[];
+  } & Comanda_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetMisComandasVariables {
+  estado?: ComandaEstado | null;
+  estados?: ComandaEstado[] | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetMisConteosInventarioData {
+  conteoInventarios: ({
+    id: UUIDString;
+    insumoId: UUIDString;
+    cantidadContada: number;
+    stockSistema: number;
+    estado: EstadoConteoInventario;
+    creadoEn: TimestampString;
+    motivoResolucion?: string | null;
+  } & ConteoInventario_Key)[];
+}
+
+export interface GetMisConteosInventarioVariables {
   limit?: number | null;
   offset?: number | null;
 }
@@ -1194,6 +1693,19 @@ export interface GetMisSalidasVehiculoData {
       } & FotoInspeccionVehiculo_Key)[];
     } & InspeccionVehiculo_Key)[];
   } & SalidaVehiculo_Key)[];
+}
+
+export interface GetMovimientoFlotaPorInspeccionData {
+  inspeccionVehiculo?: {
+    id: UUIDString;
+    salidaId: UUIDString;
+    momento: MomentoInspeccion;
+    kilometraje: number;
+  } & InspeccionVehiculo_Key;
+}
+
+export interface GetMovimientoFlotaPorInspeccionVariables {
+  id: UUIDString;
 }
 
 export interface GetPanelProduccionData {
@@ -1254,6 +1766,7 @@ export interface GetPanelProduccionData {
 
 export interface GetPanelProduccionVariables {
   limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetReporteCuentasData {
@@ -1437,6 +1950,7 @@ export interface GetSeguimientoProduccionVariables {
 
 export interface GetSeguimientoPublicoPorNumeroData {
   comanda?: {
+    codigoQr: UUIDString;
     numeroComanda: string;
     estado: ComandaEstado;
     fechaRecepcion: TimestampString;
@@ -1467,6 +1981,7 @@ export interface GetSeguimientoPublicoPorNumeroVariables {
 
 export interface GetSeguimientoPublicoPorQrData {
   comanda?: {
+    codigoQr: UUIDString;
     numeroComanda: string;
     estado: ComandaEstado;
     fechaRecepcion: TimestampString;
@@ -1493,6 +2008,54 @@ export interface GetSeguimientoPublicoPorQrData {
 
 export interface GetSeguimientoPublicoPorQrVariables {
   codigoQr: UUIDString;
+}
+
+export interface GetSolicitudContactoConfirmadaData {
+  solicitudContacto?: {
+    id: UUIDString;
+    hashContenido: string;
+  } & SolicitudContacto_Key;
+}
+
+export interface GetSolicitudContactoConfirmadaVariables {
+  id: UUIDString;
+}
+
+export interface GetSolicitudesContactoData {
+  solicitudContactos: ({
+    id: UUIDString;
+    nombre: string;
+    email: string;
+    telefono: string;
+    servicio: string;
+    mensaje: string;
+    estado: SolicitudContactoEstado;
+    creadoEn: TimestampString;
+    actualizadoEn: TimestampString;
+  } & SolicitudContacto_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetSolicitudesContactoVariables {
+  estado?: SolicitudContactoEstado | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetStockInventarioData {
+  insumos: ({
+    id: UUIDString;
+    codigoQr: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+    stockMinimo: number;
+    activo: boolean;
+    creadoEn: TimestampString;
+    revisionStock: number;
+  } & Insumo_Key)[];
 }
 
 export interface GetUsuariosData {
@@ -1548,6 +2111,47 @@ export interface Insumo_Key {
   __typename?: 'Insumo_Key';
 }
 
+export interface LimiteContacto_Key {
+  id: string;
+  __typename?: 'LimiteContacto_Key';
+}
+
+export interface ListarSolicitudesDerechoData {
+  solicitudDerechos: ({
+    id: UUIDString;
+    nombre: string;
+    email: string;
+    derecho: DerechoPrivacidad;
+    detalle: string;
+    versionAviso: string;
+    estado: EstadoDerecho;
+    revision: number;
+    creadoEn: TimestampString;
+    actualizadoEn: TimestampString;
+    objetivoAtencion: TimestampString;
+    actuacionDerechos_on_solicitud: ({
+      id: UUIDString;
+      estado: EstadoDerecho;
+      nota: string;
+      evidenciaIdentidad: string;
+      evidenciaEnvio: string;
+      creadoEn: TimestampString;
+      actor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & ActuacionDerecho_Key)[];
+  } & SolicitudDerecho_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface ListarSolicitudesDerechoVariables {
+  offset?: number;
+  estados?: EstadoDerecho[];
+}
+
 export interface ModeloIa_Key {
   id: UUIDString;
   __typename?: 'ModeloIa_Key';
@@ -1570,6 +2174,22 @@ export interface PrediccionInsumo_Key {
   __typename?: 'PrediccionInsumo_Key';
 }
 
+export interface PrepararLimiteContactoData {
+  limiteContacto_insert: LimiteContacto_Key;
+}
+
+export interface PrepararLimiteContactoVariables {
+  id: string;
+}
+
+export interface PurgarLimitesContactoData {
+  limiteContacto_deleteMany: number;
+}
+
+export interface PurgarLimitesContactoVariables {
+  antesDe: TimestampString;
+}
+
 export interface ReasignacionOperario_Key {
   id: UUIDString;
   __typename?: 'ReasignacionOperario_Key';
@@ -1587,6 +2207,44 @@ export interface ReasignarOperarioEtapaVariables {
   motivo?: string | null;
 }
 
+export interface RechazarConteoInventarioData {
+  conteoInventario_update?: ConteoInventario_Key | null;
+}
+
+export interface RechazarConteoInventarioVariables {
+  id: UUIDString;
+  motivo: string;
+}
+
+export interface RecibirSolicitudDerechoData {
+  limiteContacto_update?: LimiteContacto_Key | null;
+  solicitudDerecho_insert: SolicitudDerecho_Key;
+}
+
+export interface RecibirSolicitudDerechoVariables {
+  id: UUIDString;
+  secretoHash: string;
+  contenidoHash: string;
+  nombre: string;
+  email: string;
+  derecho: DerechoPrivacidad;
+  detalle: string;
+  versionAviso: string;
+  objetivoAtencion: TimestampString;
+  limiteId: string;
+}
+
+export interface RegistrarConteoInventarioData {
+  conteoInventario_insert: ConteoInventario_Key;
+}
+
+export interface RegistrarConteoInventarioVariables {
+  id: UUIDString;
+  insumoId: UUIDString;
+  cantidad: number;
+  revisionStock: number;
+}
+
 export interface RegistrarEntradaInventarioData {
   insumo_update?: Insumo_Key | null;
   movimientoInventario_insert: MovimientoInventario_Key;
@@ -1596,6 +2254,18 @@ export interface RegistrarEntradaInventarioVariables {
   insumoId: UUIDString;
   cantidad: number;
   motivo?: string | null;
+}
+
+export interface RegistrarEvidenciaGuardadaData {
+  fotoInspeccionVehiculo_upsert: FotoInspeccionVehiculo_Key;
+}
+
+export interface RegistrarEvidenciaGuardadaVariables {
+  id: UUIDString;
+  inspeccionId: UUIDString;
+  rutaStorage: string;
+  descripcion?: string | null;
+  orden: number;
 }
 
 export interface RegistrarIncidenciaComandaData {
@@ -1609,6 +2279,7 @@ export interface RegistrarIncidenciaComandaVariables {
 }
 
 export interface RegistrarInspeccionAntesData {
+  bloqueo?: Vehiculo_Key | null;
   inspeccionVehiculo_insert: InspeccionVehiculo_Key;
 }
 
@@ -1631,6 +2302,38 @@ export interface RegistrarInspeccionDespuesVariables {
   observaciones?: string | null;
 }
 
+export interface RegistrarRetornoFlotaData {
+  bloqueo?: Vehiculo_Key | null;
+  inspeccion: InspeccionVehiculo_Key;
+  salidaVehiculo_update?: SalidaVehiculo_Key | null;
+}
+
+export interface RegistrarRetornoFlotaVariables {
+  inspeccionId?: UUIDString | null;
+  salidaId: UUIDString;
+  kilometraje: number;
+  estadoVehiculo: EstadoVehiculo;
+  observacionesRetorno?: string | null;
+  observacionesInspeccion?: string | null;
+}
+
+export interface RegistrarSalidaFlotaData {
+  bloqueo?: Vehiculo_Key | null;
+  salida: SalidaVehiculo_Key;
+  inspeccion: InspeccionVehiculo_Key;
+}
+
+export interface RegistrarSalidaFlotaVariables {
+  salidaId?: UUIDString | null;
+  inspeccionId?: UUIDString | null;
+  vehiculoId: UUIDString;
+  repartidorId: string;
+  kilometraje: number;
+  estadoVehiculo: EstadoVehiculo;
+  observaciones?: string | null;
+  observacionesInspeccion?: string | null;
+}
+
 export interface RegistrarSalidaInventarioData {
   insumo_update?: Insumo_Key | null;
   movimientoInventario_insert: MovimientoInventario_Key;
@@ -1642,12 +2345,42 @@ export interface RegistrarSalidaInventarioVariables {
   motivo?: string | null;
 }
 
+export interface RegistrarSolicitudContactoData {
+  limiteContacto_update?: LimiteContacto_Key | null;
+  solicitudContacto_insert: SolicitudContacto_Key;
+}
+
+export interface RegistrarSolicitudContactoVariables {
+  id: UUIDString;
+  nombre: string;
+  email: string;
+  telefono: string;
+  servicio: string;
+  mensaje: string;
+  hashContenido: string;
+  limiteId: string;
+  versionPrivacidad: string;
+}
+
+export interface RegistrarVehiculoFlotaData {
+  vehiculo_insert: Vehiculo_Key;
+}
+
+export interface RegistrarVehiculoFlotaVariables {
+  patente: string;
+  marca: string;
+  modelo: string;
+  anio?: number | null;
+  descripcion?: string | null;
+}
+
 export interface RegistrarseComoClienteData {
   usuario_insert: Usuario_Key;
   cliente_insert: Cliente_Key;
 }
 
 export interface RegistrarseComoClienteVariables {
+  crearFicha?: boolean;
   rut: string;
   nombre: string;
   apellido: string;
@@ -1655,6 +2388,7 @@ export interface RegistrarseComoClienteVariables {
   email: string;
   direccion?: string | null;
   tipoCliente: TipoCliente;
+  versionPrivacidad: string;
 }
 
 export interface RegistrarseData {
@@ -1688,6 +2422,16 @@ export interface SalidaVehiculo_Key {
   __typename?: 'SalidaVehiculo_Key';
 }
 
+export interface SolicitudContacto_Key {
+  id: UUIDString;
+  __typename?: 'SolicitudContacto_Key';
+}
+
+export interface SolicitudDerecho_Key {
+  id: UUIDString;
+  __typename?: 'SolicitudDerecho_Key';
+}
+
 export interface TipoPrenda_Key {
   id: UUIDString;
   __typename?: 'TipoPrenda_Key';
@@ -1706,6 +2450,18 @@ export interface Usuario_Key {
 export interface Vehiculo_Key {
   id: UUIDString;
   __typename?: 'Vehiculo_Key';
+}
+
+export interface VincularMiComandaData {
+  comandaVinculada_upsert: ComandaVinculada_Key;
+}
+
+export interface VincularMiComandaVariables {
+  numeroComanda: string;
+}
+
+export interface VincularMiFichaVerificadaData {
+  cliente_update?: Cliente_Key | null;
 }
 
 interface AgregarComentarioComandaRef {
@@ -1768,6 +2524,18 @@ export const getMisComandasAsignadasRef: GetMisComandasAsignadasRef;
 export function getMisComandasAsignadas(vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
 export function getMisComandasAsignadas(dc: DataConnect, vars?: GetMisComandasAsignadasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasAsignadasData, GetMisComandasAsignadasVariables>;
 
+interface GetInsumosOperarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetInsumosOperarioVariables): QueryRef<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetInsumosOperarioVariables): QueryRef<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+  operationName: string;
+}
+export const getInsumosOperarioRef: GetInsumosOperarioRef;
+
+export function getInsumosOperario(vars?: GetInsumosOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+export function getInsumosOperario(dc: DataConnect, vars?: GetInsumosOperarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetInsumosOperarioData, GetInsumosOperarioVariables>;
+
 interface CrearAvisoRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: CrearAvisoVariables): MutationRef<CrearAvisoData, CrearAvisoVariables>;
@@ -1803,6 +2571,222 @@ export const getAvisosParaEquipoRef: GetAvisosParaEquipoRef;
 
 export function getAvisosParaEquipo(vars: GetAvisosParaEquipoVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
 export function getAvisosParaEquipo(dc: DataConnect, vars: GetAvisosParaEquipoVariables, options?: ExecuteQueryOptions): QueryPromise<GetAvisosParaEquipoData, GetAvisosParaEquipoVariables>;
+
+interface GetSolicitudContactoConfirmadaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetSolicitudContactoConfirmadaVariables): QueryRef<GetSolicitudContactoConfirmadaData, GetSolicitudContactoConfirmadaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetSolicitudContactoConfirmadaVariables): QueryRef<GetSolicitudContactoConfirmadaData, GetSolicitudContactoConfirmadaVariables>;
+  operationName: string;
+}
+export const getSolicitudContactoConfirmadaRef: GetSolicitudContactoConfirmadaRef;
+
+export function getSolicitudContactoConfirmada(vars: GetSolicitudContactoConfirmadaVariables, options?: ExecuteQueryOptions): QueryPromise<GetSolicitudContactoConfirmadaData, GetSolicitudContactoConfirmadaVariables>;
+export function getSolicitudContactoConfirmada(dc: DataConnect, vars: GetSolicitudContactoConfirmadaVariables, options?: ExecuteQueryOptions): QueryPromise<GetSolicitudContactoConfirmadaData, GetSolicitudContactoConfirmadaVariables>;
+
+interface PrepararLimiteContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PrepararLimiteContactoVariables): MutationRef<PrepararLimiteContactoData, PrepararLimiteContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PrepararLimiteContactoVariables): MutationRef<PrepararLimiteContactoData, PrepararLimiteContactoVariables>;
+  operationName: string;
+}
+export const prepararLimiteContactoRef: PrepararLimiteContactoRef;
+
+export function prepararLimiteContacto(vars: PrepararLimiteContactoVariables): MutationPromise<PrepararLimiteContactoData, PrepararLimiteContactoVariables>;
+export function prepararLimiteContacto(dc: DataConnect, vars: PrepararLimiteContactoVariables): MutationPromise<PrepararLimiteContactoData, PrepararLimiteContactoVariables>;
+
+interface GetLimiteContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetLimiteContactoVariables): QueryRef<GetLimiteContactoData, GetLimiteContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetLimiteContactoVariables): QueryRef<GetLimiteContactoData, GetLimiteContactoVariables>;
+  operationName: string;
+}
+export const getLimiteContactoRef: GetLimiteContactoRef;
+
+export function getLimiteContacto(vars: GetLimiteContactoVariables, options?: ExecuteQueryOptions): QueryPromise<GetLimiteContactoData, GetLimiteContactoVariables>;
+export function getLimiteContacto(dc: DataConnect, vars: GetLimiteContactoVariables, options?: ExecuteQueryOptions): QueryPromise<GetLimiteContactoData, GetLimiteContactoVariables>;
+
+interface RegistrarSolicitudContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarSolicitudContactoVariables): MutationRef<RegistrarSolicitudContactoData, RegistrarSolicitudContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarSolicitudContactoVariables): MutationRef<RegistrarSolicitudContactoData, RegistrarSolicitudContactoVariables>;
+  operationName: string;
+}
+export const registrarSolicitudContactoRef: RegistrarSolicitudContactoRef;
+
+export function registrarSolicitudContacto(vars: RegistrarSolicitudContactoVariables): MutationPromise<RegistrarSolicitudContactoData, RegistrarSolicitudContactoVariables>;
+export function registrarSolicitudContacto(dc: DataConnect, vars: RegistrarSolicitudContactoVariables): MutationPromise<RegistrarSolicitudContactoData, RegistrarSolicitudContactoVariables>;
+
+interface GetSolicitudesContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetSolicitudesContactoVariables): QueryRef<GetSolicitudesContactoData, GetSolicitudesContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetSolicitudesContactoVariables): QueryRef<GetSolicitudesContactoData, GetSolicitudesContactoVariables>;
+  operationName: string;
+}
+export const getSolicitudesContactoRef: GetSolicitudesContactoRef;
+
+export function getSolicitudesContacto(vars?: GetSolicitudesContactoVariables, options?: ExecuteQueryOptions): QueryPromise<GetSolicitudesContactoData, GetSolicitudesContactoVariables>;
+export function getSolicitudesContacto(dc: DataConnect, vars?: GetSolicitudesContactoVariables, options?: ExecuteQueryOptions): QueryPromise<GetSolicitudesContactoData, GetSolicitudesContactoVariables>;
+
+interface ActualizarEstadoSolicitudContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ActualizarEstadoSolicitudContactoVariables): MutationRef<ActualizarEstadoSolicitudContactoData, ActualizarEstadoSolicitudContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ActualizarEstadoSolicitudContactoVariables): MutationRef<ActualizarEstadoSolicitudContactoData, ActualizarEstadoSolicitudContactoVariables>;
+  operationName: string;
+}
+export const actualizarEstadoSolicitudContactoRef: ActualizarEstadoSolicitudContactoRef;
+
+export function actualizarEstadoSolicitudContacto(vars: ActualizarEstadoSolicitudContactoVariables): MutationPromise<ActualizarEstadoSolicitudContactoData, ActualizarEstadoSolicitudContactoVariables>;
+export function actualizarEstadoSolicitudContacto(dc: DataConnect, vars: ActualizarEstadoSolicitudContactoVariables): MutationPromise<ActualizarEstadoSolicitudContactoData, ActualizarEstadoSolicitudContactoVariables>;
+
+interface GetInspeccionParaEvidenciasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetInspeccionParaEvidenciasVariables): QueryRef<GetInspeccionParaEvidenciasData, GetInspeccionParaEvidenciasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetInspeccionParaEvidenciasVariables): QueryRef<GetInspeccionParaEvidenciasData, GetInspeccionParaEvidenciasVariables>;
+  operationName: string;
+}
+export const getInspeccionParaEvidenciasRef: GetInspeccionParaEvidenciasRef;
+
+export function getInspeccionParaEvidencias(vars: GetInspeccionParaEvidenciasVariables, options?: ExecuteQueryOptions): QueryPromise<GetInspeccionParaEvidenciasData, GetInspeccionParaEvidenciasVariables>;
+export function getInspeccionParaEvidencias(dc: DataConnect, vars: GetInspeccionParaEvidenciasVariables, options?: ExecuteQueryOptions): QueryPromise<GetInspeccionParaEvidenciasData, GetInspeccionParaEvidenciasVariables>;
+
+interface GetMovimientoFlotaPorInspeccionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetMovimientoFlotaPorInspeccionVariables): QueryRef<GetMovimientoFlotaPorInspeccionData, GetMovimientoFlotaPorInspeccionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetMovimientoFlotaPorInspeccionVariables): QueryRef<GetMovimientoFlotaPorInspeccionData, GetMovimientoFlotaPorInspeccionVariables>;
+  operationName: string;
+}
+export const getMovimientoFlotaPorInspeccionRef: GetMovimientoFlotaPorInspeccionRef;
+
+export function getMovimientoFlotaPorInspeccion(vars: GetMovimientoFlotaPorInspeccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetMovimientoFlotaPorInspeccionData, GetMovimientoFlotaPorInspeccionVariables>;
+export function getMovimientoFlotaPorInspeccion(dc: DataConnect, vars: GetMovimientoFlotaPorInspeccionVariables, options?: ExecuteQueryOptions): QueryPromise<GetMovimientoFlotaPorInspeccionData, GetMovimientoFlotaPorInspeccionVariables>;
+
+interface RegistrarEvidenciaGuardadaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarEvidenciaGuardadaVariables): MutationRef<RegistrarEvidenciaGuardadaData, RegistrarEvidenciaGuardadaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarEvidenciaGuardadaVariables): MutationRef<RegistrarEvidenciaGuardadaData, RegistrarEvidenciaGuardadaVariables>;
+  operationName: string;
+}
+export const registrarEvidenciaGuardadaRef: RegistrarEvidenciaGuardadaRef;
+
+export function registrarEvidenciaGuardada(vars: RegistrarEvidenciaGuardadaVariables): MutationPromise<RegistrarEvidenciaGuardadaData, RegistrarEvidenciaGuardadaVariables>;
+export function registrarEvidenciaGuardada(dc: DataConnect, vars: RegistrarEvidenciaGuardadaVariables): MutationPromise<RegistrarEvidenciaGuardadaData, RegistrarEvidenciaGuardadaVariables>;
+
+interface VincularMiFichaVerificadaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<VincularMiFichaVerificadaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): MutationRef<VincularMiFichaVerificadaData, undefined>;
+  operationName: string;
+}
+export const vincularMiFichaVerificadaRef: VincularMiFichaVerificadaRef;
+
+export function vincularMiFichaVerificada(): MutationPromise<VincularMiFichaVerificadaData, undefined>;
+export function vincularMiFichaVerificada(dc: DataConnect): MutationPromise<VincularMiFichaVerificadaData, undefined>;
+
+interface RegistrarConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarConteoInventarioVariables): MutationRef<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarConteoInventarioVariables): MutationRef<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+  operationName: string;
+}
+export const registrarConteoInventarioRef: RegistrarConteoInventarioRef;
+
+export function registrarConteoInventario(vars: RegistrarConteoInventarioVariables): MutationPromise<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+export function registrarConteoInventario(dc: DataConnect, vars: RegistrarConteoInventarioVariables): MutationPromise<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+
+interface GetMiConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetMiConteoInventarioVariables): QueryRef<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetMiConteoInventarioVariables): QueryRef<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+  operationName: string;
+}
+export const getMiConteoInventarioRef: GetMiConteoInventarioRef;
+
+export function getMiConteoInventario(vars: GetMiConteoInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+export function getMiConteoInventario(dc: DataConnect, vars: GetMiConteoInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+
+interface GetMisConteosInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetMisConteosInventarioVariables): QueryRef<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetMisConteosInventarioVariables): QueryRef<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+  operationName: string;
+}
+export const getMisConteosInventarioRef: GetMisConteosInventarioRef;
+
+export function getMisConteosInventario(vars?: GetMisConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+export function getMisConteosInventario(dc: DataConnect, vars?: GetMisConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+
+interface GetConteosInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetConteosInventarioVariables): QueryRef<GetConteosInventarioData, GetConteosInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetConteosInventarioVariables): QueryRef<GetConteosInventarioData, GetConteosInventarioVariables>;
+  operationName: string;
+}
+export const getConteosInventarioRef: GetConteosInventarioRef;
+
+export function getConteosInventario(vars?: GetConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetConteosInventarioData, GetConteosInventarioVariables>;
+export function getConteosInventario(dc: DataConnect, vars?: GetConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetConteosInventarioData, GetConteosInventarioVariables>;
+
+interface AprobarConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AprobarConteoInventarioVariables): MutationRef<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AprobarConteoInventarioVariables): MutationRef<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+  operationName: string;
+}
+export const aprobarConteoInventarioRef: AprobarConteoInventarioRef;
+
+export function aprobarConteoInventario(vars: AprobarConteoInventarioVariables): MutationPromise<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+export function aprobarConteoInventario(dc: DataConnect, vars: AprobarConteoInventarioVariables): MutationPromise<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+
+interface RechazarConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RechazarConteoInventarioVariables): MutationRef<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RechazarConteoInventarioVariables): MutationRef<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+  operationName: string;
+}
+export const rechazarConteoInventarioRef: RechazarConteoInventarioRef;
+
+export function rechazarConteoInventario(vars: RechazarConteoInventarioVariables): MutationPromise<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+export function rechazarConteoInventario(dc: DataConnect, vars: RechazarConteoInventarioVariables): MutationPromise<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+
+interface GetStockInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetStockInventarioData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetStockInventarioData, undefined>;
+  operationName: string;
+}
+export const getStockInventarioRef: GetStockInventarioRef;
+
+export function getStockInventario(options?: ExecuteQueryOptions): QueryPromise<GetStockInventarioData, undefined>;
+export function getStockInventario(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetStockInventarioData, undefined>;
+
+interface GetHistorialInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetHistorialInventarioVariables): QueryRef<GetHistorialInventarioData, GetHistorialInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetHistorialInventarioVariables): QueryRef<GetHistorialInventarioData, GetHistorialInventarioVariables>;
+  operationName: string;
+}
+export const getHistorialInventarioRef: GetHistorialInventarioRef;
+
+export function getHistorialInventario(vars?: GetHistorialInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialInventarioData, GetHistorialInventarioVariables>;
+export function getHistorialInventario(dc: DataConnect, vars?: GetHistorialInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialInventarioData, GetHistorialInventarioVariables>;
 
 interface RegistrarseRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2115,6 +3099,114 @@ export const registrarSalidaInventarioRef: RegistrarSalidaInventarioRef;
 
 export function registrarSalidaInventario(vars: RegistrarSalidaInventarioVariables): MutationPromise<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
 export function registrarSalidaInventario(dc: DataConnect, vars: RegistrarSalidaInventarioVariables): MutationPromise<RegistrarSalidaInventarioData, RegistrarSalidaInventarioVariables>;
+
+interface GetMisComandasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetMisComandasVariables): QueryRef<GetMisComandasData, GetMisComandasVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetMisComandasVariables): QueryRef<GetMisComandasData, GetMisComandasVariables>;
+  operationName: string;
+}
+export const getMisComandasRef: GetMisComandasRef;
+
+export function getMisComandas(vars?: GetMisComandasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasData, GetMisComandasVariables>;
+export function getMisComandas(dc: DataConnect, vars?: GetMisComandasVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisComandasData, GetMisComandasVariables>;
+
+interface VincularMiComandaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: VincularMiComandaVariables): MutationRef<VincularMiComandaData, VincularMiComandaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: VincularMiComandaVariables): MutationRef<VincularMiComandaData, VincularMiComandaVariables>;
+  operationName: string;
+}
+export const vincularMiComandaRef: VincularMiComandaRef;
+
+export function vincularMiComanda(vars: VincularMiComandaVariables): MutationPromise<VincularMiComandaData, VincularMiComandaVariables>;
+export function vincularMiComanda(dc: DataConnect, vars: VincularMiComandaVariables): MutationPromise<VincularMiComandaData, VincularMiComandaVariables>;
+
+interface AutorizarGestionPrivacidadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AutorizarGestionPrivacidadData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<AutorizarGestionPrivacidadData, undefined>;
+  operationName: string;
+}
+export const autorizarGestionPrivacidadRef: AutorizarGestionPrivacidadRef;
+
+export function autorizarGestionPrivacidad(options?: ExecuteQueryOptions): QueryPromise<AutorizarGestionPrivacidadData, undefined>;
+export function autorizarGestionPrivacidad(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AutorizarGestionPrivacidadData, undefined>;
+
+interface GetComprobanteDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComprobanteDerechoVariables): QueryRef<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetComprobanteDerechoVariables): QueryRef<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+  operationName: string;
+}
+export const getComprobanteDerechoRef: GetComprobanteDerechoRef;
+
+export function getComprobanteDerecho(vars: GetComprobanteDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+export function getComprobanteDerecho(dc: DataConnect, vars: GetComprobanteDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+
+interface RecibirSolicitudDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RecibirSolicitudDerechoVariables): MutationRef<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RecibirSolicitudDerechoVariables): MutationRef<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+  operationName: string;
+}
+export const recibirSolicitudDerechoRef: RecibirSolicitudDerechoRef;
+
+export function recibirSolicitudDerecho(vars: RecibirSolicitudDerechoVariables): MutationPromise<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+export function recibirSolicitudDerecho(dc: DataConnect, vars: RecibirSolicitudDerechoVariables): MutationPromise<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+
+interface ListarSolicitudesDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: ListarSolicitudesDerechoVariables): QueryRef<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: ListarSolicitudesDerechoVariables): QueryRef<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+  operationName: string;
+}
+export const listarSolicitudesDerechoRef: ListarSolicitudesDerechoRef;
+
+export function listarSolicitudesDerecho(vars?: ListarSolicitudesDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+export function listarSolicitudesDerecho(dc: DataConnect, vars?: ListarSolicitudesDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+
+interface GestionarSolicitudDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GestionarSolicitudDerechoVariables): MutationRef<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GestionarSolicitudDerechoVariables): MutationRef<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+  operationName: string;
+}
+export const gestionarSolicitudDerechoRef: GestionarSolicitudDerechoRef;
+
+export function gestionarSolicitudDerecho(vars: GestionarSolicitudDerechoVariables): MutationPromise<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+export function gestionarSolicitudDerecho(dc: DataConnect, vars: GestionarSolicitudDerechoVariables): MutationPromise<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+
+interface ContarLimitesContactoVencidosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ContarLimitesContactoVencidosVariables): QueryRef<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ContarLimitesContactoVencidosVariables): QueryRef<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+  operationName: string;
+}
+export const contarLimitesContactoVencidosRef: ContarLimitesContactoVencidosRef;
+
+export function contarLimitesContactoVencidos(vars: ContarLimitesContactoVencidosVariables, options?: ExecuteQueryOptions): QueryPromise<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+export function contarLimitesContactoVencidos(dc: DataConnect, vars: ContarLimitesContactoVencidosVariables, options?: ExecuteQueryOptions): QueryPromise<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+
+interface PurgarLimitesContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PurgarLimitesContactoVariables): MutationRef<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PurgarLimitesContactoVariables): MutationRef<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
+  operationName: string;
+}
+export const purgarLimitesContactoRef: PurgarLimitesContactoRef;
+
+export function purgarLimitesContacto(vars: PurgarLimitesContactoVariables): MutationPromise<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
+export function purgarLimitesContacto(dc: DataConnect, vars: PurgarLimitesContactoVariables): MutationPromise<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
 
 interface AsociarFlujoComandaPendienteRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2547,3 +3639,87 @@ export const getComandaOperativaPorQrRef: GetComandaOperativaPorQrRef;
 
 export function getComandaOperativaPorQr(vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
 export function getComandaOperativaPorQr(dc: DataConnect, vars: GetComandaOperativaPorQrVariables, options?: ExecuteQueryOptions): QueryPromise<GetComandaOperativaPorQrData, GetComandaOperativaPorQrVariables>;
+
+interface RegistrarVehiculoFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarVehiculoFlotaVariables): MutationRef<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarVehiculoFlotaVariables): MutationRef<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+  operationName: string;
+}
+export const registrarVehiculoFlotaRef: RegistrarVehiculoFlotaRef;
+
+export function registrarVehiculoFlota(vars: RegistrarVehiculoFlotaVariables): MutationPromise<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+export function registrarVehiculoFlota(dc: DataConnect, vars: RegistrarVehiculoFlotaVariables): MutationPromise<RegistrarVehiculoFlotaData, RegistrarVehiculoFlotaVariables>;
+
+interface EditarVehiculoFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EditarVehiculoFlotaVariables): MutationRef<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EditarVehiculoFlotaVariables): MutationRef<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+  operationName: string;
+}
+export const editarVehiculoFlotaRef: EditarVehiculoFlotaRef;
+
+export function editarVehiculoFlota(vars: EditarVehiculoFlotaVariables): MutationPromise<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+export function editarVehiculoFlota(dc: DataConnect, vars: EditarVehiculoFlotaVariables): MutationPromise<EditarVehiculoFlotaData, EditarVehiculoFlotaVariables>;
+
+interface RegistrarSalidaFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarSalidaFlotaVariables): MutationRef<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarSalidaFlotaVariables): MutationRef<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+  operationName: string;
+}
+export const registrarSalidaFlotaRef: RegistrarSalidaFlotaRef;
+
+export function registrarSalidaFlota(vars: RegistrarSalidaFlotaVariables): MutationPromise<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+export function registrarSalidaFlota(dc: DataConnect, vars: RegistrarSalidaFlotaVariables): MutationPromise<RegistrarSalidaFlotaData, RegistrarSalidaFlotaVariables>;
+
+interface RegistrarRetornoFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarRetornoFlotaVariables): MutationRef<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarRetornoFlotaVariables): MutationRef<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+  operationName: string;
+}
+export const registrarRetornoFlotaRef: RegistrarRetornoFlotaRef;
+
+export function registrarRetornoFlota(vars: RegistrarRetornoFlotaVariables): MutationPromise<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+export function registrarRetornoFlota(dc: DataConnect, vars: RegistrarRetornoFlotaVariables): MutationPromise<RegistrarRetornoFlotaData, RegistrarRetornoFlotaVariables>;
+
+interface AdjuntarFotoInspeccionFlotaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdjuntarFotoInspeccionFlotaVariables): MutationRef<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdjuntarFotoInspeccionFlotaVariables): MutationRef<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+  operationName: string;
+}
+export const adjuntarFotoInspeccionFlotaRef: AdjuntarFotoInspeccionFlotaRef;
+
+export function adjuntarFotoInspeccionFlota(vars: AdjuntarFotoInspeccionFlotaVariables): MutationPromise<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+export function adjuntarFotoInspeccionFlota(dc: DataConnect, vars: AdjuntarFotoInspeccionFlotaVariables): MutationPromise<AdjuntarFotoInspeccionFlotaData, AdjuntarFotoInspeccionFlotaVariables>;
+
+interface GetFlotaVehiculosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetFlotaVehiculosVariables): QueryRef<GetFlotaVehiculosData, GetFlotaVehiculosVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetFlotaVehiculosVariables): QueryRef<GetFlotaVehiculosData, GetFlotaVehiculosVariables>;
+  operationName: string;
+}
+export const getFlotaVehiculosRef: GetFlotaVehiculosRef;
+
+export function getFlotaVehiculos(vars?: GetFlotaVehiculosVariables, options?: ExecuteQueryOptions): QueryPromise<GetFlotaVehiculosData, GetFlotaVehiculosVariables>;
+export function getFlotaVehiculos(dc: DataConnect, vars?: GetFlotaVehiculosVariables, options?: ExecuteQueryOptions): QueryPromise<GetFlotaVehiculosData, GetFlotaVehiculosVariables>;
+
+interface GetHistorialVehiculosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetHistorialVehiculosVariables): QueryRef<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetHistorialVehiculosVariables): QueryRef<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;
+  operationName: string;
+}
+export const getHistorialVehiculosRef: GetHistorialVehiculosRef;
+
+export function getHistorialVehiculos(vars?: GetHistorialVehiculosVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;
+export function getHistorialVehiculos(dc: DataConnect, vars?: GetHistorialVehiculosVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialVehiculosData, GetHistorialVehiculosVariables>;

@@ -28,4 +28,14 @@ describe("autorización por rol", () => {
     expect(rutaPermitida("cliente", "/intranet")).toBe(false);
     expect(rutaPermitida("admin", "/cuenta")).toBe(false);
   });
+
+  it("restringe la gestión de vehículos exclusivamente a administración", () => {
+    expect(rutaPermitida("admin", "/intranet/vehiculos")).toBe(true);
+    expect(NAV_POR_ROL.admin.some((item) => item.href === "/intranet/vehiculos")).toBe(true);
+    for (const rol of ["recepcionista", "operario"] as const) {
+      expect(rutaPermitida(rol, "/intranet/vehiculos")).toBe(false);
+      expect(NAV_POR_ROL[rol].some((item) => item.href === "/intranet/vehiculos")).toBe(false);
+    }
+    expect(rutaPermitida("cliente", "/intranet/vehiculos")).toBe(false);
+  });
 });

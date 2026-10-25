@@ -1,0 +1,27 @@
+query GetInspeccionParaEvidencias($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this in ['admin', 'conductor', 'repartidor']") }
+  }
+  inspeccionVehiculo(id: $id)
+    @check(expr: "this != null && (response.yo.rol.nombre == 'admin' || this.salida.repartidorId == auth.uid)", message: "La inspección no pertenece a tu salida") {
+    id salida { repartidorId }
+  }
+}
+
+# Lectura de confirmación después de una respuesta perdida. No crea movimientos.
+query GetMovimientoFlotaPorInspeccion($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this == 'admin'") }
+  }
+  inspeccionVehiculo(id: $id) { id salidaId momento kilometraje }
+}
+
+mutation RegistrarEvidenciaGuardada($id: UUID!, $inspeccionId: UUID!, $rutaStorage: String!, $descripcion: String, $orden: Int!)
+  @auth(level: NO_ACCESS) @transaction {
+  query @redact {
+    fotoInspeccionVehiculo(id: $id) @check(expr: "this == null || (this.inspeccionId == vars.inspeccionId && this.rutaStorage == vars.rutaStorage)", message: "El identificador de evidencia ya está en uso") { inspeccionId rutaStorage }
+  }
+  fotoInspeccionVehiculo_upsert(data: { id: $id, inspeccionId: $inspeccionId, rutaStorage: $rutaStorage, descripcion: $descripcion, orden: $orden })
+}

@@ -5,6 +5,8 @@ mutation SeedProduccion @transaction {
     {id:"00000000-0000-4000-8000-000000000002",nombre:"recepcionista"}
     {id:"00000000-0000-4000-8000-000000000003",nombre:"operario"}
     {id:"00000000-0000-4000-8000-000000000004",nombre:"cliente"}
+    {id:"00000000-0000-4000-8000-000000000005",nombre:"repartidor"}
+    {id:"00000000-0000-4000-8000-000000000006",nombre:"conductor"}
   ])
   usuario_upsertMany(data: [
     {id:"test-admin",rolId:"00000000-0000-4000-8000-000000000001",nombre:"Admin",email:"admin@example.test",activo:true}
@@ -12,6 +14,8 @@ mutation SeedProduccion @transaction {
     {id:"test-operario",rolId:"00000000-0000-4000-8000-000000000003",nombre:"Operario",email:"operario@example.test",activo:true}
     {id:"test-cliente",rolId:"00000000-0000-4000-8000-000000000004",nombre:"Cliente",email:"cliente@example.test",activo:true}
     {id:"test-inactivo",rolId:"00000000-0000-4000-8000-000000000001",nombre:"Inactivo",email:"inactivo@example.test",activo:false}
+    {id:"test-repartidor",rolId:"00000000-0000-4000-8000-000000000005",nombre:"Repartidor",email:"repartidor@example.test",activo:true}
+    {id:"test-conductor",rolId:"00000000-0000-4000-8000-000000000006",nombre:"Conductor",email:"conductor@example.test",activo:true}
   ])
   cliente_upsert(data:{id:"00000000-0000-4000-8000-000000000010",nombre:"Cliente de prueba"})
   tipoPrenda_upsert(data:{id:"00000000-0000-4000-8000-000000000011",nombre:"Camisa"})

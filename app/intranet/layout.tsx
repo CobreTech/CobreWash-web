@@ -2,7 +2,6 @@ import IntranetSidebar from "@/components/intranet/Sidebar";
 import IntranetTopbar from "@/components/intranet/Topbar";
 import AuthGuard from "@/components/intranet/AuthGuard";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import Script from "next/script";
 import AlertasRetraso, { AlertasRetrasoProvider } from "@/components/intranet/AlertasRetraso";
 
 export const metadata = {
@@ -10,22 +9,9 @@ export const metadata = {
   description: "Panel de administración interno",
 };
 
-const NO_FLASH_THEME_SCRIPT = `
-(function () {
-  try {
-    var theme = localStorage.getItem("intranet-theme") || "system";
-    var isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList.toggle("dark", isDark);
-  } catch (e) {}
-})();
-`;
-
 export default function IntranetLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Script id="intranet-theme" strategy="beforeInteractive">
-        {NO_FLASH_THEME_SCRIPT}
-      </Script>
       <ThemeProvider>
         <AuthGuard>
           <AlertasRetrasoProvider>
