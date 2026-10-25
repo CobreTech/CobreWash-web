@@ -12,7 +12,7 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useAgregarComentarioComanda, useResolverMiIncidencia, useAutoAsignarComandaOperario, useGetComandaDetalleOperario, useGetMisComandasAsignadas, useGetInsumosOperario, useCrearAviso, useGetAvisosAdministracion, useGetAvisosParaEquipo, useRegistrarse } from '@dataconnect/generated/react';
+import { useAgregarComentarioComanda, useResolverMiIncidencia, useAutoAsignarComandaOperario, useGetComandaDetalleOperario, useGetMisComandasAsignadas, useCrearAviso, useGetAvisosAdministracion, useGetAvisosParaEquipo, useRegistrarse, useCrearUsuarioAdministrado } from '@dataconnect/generated/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useAgregarComentarioComanda(agregarComentarioComandaVars);
@@ -25,8 +25,6 @@ const { data, isPending, isSuccess, isError, error } = useGetComandaDetalleOpera
 
 const { data, isPending, isSuccess, isError, error } = useGetMisComandasAsignadas(getMisComandasAsignadasVars);
 
-const { data, isPending, isSuccess, isError, error } = useGetInsumosOperario(getInsumosOperarioVars);
-
 const { data, isPending, isSuccess, isError, error } = useCrearAviso(crearAvisoVars);
 
 const { data, isPending, isSuccess, isError, error } = useGetAvisosAdministracion(getAvisosAdministracionVars);
@@ -34,6 +32,8 @@ const { data, isPending, isSuccess, isError, error } = useGetAvisosAdministracio
 const { data, isPending, isSuccess, isError, error } = useGetAvisosParaEquipo(getAvisosParaEquipoVars);
 
 const { data, isPending, isSuccess, isError, error } = useRegistrarse(registrarseVars);
+
+const { data, isPending, isSuccess, isError, error } = useCrearUsuarioAdministrado(crearUsuarioAdministradoVars);
 
 ```
 
@@ -72,7 +72,7 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { agregarComentarioComanda, resolverMiIncidencia, autoAsignarComandaOperario, getComandaDetalleOperario, getMisComandasAsignadas, getInsumosOperario, crearAviso, getAvisosAdministracion, getAvisosParaEquipo, registrarse } from '@dataconnect/generated';
+import { agregarComentarioComanda, resolverMiIncidencia, autoAsignarComandaOperario, getComandaDetalleOperario, getMisComandasAsignadas, crearAviso, getAvisosAdministracion, getAvisosParaEquipo, registrarse, crearUsuarioAdministrado } from '@dataconnect/generated';
 
 
 // Operation AgregarComentarioComanda:  For variables, look at type AgregarComentarioComandaVars in ../index.d.ts
@@ -90,9 +90,6 @@ const { data } = await GetComandaDetalleOperario(dataConnect, getComandaDetalleO
 // Operation GetMisComandasAsignadas:  For variables, look at type GetMisComandasAsignadasVars in ../index.d.ts
 const { data } = await GetMisComandasAsignadas(dataConnect, getMisComandasAsignadasVars);
 
-// Operation GetInsumosOperario:  For variables, look at type GetInsumosOperarioVars in ../index.d.ts
-const { data } = await GetInsumosOperario(dataConnect, getInsumosOperarioVars);
-
 // Operation CrearAviso:  For variables, look at type CrearAvisoVars in ../index.d.ts
 const { data } = await CrearAviso(dataConnect, crearAvisoVars);
 
@@ -104,6 +101,9 @@ const { data } = await GetAvisosParaEquipo(dataConnect, getAvisosParaEquipoVars)
 
 // Operation Registrarse:  For variables, look at type RegistrarseVars in ../index.d.ts
 const { data } = await Registrarse(dataConnect, registrarseVars);
+
+// Operation CrearUsuarioAdministrado:  For variables, look at type CrearUsuarioAdministradoVars in ../index.d.ts
+const { data } = await CrearUsuarioAdministrado(dataConnect, crearUsuarioAdministradoVars);
 
 
 ```
