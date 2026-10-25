@@ -68,7 +68,8 @@ await check("seguimiento público por QR y número solo devuelve campos permitid
   const porQr = (await execute(trackingQueries, "GetSeguimientoPublicoPorQr", { codigoQr: codigoQrInicial }, null)).comanda;
   const porNumero = (await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda: good.numeroComanda }, null)).comanda;
   assert.deepEqual(porQr, porNumero);
-  assert.deepEqual(Object.keys(porQr).sort(), ["numeroComanda", "estado", "fechaRecepcion", "fechaEntregaEstimada", "fechaEntregaReal", "actualizadoEn", "comandaDetalles_on_comanda", "comandaEtapas_on_comanda"].sort());
+  assert.deepEqual(Object.keys(porQr).sort(), ["numeroComanda", "codigoQr", "estado", "fechaRecepcion", "fechaEntregaEstimada", "fechaEntregaReal", "actualizadoEn", "comandaDetalles_on_comanda", "comandaEtapas_on_comanda"].sort());
+  assert.equal(porQr.codigoQr, codigoQrInicial);
   assert.equal(porQr.estado, "PENDIENTE");
   assert.equal(porQr.comandaEtapas_on_comanda.length, 5);
   assert(porQr.comandaEtapas_on_comanda.every((e) => e.estado === "PENDIENTE"));

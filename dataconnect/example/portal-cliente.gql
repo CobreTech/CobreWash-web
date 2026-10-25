@@ -1,5 +1,5 @@
 # El UID se obtiene del token; nunca se acepta un dueño enviado por el navegador.
-query GetMisComandas($estado: ComandaEstado, $limit: Int = 10, $offset: Int = 0) @auth(level: USER) {
+query GetMisComandas($estado: ComandaEstado, $estados: [ComandaEstado!], $limit: Int = 10, $offset: Int = 0) @auth(level: USER) {
   yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
     activo @check(expr: "this == true", message: "La cuenta está inactiva")
     rol { nombre @check(expr: "this == 'cliente'", message: "Acceso reservado a clientes") }
@@ -10,12 +10,12 @@ query GetMisComandas($estado: ComandaEstado, $limit: Int = 10, $offset: Int = 0)
         { cliente: { usuarioId: { eq_expr: "auth.uid" } } }
         { comandaVinculadas_on_comanda: { exist: { usuarioId: { eq_expr: "auth.uid" } } } }
       ]
-      }, { estado: { eq: $estado } }]
+      }, { estado: { eq: $estado } }, { estado: { in: $estados } }]
     }
     orderBy: [{ fechaRecepcion: DESC }, { numeroComanda: DESC }]
     limit: $limit offset: $offset
   ) {
-    id numeroComanda estado valorTotal fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
+    id codigoQr numeroComanda estado valorTotal fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
     comandaDetalles_on_comanda {
       id cantidad pesoKg precioUnitario subtotal
       tipoPrenda { nombre }
@@ -31,7 +31,7 @@ query GetMisComandas($estado: ComandaEstado, $limit: Int = 10, $offset: Int = 0)
       { cliente: { usuarioId: { eq_expr: "auth.uid" } } }
       { comandaVinculadas_on_comanda: { exist: { usuarioId: { eq_expr: "auth.uid" } } } }
     ]
-    }, { estado: { eq: $estado } }]
+    }, { estado: { eq: $estado } }, { estado: { in: $estados } }]
   }) { _count }
 }
 

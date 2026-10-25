@@ -2,6 +2,7 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ComandaEstado } from "@/src/dataconnect-generated";
+import type { VistaPedidos } from "./vistas";
 const mocks = vi.hoisted(() => ({ consultar: vi.fn() }));
 vi.mock("./consultar", () => ({ consultarMisComandas: mocks.consultar }));
 import { usePedidosCliente } from "./usePedidosCliente";
@@ -35,8 +36,19 @@ it("cambia filtro y página, distingue errores y permite reintentar", async () =
   expect(result.current.error).toBe(""); expect(result.current.total).toBe(0);
   rerender({ estado: ComandaEstado.ENTREGADA, pagina: 1 });
   await act(() => vi.advanceTimersByTimeAsync(0));
-  expect(mocks.consultar).toHaveBeenLastCalledWith(ComandaEstado.ENTREGADA, 1);
+  expect(mocks.consultar).toHaveBeenLastCalledWith(ComandaEstado.ENTREGADA, 1, "todos");
   expect(result.current.error).toMatch(/cargar/);
   await act(() => result.current.actualizar());
   expect(result.current.error).toBe(""); expect(result.current.total).toBe(12);
+});
+it("el historial no conserva filas ni respuestas pendientes de la vista de activos", async () => {
+  let resolver!: (value: unknown) => void;
+  mocks.consultar.mockReturnValueOnce(new Promise(resolve => { resolver = resolve; })).mockResolvedValueOnce({ pedidos: [{ numeroComanda: "histórico" }], total: 1 });
+  const { result, rerender } = renderHook(({ vista }) => usePedidosCliente("a", null, 0, vista), { initialProps: { vista: "activos" as VistaPedidos } });
+  await act(() => vi.advanceTimersByTimeAsync(0));
+  rerender({ vista: "historial" }); expect(result.current.pedidos).toEqual([]);
+  await act(() => vi.advanceTimersByTimeAsync(0));
+  await act(async () => { resolver({ pedidos: [{ numeroComanda: "activo" }], total: 1 }); });
+  expect(mocks.consultar).toHaveBeenLastCalledWith(null, 0, "historial");
+  expect(result.current.pedidos).toEqual([{ numeroComanda: "histórico" }]);
 });

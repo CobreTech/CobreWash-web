@@ -67,6 +67,9 @@ await check("seguimiento anónimo por número y QR: timeline sin datos privados"
  const numero=await execute(publico,"GetSeguimientoPublicoPorNumero",{numeroComanda:"ELCOBRE-aa01"},null);
  const codigo=await execute(publico,"GetSeguimientoPublicoPorQr",{codigoQr:qr},null);
  assert.deepEqual(numero,codigo); assert.equal(numero.comanda.comandaEtapas_on_comanda[1].estado,"EN_PROCESO");
+ assert.equal(numero.comanda.codigoQr.replaceAll("-", ""), qr.replaceAll("-", ""));
+ const desdeQrMostrado=await execute(publico,"GetSeguimientoPublicoPorQr",{codigoQr:qr},null);
+ assert.deepEqual(desdeQrMostrado.comanda,codigo.comanda);
  for(const prohibido of ["email","usuarioId","cliente","valorTotal","precioUnitario","observaciones","operario"]) assert.equal(Object.hasOwn(numero.comanda,prohibido),false);
  assert.equal((await execute(publico,"GetSeguimientoPublicoPorNumero",{numeroComanda:"ELCOBRE-xxxx"},null)).comanda,null);
 });
@@ -114,5 +117,19 @@ await check("una cuenta pública no puede cambiar su propio rol a administrador"
  },"registro-PARTICULAR"));
  const perfil=await execute(await readFile("dataconnect/example/queries.gql","utf8"),"GetMiPerfil",{},"registro-PARTICULAR");
  assert.equal(perfil.usuario.rol.nombre,"cliente");
+});
+await check("activos e historial filtran todos los registros antes de paginar, sin mezclar cuentas", async () => {
+ const estadosActivos=["PENDIENTE","EN_PROCESO","FINALIZADA"],estadosHistorial=["ENTREGADA","ANULADA"];
+ const filas=Array.from({length:19},(_,i)=>`{id:"${randomUUID()}",clienteId:"${propioId}",numeroComanda:"ELCOBRE-bb${String(i).padStart(2,"0")}",codigoQr_expr:"uuidV4()",estado:${i<15?estadosActivos[i%3]:estadosHistorial[i%2]},fechaRecepcion:"2026-10-24T12:00:00Z"}`);
+ await execute(`mutation Paginas { comanda_insertMany(data:[${filas.join("\n")}]) }`,"Paginas");
+ const primera=await listar(verified,{estados:estadosActivos,limit:10,offset:0});
+ const segunda=await listar(verified,{estados:estadosActivos,limit:10,offset:10});
+ assert.equal(primera.total[0]._count,16);assert.equal(primera.comandas.length,10);assert.equal(segunda.comandas.length,6);
+ const ids=[...primera.comandas,...segunda.comandas].map(c=>c.id);assert.equal(new Set(ids).size,16);
+ assert([...primera.comandas,...segunda.comandas].every(c=>estadosActivos.includes(c.estado)));
+ const historial=await listar(verified,{estados:estadosHistorial,limit:2,offset:2});
+ assert.equal(historial.total[0]._count,5);assert.equal(historial.comandas.length,2);assert(historial.comandas.every(c=>estadosHistorial.includes(c.estado)));
+ const incompatible=await listar(verified,{estados:estadosActivos,estado:"ENTREGADA"});assert.equal(incompatible.comandas.length,0);
+ const otro=await listar({uid:"otro-cliente",email:"otro@example.test",verified:true},{estados:estadosActivos});assert.deepEqual(otro.comandas.map(c=>c.numeroComanda),["ELCOBRE-aa03"]);
 });
 console.log(`${checks} pruebas de integración del portal completadas.`);

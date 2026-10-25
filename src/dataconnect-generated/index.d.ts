@@ -1490,6 +1490,7 @@ export interface GetMisComandasAsignadasVariables {
 export interface GetMisComandasData {
   comandas: ({
     id: UUIDString;
+    codigoQr: UUIDString;
     numeroComanda: string;
     estado: ComandaEstado;
     valorTotal: number;
@@ -1528,6 +1529,7 @@ export interface GetMisComandasData {
 
 export interface GetMisComandasVariables {
   estado?: ComandaEstado | null;
+  estados?: ComandaEstado[] | null;
   limit?: number | null;
   offset?: number | null;
 }
@@ -1818,6 +1820,7 @@ export interface GetSeguimientoProduccionVariables {
 
 export interface GetSeguimientoPublicoPorNumeroData {
   comanda?: {
+    codigoQr: UUIDString;
     numeroComanda: string;
     estado: ComandaEstado;
     fechaRecepcion: TimestampString;
@@ -1848,6 +1851,7 @@ export interface GetSeguimientoPublicoPorNumeroVariables {
 
 export interface GetSeguimientoPublicoPorQrData {
   comanda?: {
+    codigoQr: UUIDString;
     numeroComanda: string;
     estado: ComandaEstado;
     fechaRecepcion: TimestampString;

@@ -2,7 +2,7 @@
 query GetSeguimientoPublicoPorQr($codigoQr: UUID!)
   @auth(level: PUBLIC, insecureReason: "Seguimiento por código impreso: solo estado, fechas, servicios y etapas, sin datos personales") {
   comanda(first: { where: { codigoQr: { eq: $codigoQr } } }) {
-    numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
+    codigoQr numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
     comandaDetalles_on_comanda { tipoServicio { nombre } }
     comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
       nombreEtapa ordenEtapa estado fechaCompletado
@@ -14,7 +14,7 @@ query GetSeguimientoPublicoPorQr($codigoQr: UUID!)
 query GetSeguimientoPublicoPorNumero($numeroComanda: String!)
   @auth(level: PUBLIC, insecureReason: "Consulta por número público: solo estado, fechas, servicios y etapas, sin datos personales") {
   comanda(first: { where: { numeroComanda: { eq: $numeroComanda } } }) {
-    numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
+    codigoQr numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
     comandaDetalles_on_comanda { tipoServicio { nombre } }
     comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {
       nombreEtapa ordenEtapa estado fechaCompletado

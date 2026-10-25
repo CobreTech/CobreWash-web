@@ -2,33 +2,38 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { sendEmailVerification, signOut } from "firebase/auth";
-import { Loader2, LogOut, Package } from "lucide-react";
+import { Loader2, LogOut, Package, QrCode, ShieldCheck, UserRound, Link2, RefreshCw, History, Layers3, CircleDot, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, ArrowUpRight, MailCheck } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 import { useUsuarioActual } from "@/lib/firebase/useUsuarioActual";
 import { esRolInterno, LANDING_POR_ROL, type Rol } from "@/lib/roles";
 import { ComandaEstado } from "@/src/dataconnect-generated";
 import { usePedidosCliente } from "@/lib/portal/usePedidosCliente";
-import { TAMANO_PAGINA, vincularPedido, type PedidoCliente } from "@/lib/portal/consultar";
-import { ESTADOS_PUBLICOS, fechaSeguimiento, presentarPedido } from "@/lib/seguimiento/publico";
+import { TAMANO_PAGINA, vincularPedido } from "@/lib/portal/consultar";
+import { ESTADOS_POR_VISTA, type VistaPedidos } from "@/lib/portal/vistas";
+import { ESTADOS_PUBLICOS } from "@/lib/seguimiento/publico";
+import GlassSelect from "@/components/ui/GlassSelect";
+import DetallePedido from "@/components/portal/DetallePedido";
 
-const clp = (valor: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP" }).format(valor);
-const campo = "w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-900";
-const boton = "rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50";
+const campo = "w-full rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3 text-sm font-medium text-stone-900 placeholder:font-normal placeholder:text-stone-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/10";
+const boton = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-brand px-4 py-3 text-sm font-bold text-white shadow-premium transition-shadow hover:shadow-lg disabled:opacity-50";
+const vistas = [{ id: "todos", label: "Todos", icon: Layers3 }, { id: "activos", label: "Activos", icon: CircleDot }, { id: "historial", label: "Historial", icon: History }] as const;
 
 export default function CuentaPage() {
   const router = useRouter();
   const { usuario, loading } = useUsuarioActual();
   const clienteActivo = usuario?.rol.nombre === "cliente" && usuario.activo;
   const [estado, setEstado] = useState<ComandaEstado | null>(null);
+  const [vista, setVista] = useState<VistaPedidos>("todos");
   const [pagina, setPagina] = useState(0);
   const [numero, setNumero] = useState("");
   const [vinculando, setVinculando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [errorAccion, setErrorAccion] = useState("");
-  const { pedidos, total, cargando, error, actualizar } = usePedidosCliente(clienteActivo ? usuario.id : null, estado, pagina);
+  const { pedidos, total, cargando, error, actualizar } = usePedidosCliente(clienteActivo ? usuario.id : null, estado, pagina, vista);
 
   useEffect(() => {
     if (loading) return;
@@ -41,7 +46,7 @@ export default function CuentaPage() {
     try {
       await vincularPedido(numero);
       setNumero(""); setMensaje("Comanda vinculada a tu cuenta.");
-      if (estado !== null || pagina !== 0) { setEstado(null); setPagina(0); }
+      if (estado !== null || pagina !== 0 || vista !== "todos") { setEstado(null); setPagina(0); setVista("todos"); }
       else await actualizar();
     } catch (error) {
       setErrorAccion(error instanceof Error && error.message.startsWith("Ingresa") ? error.message : "No se pudo vincular. Revisa el número y verifica que el correo de tu cuenta coincida con el del comprobante. Si no coincide, contacta a recepción.");
@@ -61,79 +66,36 @@ export default function CuentaPage() {
     finally { setEnviando(false); }
   }
 
-  if (loading || !usuario || !clienteActivo) return <main className="flex min-h-screen items-center justify-center"><Loader2 aria-label="Cargando cuenta" className="animate-spin text-brand-600" /></main>;
+  if (loading || !usuario || !clienteActivo) return <main className="flex min-h-screen items-center justify-center gap-3 text-sm text-stone-500"><Loader2 aria-label="Cargando cuenta" className="h-5 w-5 animate-spin text-brand-600" />Preparando tu cuenta…</main>;
   const perfil = usuario.clientes_on_usuario[0];
-  return <main className="min-h-screen bg-gradient-to-b from-brand-50 to-white text-stone-900">
-    <header className="border-b border-stone-200 bg-white px-4 py-4">
-      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
-        <Link href="/" className="font-display font-extrabold">Lavandería <span className="text-brand-600">El Cobre</span></Link>
-        <nav className="flex flex-wrap items-center gap-4 text-sm"><Link href="/seguimiento">Seguimiento público</Link><Link href="/privacidad/derechos">Mis datos personales</Link><button onClick={async () => { try { await signOut(auth); router.replace("/"); } catch { setErrorAccion("No pudimos cerrar la sesión. Intenta nuevamente."); } }} className="flex items-center gap-2 text-red-600"><LogOut size={16} />Salir</button></nav>
+  return <main className="relative isolate min-h-screen overflow-hidden pb-16 text-stone-900">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[700px] bg-gradient-to-b from-brand-50/80 via-copper-50/40 to-transparent" />
+    <header className="glass-nav sticky top-0 z-30 border-b border-brand-500/10 bg-white/70 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2.5"><Image src="/logo.webp" alt="Logo Lavandería El Cobre" width={40} height={40} className="h-10 w-auto" /><span className="font-display text-sm font-extrabold">Lavandería <span className="text-brand-600">El Cobre</span></span></Link>
+        <nav aria-label="Mi cuenta" className="flex flex-wrap items-center gap-2 text-xs font-semibold"><Link href="/seguimiento" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/60 px-3 text-stone-600 hover:bg-brand-50"><QrCode className="h-4 w-4 text-brand-600" />Seguimiento público</Link><Link href="/privacidad/derechos" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-stone-600 hover:bg-brand-50"><ShieldCheck className="h-4 w-4 text-brand-600" />Mis datos personales</Link><button onClick={async () => { try { await signOut(auth); router.replace("/"); } catch { setErrorAccion("No pudimos cerrar la sesión. Intenta nuevamente."); } }} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-white/60 px-3 text-stone-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"><LogOut className="h-4 w-4" />Salir</button></nav>
       </div>
     </header>
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
-      <section className="rounded-3xl border border-stone-200 bg-white p-6">
-        <p className="text-xs font-bold text-brand-700">Cliente · {perfil ? (perfil.tipoCliente === "HOTEL" ? "Empresa" : "Particular") : "Ficha pendiente de validación"}</p>
-        <h1 className="mt-2 text-2xl font-extrabold">Hola, {usuario.nombre}</h1>
-        <p className="mt-2 break-all text-sm text-stone-600">{usuario.email}</p>
-        <p className="mt-1 text-sm text-stone-500">Aquí puedes consultar tus pedidos actuales y anteriores.</p>
-        <dl className="mt-4 grid gap-3 border-t border-stone-100 pt-4 text-sm sm:grid-cols-2">
-          <div><dt className="text-stone-500">RUT</dt><dd>{usuario.rut ?? "Sin registrar"}</dd></div>
-          <div><dt className="text-stone-500">Teléfono</dt><dd>{usuario.telefono ?? "Sin registrar"}</dd></div>
-          <div className="sm:col-span-2"><dt className="text-stone-500">Dirección</dt><dd>{perfil?.direccion ?? "Sin registrar"}</dd></div>
-        </dl>
-      </section>
-      <section className="space-y-3 rounded-3xl border border-stone-200 bg-white p-6">
-        <h2 className="text-lg font-bold">Vincular una comanda anterior</h2>
-        <p className="text-sm text-stone-600">Ingresa el número de tu comprobante. Para proteger el detalle de tus pedidos, el correo registrado en recepción debe coincidir con el de tu cuenta y estar verificado.</p>
-        <form onSubmit={vincular} className="flex flex-col gap-3 sm:flex-row">
-          <label className="flex-1 text-sm font-semibold">Número de comanda<input required maxLength={20} value={numero} onChange={e => setNumero(e.target.value)} placeholder="ELCOBRE-14r3 o 14r3" className={`${campo} mt-1`} /></label>
-          <button disabled={vinculando} className={`${boton} self-end`}>{vinculando ? "Vinculando…" : "Vincular pedido"}</button>
-        </form>
-        <button disabled={enviando} onClick={() => void verificarCorreo()} className="text-sm font-bold text-brand-700 underline disabled:opacity-50">{enviando ? "Enviando…" : "Verificar mi correo"}</button>
-        {mensaje && <p role="status" className="text-sm text-green-700">{mensaje}</p>}
-      </section>
-      {errorAccion && <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{errorAccion}</p>}
-      <section className="space-y-4" aria-busy={cargando}>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-xl font-bold">Mis pedidos</h2>
-          <button disabled={cargando} onClick={() => void actualizar()} className="text-sm font-bold text-brand-700 underline disabled:opacity-50">Actualizar pedidos</button>
-          <label className="text-sm font-semibold">Filtrar por estado<select value={estado ?? ""} disabled={vinculando} onChange={e => { setEstado((e.target.value || null) as ComandaEstado | null); setPagina(0); }} className={`${campo} mt-1`}><option value="">Todos los estados</option>{Object.values(ComandaEstado).map(value => <option key={value} value={value}>{ESTADOS_PUBLICOS[value]}</option>)}</select></label>
-        </div>
-        <p className="text-sm text-stone-500">Más recientes primero · {total} pedidos{estado ? " en este estado" : ""}</p>
-        {error && <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error} <button onClick={() => void actualizar()} disabled={cargando} className="font-bold underline">Reintentar</button></div>}
-        {cargando && <p role="status" className="text-sm text-stone-500">Cargando pedidos…</p>}
-        {!cargando && !error && pedidos.length === 0 && <p className="rounded-2xl border border-stone-200 bg-white p-6 text-sm text-stone-600">{estado ? "No tienes pedidos en este estado." : "Todavía no tienes pedidos en tu cuenta. Puedes vincular uno con el número de tu comprobante."}</p>}
-        {pedidos.map(pedido => <DetallePedido key={pedido.id} pedido={pedido} />)}
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <button className={boton} disabled={cargando || pagina === 0} onClick={() => setPagina(p => p - 1)}>Anterior</button>
-          <span>Página {pagina + 1} de {Math.max(1, Math.ceil(total / TAMANO_PAGINA))}</span>
-          <button className={boton} disabled={cargando || (pagina + 1) * TAMANO_PAGINA >= total} onClick={() => setPagina(p => p + 1)}>Siguiente</button>
-        </div>
-      </section>
+    <div className="mx-auto max-w-7xl space-y-7 px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <section className="flex flex-wrap items-center justify-between gap-5"><div><p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-700">Tu portal de cliente</p><h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Hola, <span className="text-brand-600">{usuario.nombre}</span></h1><p className="mt-3 text-sm text-stone-500">Tus prendas, tus pedidos y todo su recorrido, en un mismo lugar.</p></div><span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/65 px-4 py-2 text-xs font-semibold text-brand-700"><ShieldCheck className="h-4 w-4" />Cuenta privada</span></section>
+      <div className="grid items-start gap-7 lg:grid-cols-[18rem_minmax(0,1fr)]">
+        <aside className="min-w-0 space-y-5">
+          <section className="glass-card rounded-3xl bg-white/65 p-6 shadow-premium backdrop-blur-lg"><span className="mb-4 inline-flex rounded-2xl bg-gradient-brand p-3 text-white shadow-premium"><UserRound className="h-6 w-6" /></span><h2 className="font-display text-lg font-extrabold">Mi perfil</h2><p className="mt-1 text-[11px] font-bold text-brand-700">Cliente · {perfil ? (perfil.tipoCliente === "HOTEL" ? "Empresa" : "Particular") : "Ficha pendiente de validación"}</p><p className="mt-3 break-all text-xs text-stone-500">{usuario.email}</p><dl className="mt-5 space-y-3 border-t border-stone-100 pt-4 text-xs">{[["RUT", usuario.rut], ["Teléfono", usuario.telefono], ["Dirección", perfil?.direccion]].map(([label, value]) => <div key={label}><dt className="text-stone-400">{label}</dt><dd className="mt-1 break-words font-semibold text-stone-700">{value || "Sin registrar"}</dd></div>)}</dl></section>
+          <section className="glass-card space-y-4 rounded-3xl bg-white/65 p-6 shadow-premium backdrop-blur-lg"><span className="inline-flex rounded-xl bg-brand-50 p-2.5 text-brand-600"><Link2 className="h-5 w-5" /></span><h2 className="font-display text-base font-extrabold">Vincular una comanda anterior</h2><p className="text-xs leading-relaxed text-stone-500">Ingresa el número de tu comprobante. El correo registrado en recepción debe coincidir con el de tu cuenta y estar verificado.</p><form onSubmit={vincular} className="space-y-3"><label className="block text-xs font-bold text-stone-600">Número de comanda<input required maxLength={20} value={numero} onChange={e => setNumero(e.target.value)} placeholder="ELCOBRE-14r3 o 14r3" className={`${campo} mt-2`} /></label><button disabled={vinculando} className={`${boton} w-full`}>{vinculando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}{vinculando ? "Vinculando…" : "Vincular pedido"}</button></form><button disabled={enviando} onClick={() => void verificarCorreo()} className="inline-flex min-h-11 items-center gap-2 text-xs font-bold text-brand-700 underline underline-offset-4 disabled:opacity-50"><MailCheck className="h-4 w-4" />{enviando ? "Enviando…" : "Verificar mi correo"}</button>{mensaje && <p role="status" className="flex items-start gap-2 rounded-xl bg-green-50 p-3 text-xs leading-relaxed text-green-700"><CheckCircle2 className="h-4 w-4 shrink-0" />{mensaje}</p>}</section>
+          <Link href="/privacidad/derechos" className="flex items-start gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-4 text-xs leading-relaxed text-stone-600"><ShieldCheck className="h-5 w-5 shrink-0 text-brand-600" /><span>¿Necesitas gestionar tus datos personales?<span className="mt-1 block font-bold text-brand-700">Ir al canal de derechos <ArrowUpRight className="inline h-3.5 w-3.5" /></span></span></Link>
+        </aside>
+        <section className="min-w-0 space-y-5" aria-busy={cargando} aria-label="Mis pedidos">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-display text-2xl font-extrabold">Mis pedidos</h2><p className="mt-1 text-xs text-stone-500">Abre una comanda para ver sus prendas, montos, etapas y QR.</p></div><button disabled={cargando} onClick={() => void actualizar()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-stone-200 bg-white/60 px-4 text-xs font-bold text-stone-600 hover:bg-brand-50 disabled:opacity-50"><RefreshCw className={cargando ? "h-4 w-4 animate-spin" : "h-4 w-4"} />Actualizar pedidos</button></div>
+          <div className="glass-card flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/65 p-3 shadow-premium"><nav aria-label="Vistas de pedidos" className="flex flex-wrap gap-1">{vistas.map(v => { const Icon = v.icon; return <button key={v.id} type="button" aria-pressed={vista === v.id} onClick={() => { setVista(v.id); setEstado(null); setPagina(0); }} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${vista === v.id ? "bg-gradient-brand text-white shadow-premium" : "text-stone-500 hover:bg-brand-50 hover:text-brand-700"}`}><Icon className="h-4 w-4" />{v.label}</button>; })}</nav><div className="w-full sm:w-56"><GlassSelect ariaLabel="Filtrar por estado" disabled={vinculando} value={estado ?? ""} onChange={value => { setEstado((value || null) as ComandaEstado | null); setPagina(0); }} options={[{ value: "", label: "Todos los estados" }, ...ESTADOS_POR_VISTA[vista].map(value => ({ value, label: ESTADOS_PUBLICOS[value] }))]} /></div></div>
+          <p className="text-xs text-stone-500">Más recientes primero · {total} pedidos{estado ? " en este estado" : vista === "activos" ? " activos" : vista === "historial" ? " en el historial" : " en tu cuenta"}</p>
+          {errorAccion && <p role="alert" className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><AlertCircle className="h-5 w-5 shrink-0" />{errorAccion}</p>}
+          {error && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error} <button onClick={() => void actualizar()} disabled={cargando} className="font-bold underline">Reintentar</button></div>}
+          {cargando && <p role="status" className="flex items-center gap-2 rounded-xl bg-white/60 p-4 text-sm text-stone-500"><Loader2 className="h-4 w-4 animate-spin text-brand-600" />Cargando pedidos…</p>}
+          {!cargando && !error && pedidos.length === 0 && <div className="glass-card rounded-3xl bg-white/65 p-8 text-center shadow-premium"><Package className="mx-auto mb-4 h-10 w-10 text-brand-400" /><h3 className="font-display text-lg font-bold">{estado || vista !== "todos" ? "No hay pedidos en esta vista" : "Tus próximos pedidos aparecerán aquí"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-stone-500">{estado || vista !== "todos" ? "Prueba otro estado o consulta todos tus pedidos." : "Todavía no tienes pedidos en tu cuenta. Puedes vincular uno con el número de tu comprobante."}</p></div>}
+          {pedidos.map(pedido => <DetallePedido key={pedido.id} pedido={pedido} />)}
+          <nav aria-label="Páginas de mis pedidos" className="flex items-center justify-between gap-3 text-xs font-semibold text-stone-500"><button className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-stone-200 bg-white/60 px-3 disabled:opacity-40" disabled={cargando || pagina === 0} onClick={() => setPagina(p => p - 1)}><ChevronLeft className="h-4 w-4" />Anterior</button><span>Página {pagina + 1} de {Math.max(1, Math.ceil(total / TAMANO_PAGINA))}</span><button className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-stone-200 bg-white/60 px-3 disabled:opacity-40" disabled={cargando || (pagina + 1) * TAMANO_PAGINA >= total} onClick={() => setPagina(p => p + 1)}>Siguiente<ChevronRight className="h-4 w-4" /></button></nav>
+        </section>
+      </div>
     </div>
   </main>;
-}
-
-function DetallePedido({ pedido }: { pedido: PedidoCliente }) {
-  const vista = presentarPedido(pedido);
-  return <details className="overflow-hidden rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-    <summary className="cursor-pointer space-y-2">
-      <span className="inline-flex items-center gap-2 font-bold"><Package size={18} className="text-brand-600" />{pedido.numeroComanda}</span>
-      <span className="ml-3 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{vista.estado}</span>
-      <span className="block text-sm text-stone-600">{fechaSeguimiento(pedido.fechaRecepcion)} · {clp(pedido.valorTotal)}</span>
-    </summary>
-    <div className="mt-5 space-y-5 border-t border-stone-100 pt-5">
-      <p className="text-sm">Servicios: {vista.servicios}</p>
-      {pedido.fechaEntregaEstimada && <p className="text-sm">Entrega estimada: {fechaSeguimiento(pedido.fechaEntregaEstimada)}</p>}
-      {pedido.fechaEntregaReal && <p className="text-sm">Entregado el: {fechaSeguimiento(pedido.fechaEntregaReal)}</p>}
-      <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-        <caption className="sr-only">Detalle de prendas y servicios de {pedido.numeroComanda}</caption>
-        <thead><tr className="border-b border-stone-200 text-stone-500"><th className="p-2">Prenda</th><th className="p-2">Servicio</th><th className="p-2">Cantidad / peso</th><th className="p-2 text-right">Subtotal</th></tr></thead>
-        <tbody>{pedido.comandaDetalles_on_comanda.map(d => <tr key={d.id} className="border-b border-stone-100"><td className="p-2">{d.tipoPrenda.nombre}</td><td className="p-2">{d.tipoServicio.nombre}</td><td className="p-2">{d.cantidad}{d.pesoKg != null ? ` / ${d.pesoKg} kg` : ""}</td><td className="p-2 text-right">{clp(d.subtotal)}</td></tr>)}</tbody>
-        <tfoot><tr><th colSpan={3} className="p-2">Total</th><td className="p-2 text-right font-bold">{clp(pedido.valorTotal)}</td></tr></tfoot>
-      </table></div>
-      {vista.etapas.length > 0 ? <div><h3 className="mb-3 font-bold">Avance · {vista.progreso}%</h3><ol className="space-y-2">{vista.etapas.map(e => <li key={e.orden} className="flex justify-between gap-3 text-sm"><span>{e.nombre}</span><span className={e.estado === "COMPLETADA" ? "text-green-700" : "text-stone-500"}>{e.estado === "COMPLETADA" ? "Completada" : e.estado === "EN_PROCESO" ? (pedido.estado === "ANULADA" ? "Interrumpida" : "En curso") : "Pendiente"}</span></li>)}</ol></div> : <p className="text-sm text-stone-500">Sin etapas registradas.</p>}
-      <p className="text-xs text-stone-500">Último cambio: {fechaSeguimiento(pedido.actualizadoEn)}</p>
-    </div>
-  </details>;
 }

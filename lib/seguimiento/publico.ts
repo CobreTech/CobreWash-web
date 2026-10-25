@@ -13,7 +13,7 @@ export const ESTADOS_PUBLICOS: Record<string, string> = {
   ENTREGADA: "Entregado", ANULADA: "Anulado",
 };
 
-export function presentarPedido(pedido: PedidoPublico) {
+export function presentarPedido(pedido: Pick<PedidoPublico, "estado" | "comandaEtapas_on_comanda" | "comandaDetalles_on_comanda">) {
   const etapas = pedido.comandaEtapas_on_comanda.map((etapa) => ({
     nombre: etapa.nombreEtapa ?? etapa.etapa.nombre,
     orden: etapa.ordenEtapa ?? etapa.etapa.orden,
