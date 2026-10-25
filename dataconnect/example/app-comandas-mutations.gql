@@ -40,7 +40,7 @@ mutation AutoAsignarComandaOperario($comandaId: UUID!) @auth(level: USER) @trans
     }
   }
   comandaEtapa_updateMany(
-    where: { comandaId: { eq: $comandaId }, estado: { in: [PENDIENTE, EN_PROCESO] } }
+    where: { comandaId: { eq: $comandaId }, estado: { in: [PENDIENTE, EN_PROCESO] }, asignadoAId: { isNull: true } }
     data: { asignadoAId_expr: "auth.uid" }
-  ) @check(expr: "this > 0", message: "No hay etapas pendientes para asignar")
+  )
 }
