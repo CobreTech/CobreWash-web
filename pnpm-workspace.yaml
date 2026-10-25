@@ -18,6 +18,8 @@ overrides:
   vite: "~8.2.4"
   zod: "^4.6.6"
   undici: "^8.12.2"
+  # Pub/Sub 5 uses W3CTraceContextPropagator, retained in the patched core API.
+  '@google-cloud/pubsub>@opentelemetry/core': "^2.8.0"
   next: "^16.4.1"
   browserslist: "4.28.7"
   sharp: ">=0.35.5"
