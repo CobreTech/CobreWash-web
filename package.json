@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:portal": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-portal.mjs\"",
     "test:vehiculos": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-vehiculos.mjs\"",
+    "test:inventario": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-inventario-aprobaciones.mjs\"",
+    "verify:deployment": "node scripts/verificar-publicacion.mjs",
     "test:reportes": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-reportes.mjs\"",
     "test:avisos": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-avisos.mjs\"",
     "test:privacidad": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-privacidad.mjs\"",
