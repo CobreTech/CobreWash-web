@@ -225,6 +225,7 @@ export default function Navbar({ paginaInterior = false }: { paginaInterior?: bo
 
   const navLinks = [
     { name: "Inicio", href: "#inicio" },
+    { name: "Nosotros", href: "#nosotros" },
     { name: "Servicios", href: "#servicios" },
     { name: "Maquinaria", href: "#maquinaria" },
     { name: "Recepción", href: "#recepcion" },
