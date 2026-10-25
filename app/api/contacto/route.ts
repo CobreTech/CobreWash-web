@@ -1,10 +1,13 @@
 import { createHash, createHmac } from "node:crypto";
 import { serviciosAdmin } from "@/lib/firebase/admin";
 import { validarContacto } from "@/lib/contacto/validar";
+import { configuracionLegal } from "@/lib/privacidad/configuracion";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 export const runtime = "nodejs";
 type Confirmacion = { solicitudContacto?: { id: string; hashContenido: string } | null };
 export async function POST(request: Request) {
+  if (!configuracionLegal().publicada) return Response.json({ error: "El formulario se habilitará cuando se publique el aviso de privacidad aprobado. Puedes contactarnos por los canales de atención indicados en el sitio." }, { status: 503 });
   let entrada;
   try {
     const reader = request.body?.getReader();
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
       const existente = await db.executeQuery<{ limiteContacto: { id: string } | null }, { id: string }>("GetLimiteContacto", { id: limiteId });
       if (!existente.data.limiteContacto) throw new Error("No se pudo preparar el límite.");
     }
-    try { await db.executeMutation("RegistrarSolicitudContacto", { ...entrada, hashContenido, limiteId }); }
+    try { await db.executeMutation("RegistrarSolicitudContacto", { ...entrada, hashContenido, limiteId, versionPrivacidad: VERSION_PRIVACIDAD }); }
     catch (error) {
       const guardada = (await comprobar()).data.solicitudContacto;
       if (guardada?.hashContenido === hashContenido) return Response.json({ id: guardada.id });

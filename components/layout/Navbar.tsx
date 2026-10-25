@@ -20,13 +20,15 @@ import {
   validatePublicClientRegistration,
 } from "@/lib/auth-validation";
 import GlassSelect from "@/components/ui/GlassSelect";
+import AutorizacionDatos, { useAvisoPublicado } from "@/components/privacidad/AutorizacionDatos";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 const tipoClienteOptions = [
   { value: TipoCliente.PARTICULAR, label: "Particular" },
   { value: TipoCliente.HOTEL, label: "Empresa / Hotel" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ paginaInterior = false }: { paginaInterior?: boolean } = {}) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -65,6 +67,8 @@ export default function Navbar() {
   const [authConfirmPass, setAuthConfirmPass] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
+  const [autorizaDatos, setAutorizaDatos] = useState(false);
+  const avisoPublicado = useAvisoPublicado();
   const [authError, setAuthError] = useState("");
 
   // Register-only fields (Usuario / Cliente). El registro público siempre
@@ -81,6 +85,7 @@ export default function Navbar() {
   const passwordCheck = validatePassword(authPassword);
 
   const resetRegisterFields = () => {
+    setAutorizaDatos(false);
     setAuthName("");
     setAuthApellido("");
     setAuthRut("");
@@ -169,6 +174,7 @@ export default function Navbar() {
         tipoCliente: authTipoCliente,
         password: authPassword,
         confirmPassword: authConfirmPass,
+        autorizaDatos, versionPrivacidad: VERSION_PRIVACIDAD,
       };
       const validationError = validatePublicClientRegistration(registration);
       if (validationError) {
@@ -178,6 +184,9 @@ export default function Navbar() {
 
       setAuthLoading(true);
       try {
+        const aviso = await fetch("/api/privacidad/configuracion", { cache: "no-store" });
+        const legal = aviso.ok ? await aviso.json() : null;
+        if (!legal?.publicada || legal.version !== VERSION_PRIVACIDAD) throw new Error("El aviso de privacidad aún no está publicado.");
         await registerPublicClient({ auth, dataConnect }, registration);
 
         setAuthLoading(false);
@@ -220,7 +229,7 @@ export default function Navbar() {
     { name: "Maquinaria", href: "#maquinaria" },
     { name: "Recepción", href: "#recepcion" },
     { name: "Contacto", href: "#contacto" },
-  ];
+  ].map(link => ({ ...link, href: paginaInterior ? `/${link.href}` : link.href }));
 
   return (
     <>
@@ -236,7 +245,7 @@ export default function Navbar() {
             {/* Logo + Text */}
             <div className="flex-shrink-0 flex items-center">
               <a
-                href="#inicio"
+                href={paginaInterior ? "/#inicio" : "#inicio"}
                 className="flex items-center gap-3"
               >
                 <Image
@@ -693,10 +702,11 @@ export default function Navbar() {
                         </div>
                       )}
 
+                      {authView === "register" && <AutorizacionDatos finalidad="cuenta" aceptada={autorizaDatos} onChange={setAutorizaDatos} publicada={avisoPublicado} />}
                       {/* Submit Button */}
                       <button
                         type="submit"
-                        disabled={authLoading}
+                        disabled={authLoading || (authView === "register" && (!avisoPublicado || !autorizaDatos))}
                         className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-white py-3 rounded-xl font-bold text-sm shadow-premium hover:shadow-lg disabled:opacity-50 transition-all duration-200 hover:scale-[1.01] cursor-pointer"
                       >
                         {authLoading ? (

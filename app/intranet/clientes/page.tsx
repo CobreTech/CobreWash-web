@@ -1,5 +1,7 @@
 "use client";
 
+import { registrarError } from "@/lib/registro-seguro";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Building2, Mail, MapPin, Package, Pencil, Phone, Plus, Loader2, Search, User, X } from "lucide-react";
@@ -77,7 +79,7 @@ export default function ClientesPage() {
       );
       if (solicitud === solicitudActual.current) setClientes(result.data.clientes);
     } catch (error) {
-      console.error("No se pudieron cargar las fichas de clientes:", error);
+      registrarError("No se pudieron cargar las fichas de clientes:", error);
       if (!silencioso) setNotice("No se pudieron cargar los clientes.");
     } finally {
       if (solicitud === solicitudActual.current) setLoading(false);
@@ -179,7 +181,7 @@ export default function ClientesPage() {
       setNotice(form.id ? "Ficha actualizada correctamente." : "Cliente registrado correctamente.");
       setForm(null);
     } catch (error) {
-      console.error("No se pudo guardar la ficha:", error);
+      registrarError("No se pudo guardar la ficha:", error);
       setNotice(String(error).includes("ALREADY_EXISTS")
         ? "Ya existe un cliente registrado con ese RUT."
         : "No se pudo guardar la ficha del cliente.");

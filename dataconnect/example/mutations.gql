@@ -70,6 +70,7 @@ mutation RegistrarseComoCliente(
   $email: String!
   $direccion: String
   $tipoCliente: TipoCliente!
+  $versionPrivacidad: String!
 ) @auth(level: USER) @transaction {
   query @redact {
     previa: cliente(first: { where: { rut: { eq: $rut } } })
@@ -77,12 +78,14 @@ mutation RegistrarseComoCliente(
 
     rolCliente: rol(first: { where: { nombre: { eq: "cliente" } } })
       @check(expr: "this != null", message: "El rol cliente no está configurado") {
-      id
+      id @check(expr: "vars.versionPrivacidad == '2026-10-25'", message: "Debes autorizar el aviso de privacidad vigente")
     }
   }
   usuario_insert(data: {
     id_expr: "auth.uid"
     rolId_expr: "response.query.rolCliente.id"
+    versionPrivacidad: $versionPrivacidad
+    autorizadaEn_expr: "request.time"
     rut: $rut
     nombre: $nombre
     apellido: $apellido

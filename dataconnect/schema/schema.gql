@@ -34,6 +34,8 @@ type SolicitudContacto @table(name: "solicitud_contacto") {
   servicio: String! @col(dataType: "varchar(30)")
   mensaje: String! @col(dataType: "varchar(2000)")
   hashContenido: String! @col(dataType: "varchar(64)")
+  versionPrivacidad: String @col(dataType: "varchar(30)")
+  autorizadaEn: Timestamp
   estado: SolicitudContactoEstado! @default(value: RECIBIDA)
   creadoEn: Timestamp! @default(expr: "request.time")
   actualizadoEn: Timestamp! @default(expr: "request.time")
@@ -43,6 +45,38 @@ type SolicitudContacto @table(name: "solicitud_contacto") {
 type LimiteContacto @table(name: "limite_contacto") {
   id: String!
   contador: Int! @default(value: 0)
+  creadoEn: Timestamp @default(expr: "request.time")
+}
+
+enum DerechoPrivacidad { ACCESO RECTIFICACION SUPRESION OPOSICION BLOQUEO PORTABILIDAD REVOCACION }
+enum EstadoDerecho { RECIBIDA VERIFICACION EN_GESTION RESPONDIDA }
+
+# El secreto del comprobante y el contenido se conservan como hashes distintos.
+# El secreto no acredita identidad ni permite descargar datos personales.
+type SolicitudDerecho @table(name: "solicitud_derecho") {
+  id: UUID!
+  secretoHash: String! @col(dataType: "varchar(64)")
+  contenidoHash: String! @col(dataType: "varchar(64)")
+  nombre: String! @col(dataType: "varchar(160)")
+  email: String! @col(dataType: "varchar(120)")
+  derecho: DerechoPrivacidad!
+  detalle: String! @col(dataType: "varchar(3000)")
+  versionAviso: String! @col(dataType: "varchar(30)")
+  estado: EstadoDerecho! @default(value: RECIBIDA)
+  revision: Int! @default(value: 0)
+  creadoEn: Timestamp! @default(expr: "request.time")
+  actualizadoEn: Timestamp! @default(expr: "request.time")
+  objetivoAtencion: Timestamp!
+}
+
+type ActuacionDerecho @table(name: "actuacion_derecho") {
+  solicitud: SolicitudDerecho!
+  actor: Usuario!
+  estado: EstadoDerecho!
+  nota: String! @col(dataType: "varchar(4000)")
+  evidenciaIdentidad: String! @col(dataType: "varchar(500)")
+  evidenciaEnvio: String! @col(dataType: "varchar(500)")
+  creadoEn: Timestamp! @default(expr: "request.time")
 }
 
 # ====================== MÓDULO 1: IDENTIDAD Y ACCESO ==========================
@@ -64,6 +98,8 @@ type Usuario @table(name: "usuario") {
   email: String! @unique @col(dataType: "varchar(120)")
   telefono: String @col(dataType: "varchar(20)")
   activo: Boolean! @default(value: true)
+  versionPrivacidad: String @col(dataType: "varchar(30)")
+  autorizadaEn: Timestamp
   creadoEn: Timestamp! @default(expr: "request.time")
   actualizadoEn: Timestamp! @default(expr: "request.time")
 }

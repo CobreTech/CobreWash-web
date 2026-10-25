@@ -16,6 +16,23 @@ export enum ComandaEstado {
   ANULADA = "ANULADA",
 };
 
+export enum DerechoPrivacidad {
+  ACCESO = "ACCESO",
+  RECTIFICACION = "RECTIFICACION",
+  SUPRESION = "SUPRESION",
+  OPOSICION = "OPOSICION",
+  BLOQUEO = "BLOQUEO",
+  PORTABILIDAD = "PORTABILIDAD",
+  REVOCACION = "REVOCACION",
+};
+
+export enum EstadoDerecho {
+  RECIBIDA = "RECIBIDA",
+  VERIFICACION = "VERIFICACION",
+  EN_GESTION = "EN_GESTION",
+  RESPONDIDA = "RESPONDIDA",
+};
+
 export enum EstadoVehiculo {
   APTO = "APTO",
   CON_OBSERVACIONES = "CON_OBSERVACIONES",
@@ -62,6 +79,11 @@ export enum UnidadCobro {
 };
 
 
+
+export interface ActuacionDerecho_Key {
+  id: UUIDString;
+  __typename?: 'ActuacionDerecho_Key';
+}
 
 export interface ActualizarEstadoIncidenciaData {
   incidenciaComanda_update?: IncidenciaComanda_Key | null;
@@ -196,6 +218,9 @@ export interface AutoAsignarComandaOperarioVariables {
   comandaId: UUIDString;
 }
 
+export interface AutorizarGestionPrivacidadData {
+}
+
 export interface Aviso_Key {
   id: UUIDString;
   __typename?: 'Aviso_Key';
@@ -278,6 +303,16 @@ export interface ConfigurarLimitesEtapasVariables {
   secado: number;
   planchado: number;
   entrega: number;
+}
+
+export interface ContarLimitesContactoVencidosData {
+  limiteContactos: ({
+    _count: number;
+  })[];
+}
+
+export interface ContarLimitesContactoVencidosVariables {
+  antesDe: TimestampString;
 }
 
 export interface CrearAvisoData {
@@ -501,6 +536,21 @@ export interface EtapaProduccion_Key {
 export interface FotoInspeccionVehiculo_Key {
   id: UUIDString;
   __typename?: 'FotoInspeccionVehiculo_Key';
+}
+
+export interface GestionarSolicitudDerechoData {
+  solicitudDerecho_update?: SolicitudDerecho_Key | null;
+  actuacionDerecho_insert: ActuacionDerecho_Key;
+}
+
+export interface GestionarSolicitudDerechoVariables {
+  id: UUIDString;
+  revision: number;
+  actorId: string;
+  estado: EstadoDerecho;
+  nota: string;
+  evidenciaIdentidad: string;
+  evidenciaEnvio: string;
 }
 
 export interface GetAvisosAdministracionData {
@@ -958,6 +1008,21 @@ export interface GetComandasParaAlertasData {
 export interface GetComandasParaAlertasVariables {
   limit?: number | null;
   offset?: number | null;
+}
+
+export interface GetComprobanteDerechoData {
+  solicitudDerecho?: {
+    id: UUIDString;
+    secretoHash: string;
+    contenidoHash: string;
+    estado: EstadoDerecho;
+    creadoEn: TimestampString;
+    objetivoAtencion: TimestampString;
+  } & SolicitudDerecho_Key;
+}
+
+export interface GetComprobanteDerechoVariables {
+  id: UUIDString;
 }
 
 export interface GetDetalleReporteCuentasData {
@@ -1903,6 +1968,42 @@ export interface LimiteContacto_Key {
   __typename?: 'LimiteContacto_Key';
 }
 
+export interface ListarSolicitudesDerechoData {
+  solicitudDerechos: ({
+    id: UUIDString;
+    nombre: string;
+    email: string;
+    derecho: DerechoPrivacidad;
+    detalle: string;
+    versionAviso: string;
+    estado: EstadoDerecho;
+    revision: number;
+    creadoEn: TimestampString;
+    actualizadoEn: TimestampString;
+    objetivoAtencion: TimestampString;
+    actuacionDerechos_on_solicitud: ({
+      id: UUIDString;
+      estado: EstadoDerecho;
+      nota: string;
+      evidenciaIdentidad: string;
+      evidenciaEnvio: string;
+      creadoEn: TimestampString;
+      actor: {
+        id: string;
+        nombre: string;
+      } & Usuario_Key;
+    } & ActuacionDerecho_Key)[];
+  } & SolicitudDerecho_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface ListarSolicitudesDerechoVariables {
+  offset?: number;
+  estados?: EstadoDerecho[];
+}
+
 export interface ModeloIa_Key {
   id: UUIDString;
   __typename?: 'ModeloIa_Key';
@@ -1933,6 +2034,14 @@ export interface PrepararLimiteContactoVariables {
   id: string;
 }
 
+export interface PurgarLimitesContactoData {
+  limiteContacto_deleteMany: number;
+}
+
+export interface PurgarLimitesContactoVariables {
+  antesDe: TimestampString;
+}
+
 export interface ReasignacionOperario_Key {
   id: UUIDString;
   __typename?: 'ReasignacionOperario_Key';
@@ -1948,6 +2057,24 @@ export interface ReasignarOperarioEtapaVariables {
   etapaId: UUIDString;
   operarioId: string;
   motivo?: string | null;
+}
+
+export interface RecibirSolicitudDerechoData {
+  limiteContacto_update?: LimiteContacto_Key | null;
+  solicitudDerecho_insert: SolicitudDerecho_Key;
+}
+
+export interface RecibirSolicitudDerechoVariables {
+  id: UUIDString;
+  secretoHash: string;
+  contenidoHash: string;
+  nombre: string;
+  email: string;
+  derecho: DerechoPrivacidad;
+  detalle: string;
+  versionAviso: string;
+  objetivoAtencion: TimestampString;
+  limiteId: string;
 }
 
 export interface RegistrarEntradaInventarioData {
@@ -2064,6 +2191,7 @@ export interface RegistrarSolicitudContactoVariables {
   mensaje: string;
   hashContenido: string;
   limiteId: string;
+  versionPrivacidad: string;
 }
 
 export interface RegistrarVehiculoFlotaData {
@@ -2092,6 +2220,7 @@ export interface RegistrarseComoClienteVariables {
   email: string;
   direccion?: string | null;
   tipoCliente: TipoCliente;
+  versionPrivacidad: string;
 }
 
 export interface RegistrarseData {
@@ -2128,6 +2257,11 @@ export interface SalidaVehiculo_Key {
 export interface SolicitudContacto_Key {
   id: UUIDString;
   __typename?: 'SolicitudContacto_Key';
+}
+
+export interface SolicitudDerecho_Key {
+  id: UUIDString;
+  __typename?: 'SolicitudDerecho_Key';
 }
 
 export interface TipoPrenda_Key {
@@ -2725,6 +2859,90 @@ export const vincularMiComandaRef: VincularMiComandaRef;
 
 export function vincularMiComanda(vars: VincularMiComandaVariables): MutationPromise<VincularMiComandaData, VincularMiComandaVariables>;
 export function vincularMiComanda(dc: DataConnect, vars: VincularMiComandaVariables): MutationPromise<VincularMiComandaData, VincularMiComandaVariables>;
+
+interface AutorizarGestionPrivacidadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AutorizarGestionPrivacidadData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<AutorizarGestionPrivacidadData, undefined>;
+  operationName: string;
+}
+export const autorizarGestionPrivacidadRef: AutorizarGestionPrivacidadRef;
+
+export function autorizarGestionPrivacidad(options?: ExecuteQueryOptions): QueryPromise<AutorizarGestionPrivacidadData, undefined>;
+export function autorizarGestionPrivacidad(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AutorizarGestionPrivacidadData, undefined>;
+
+interface GetComprobanteDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetComprobanteDerechoVariables): QueryRef<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetComprobanteDerechoVariables): QueryRef<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+  operationName: string;
+}
+export const getComprobanteDerechoRef: GetComprobanteDerechoRef;
+
+export function getComprobanteDerecho(vars: GetComprobanteDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+export function getComprobanteDerecho(dc: DataConnect, vars: GetComprobanteDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<GetComprobanteDerechoData, GetComprobanteDerechoVariables>;
+
+interface RecibirSolicitudDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RecibirSolicitudDerechoVariables): MutationRef<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RecibirSolicitudDerechoVariables): MutationRef<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+  operationName: string;
+}
+export const recibirSolicitudDerechoRef: RecibirSolicitudDerechoRef;
+
+export function recibirSolicitudDerecho(vars: RecibirSolicitudDerechoVariables): MutationPromise<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+export function recibirSolicitudDerecho(dc: DataConnect, vars: RecibirSolicitudDerechoVariables): MutationPromise<RecibirSolicitudDerechoData, RecibirSolicitudDerechoVariables>;
+
+interface ListarSolicitudesDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: ListarSolicitudesDerechoVariables): QueryRef<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: ListarSolicitudesDerechoVariables): QueryRef<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+  operationName: string;
+}
+export const listarSolicitudesDerechoRef: ListarSolicitudesDerechoRef;
+
+export function listarSolicitudesDerecho(vars?: ListarSolicitudesDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+export function listarSolicitudesDerecho(dc: DataConnect, vars?: ListarSolicitudesDerechoVariables, options?: ExecuteQueryOptions): QueryPromise<ListarSolicitudesDerechoData, ListarSolicitudesDerechoVariables>;
+
+interface GestionarSolicitudDerechoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GestionarSolicitudDerechoVariables): MutationRef<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GestionarSolicitudDerechoVariables): MutationRef<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+  operationName: string;
+}
+export const gestionarSolicitudDerechoRef: GestionarSolicitudDerechoRef;
+
+export function gestionarSolicitudDerecho(vars: GestionarSolicitudDerechoVariables): MutationPromise<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+export function gestionarSolicitudDerecho(dc: DataConnect, vars: GestionarSolicitudDerechoVariables): MutationPromise<GestionarSolicitudDerechoData, GestionarSolicitudDerechoVariables>;
+
+interface ContarLimitesContactoVencidosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ContarLimitesContactoVencidosVariables): QueryRef<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ContarLimitesContactoVencidosVariables): QueryRef<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+  operationName: string;
+}
+export const contarLimitesContactoVencidosRef: ContarLimitesContactoVencidosRef;
+
+export function contarLimitesContactoVencidos(vars: ContarLimitesContactoVencidosVariables, options?: ExecuteQueryOptions): QueryPromise<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+export function contarLimitesContactoVencidos(dc: DataConnect, vars: ContarLimitesContactoVencidosVariables, options?: ExecuteQueryOptions): QueryPromise<ContarLimitesContactoVencidosData, ContarLimitesContactoVencidosVariables>;
+
+interface PurgarLimitesContactoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PurgarLimitesContactoVariables): MutationRef<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PurgarLimitesContactoVariables): MutationRef<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
+  operationName: string;
+}
+export const purgarLimitesContactoRef: PurgarLimitesContactoRef;
+
+export function purgarLimitesContacto(vars: PurgarLimitesContactoVariables): MutationPromise<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
+export function purgarLimitesContacto(dc: DataConnect, vars: PurgarLimitesContactoVariables): MutationPromise<PurgarLimitesContactoData, PurgarLimitesContactoVariables>;
 
 interface AsociarFlujoComandaPendienteRef {
   /* Allow users to create refs without passing in DataConnect */

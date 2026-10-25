@@ -38,7 +38,7 @@ export default function SolicitudesPage() {
     <div className="space-y-3">{datos?.solicitudContactos.map(s => <article key={s.id} className="glass-panel space-y-3 rounded-2xl p-5">
       <div className="flex flex-wrap justify-between gap-3"><h2 className="font-bold">{s.nombre}</h2><span className="text-xs text-stone-500">{fechaSeguimiento(s.creadoEn)}</span></div>
       <p className="text-sm">Servicio: {s.servicio}</p><p className="whitespace-pre-wrap break-words text-sm">{s.mensaje}</p>
-      <div className="flex flex-wrap gap-4 text-sm"><a className="text-brand-600 underline" href={`mailto:${encodeURIComponent(s.email)}`}>{s.email}</a><a className="text-brand-600 underline" href={`tel:${s.telefono.replace(/[^+\d]/g, "")}`}>{s.telefono}</a></div>
+      <div className="flex flex-wrap gap-4 text-sm"><a className="text-brand-600 underline" href={`mailto:${encodeURIComponent(s.email)}`}>{s.email}</a>{s.telefono && <a className="text-brand-600 underline" href={`tel:${s.telefono.replace(/[^+\d]/g, "")}`}>{s.telefono}</a>}</div>
       <label className="block text-sm">Seguimiento<select aria-label={`Estado de solicitud de ${s.nombre}`} disabled={guardando !== null} value={s.estado} className="ml-2 rounded-xl border border-stone-300 bg-transparent p-2" onChange={async e => {
         const nuevo = e.target.value as SolicitudContactoEstado; setGuardando(s.id); setError("");
         try { await actualizarEstadoSolicitudContacto(dataConnect, { id: s.id, estado: nuevo }); await cargar(); }

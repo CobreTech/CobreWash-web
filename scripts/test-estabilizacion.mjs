@@ -46,7 +46,7 @@ await check('solo se confirma una salida concurrente para un vehículo',async()=
  assert.equal(result.filter(r=>r.status==='fulfilled').length,1);
 });
 await check('la bandeja es privada, limita solicitudes y preserva estados',async()=>{
- const base={nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'a'.repeat(64),limiteId:'test-'+randomUUID()};
+ const base={versionPrivacidad:'2026-10-25',nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'a'.repeat(64),limiteId:'test-'+randomUUID()};
  await execute(contactos,'PrepararLimiteContacto',{id:base.limiteId});
  let id;
  for(let i=0;i<5;i++){id=randomUUID();await execute(contactos,'RegistrarSolicitudContacto',{...base,id});}
@@ -57,7 +57,7 @@ await check('la bandeja es privada, limita solicitudes y preserva estados',async
  for(const user of [null,'test-admin'])await assert.rejects(execute(contactos,'RegistrarSolicitudContacto',{...base,id:randomUUID()},user));
 });
 await check('el contador de contactos también limita peticiones simultáneas',async()=>{
- const base={nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'b'.repeat(64),limiteId:'concurrente-'+randomUUID()};
+ const base={versionPrivacidad:'2026-10-25',nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'b'.repeat(64),limiteId:'concurrente-'+randomUUID()};
  await execute(contactos,'PrepararLimiteContacto',{id:base.limiteId});
  const resultados=await Promise.allSettled(Array.from({length:8},()=>execute(contactos,'RegistrarSolicitudContacto',{...base,id:randomUUID()})));
  assert.equal(resultados.filter(r=>r.status==='fulfilled').length,5);
@@ -65,7 +65,7 @@ await check('el contador de contactos también limita peticiones simultáneas',a
 await check('registro conserva RUT y ficha anterior solo se vincula con correo verificado coincidente',async()=>{
  const cliente=randomUUID(); const rut='11.111.111-1';
  await execute('mutation Cliente($id:UUID!,$rut:String!){cliente_insert(data:{id:$id,rut:$rut,nombre:"Anterior",email:"anterior@example.test"})}','Cliente',{id:cliente,rut});
- const args={rut,nombre:'Registro',apellido:'Prueba',email:'anterior@example.test',tipoCliente:'PARTICULAR',crearFicha:false};
+ const args={versionPrivacidad:'2026-10-25',rut,nombre:'Registro',apellido:'Prueba',email:'anterior@example.test',tipoCliente:'PARTICULAR',crearFicha:false};
  await execute(registro,'RegistrarseComoCliente',args,'nuevo-con-anterior');
  const usuario={uid:'nuevo-con-anterior',email:'anterior@example.test',verified:false};
  await assert.rejects(execute(ficha,'VincularMiFichaVerificada',{},usuario));

@@ -1,5 +1,7 @@
 "use client";
 
+import { registrarError } from "@/lib/registro-seguro";
+
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -219,7 +221,7 @@ export default function VehiculosPage() {
         const result = { data: await consultarFlotaCompleta() };
         if (solicitud === solicitudActual.current) aplicarDatos(result.data);
       } catch (error) {
-        console.error("No se pudo cargar la flota de vehículos:", error);
+        registrarError("No se pudo cargar la flota de vehículos:", error);
         if (!silencioso) {
           setNotice({
             text: "No se pudo cargar la flota de vehículos.",

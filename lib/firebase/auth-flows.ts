@@ -24,6 +24,7 @@ import { formatRut } from "@/lib/validators";
 import { isPublicClientType } from "@/lib/auth-validation";
 import { LANDING_POR_ROL, type Rol } from "@/lib/roles";
 import { createSecondaryFirebaseContext } from "@/lib/firebase/secondary";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 interface FirebaseContext {
   auth: Auth;
@@ -96,11 +97,12 @@ export async function signInAndResolveLanding(
 
 export async function registerPublicClient(
   context: FirebaseContext,
-  input: ClientRegistrationInput,
+  input: ClientRegistrationInput & { autorizaDatos: boolean; versionPrivacidad: string },
 ): Promise<void> {
   if (!isPublicClientType(input.tipoCliente)) {
     throw new Error("Selecciona el tipo de cliente.");
   }
+  if (input.autorizaDatos !== true || input.versionPrivacidad !== VERSION_PRIVACIDAD) throw new Error("Lee el aviso vigente y autoriza el tratamiento para crear tu cuenta.");
   const credential = await createUserWithEmailAndPassword(
     context.auth,
     input.email.trim(),
@@ -109,7 +111,7 @@ export async function registerPublicClient(
 
   try {
     const variables = {
-      ...registrationVariables(input), direccion: input.direccion.trim() || null, tipoCliente: input.tipoCliente as TipoCliente,
+      ...registrationVariables(input), direccion: input.direccion.trim() || null, tipoCliente: input.tipoCliente as TipoCliente, versionPrivacidad: VERSION_PRIVACIDAD,
     };
     try { await registrarseComoCliente(context.dataConnect, variables); }
     catch (error) {

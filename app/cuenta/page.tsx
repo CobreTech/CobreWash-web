@@ -67,7 +67,7 @@ export default function CuentaPage() {
     <header className="border-b border-stone-200 bg-white px-4 py-4">
       <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
         <Link href="/" className="font-display font-extrabold">Lavandería <span className="text-brand-600">El Cobre</span></Link>
-        <nav className="flex items-center gap-4 text-sm"><Link href="/seguimiento">Seguimiento público</Link><button onClick={async () => { try { await signOut(auth); router.replace("/"); } catch { setErrorAccion("No pudimos cerrar la sesión. Intenta nuevamente."); } }} className="flex items-center gap-2 text-red-600"><LogOut size={16} />Salir</button></nav>
+        <nav className="flex flex-wrap items-center gap-4 text-sm"><Link href="/seguimiento">Seguimiento público</Link><Link href="/privacidad/derechos">Mis datos personales</Link><button onClick={async () => { try { await signOut(auth); router.replace("/"); } catch { setErrorAccion("No pudimos cerrar la sesión. Intenta nuevamente."); } }} className="flex items-center gap-2 text-red-600"><LogOut size={16} />Salir</button></nav>
       </div>
     </header>
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">

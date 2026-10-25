@@ -1,5 +1,7 @@
 "use client";
 
+import { registrarError } from "@/lib/registro-seguro";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -117,7 +119,7 @@ export default function InventarioPage() {
       const result = await getInventario(dataConnect, { fetchPolicy: QueryFetchPolicy.SERVER_ONLY });
       if (solicitud === solicitudActual.current) aplicarDatos(result.data);
     } catch (error) {
-      console.error("No se pudo cargar el inventario:", error);
+      registrarError("No se pudo cargar el inventario:", error);
       if (!silencioso) setNotice({ text: "No se pudo cargar el inventario.", tipo: "error" });
     } finally {
       if (solicitud === solicitudActual.current) setLoading(false);
@@ -131,7 +133,7 @@ export default function InventarioPage() {
       query,
       (result) => aplicarDatos(result.data),
       (error) => {
-        console.error("Se interrumpió la actualización del inventario:", error);
+        registrarError("Se interrumpió la actualización del inventario:", error);
         setNotice({ text: "Se perdió la actualización en tiempo real. Reintentando…", tipo: "warning" });
         void cargarInventario(true);
       },
@@ -209,7 +211,7 @@ export default function InventarioPage() {
       setNotice({ text: form.id ? "Insumo actualizado correctamente." : "Insumo registrado correctamente.", tipo: "success" });
       setForm(null);
     } catch (error) {
-      console.error("No se pudo guardar el insumo:", error);
+      registrarError("No se pudo guardar el insumo:", error);
       setNotice({ text: mensajeError(error), tipo: "error" });
     } finally { setSaving(false); }
   };
@@ -258,7 +260,7 @@ export default function InventarioPage() {
       setNotice({ text: `${movimiento.tipo === TipoMovimiento.ENTRADA ? "Entrada" : "Salida"} registrada y stock actualizado.`, tipo: "success" });
       setMovimiento(null);
     } catch (error) {
-      console.error("No se pudo registrar el movimiento:", error);
+      registrarError("No se pudo registrar el movimiento:", error);
       setNotice({ text: mensajeError(error), tipo: "error" });
       await cargarInventario(true);
     } finally { setSaving(false); }

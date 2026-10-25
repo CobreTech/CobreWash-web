@@ -1,4 +1,4 @@
-import { agregarComentarioComandaRef, resolverMiIncidenciaRef, autoAsignarComandaOperarioRef, getComandaDetalleOperarioRef, getMisComandasAsignadasRef, getInsumosOperarioRef, crearAvisoRef, getAvisosAdministracionRef, getAvisosParaEquipoRef, getSolicitudContactoConfirmadaRef, prepararLimiteContactoRef, getLimiteContactoRef, registrarSolicitudContactoRef, getSolicitudesContactoRef, actualizarEstadoSolicitudContactoRef, getInspeccionParaEvidenciasRef, getMovimientoFlotaPorInspeccionRef, registrarEvidenciaGuardadaRef, vincularMiFichaVerificadaRef, registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, registrarSalidaInventarioRef, getMisComandasRef, vincularMiComandaRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, configurarLimitesEtapasRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getComandasParaAlertasRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, getReporteVolumenRef, getReporteCuentasRef, getDetalleReporteCuentasRef, getFiltrosReportesRef, getReporteServiciosRef, getDetalleReporteServiciosRef, getSeguimientoPublicoPorQrRef, getSeguimientoPublicoPorNumeroRef, getComandaOperativaPorQrRef, registrarVehiculoFlotaRef, editarVehiculoFlotaRef, registrarSalidaFlotaRef, registrarRetornoFlotaRef, adjuntarFotoInspeccionFlotaRef, getFlotaVehiculosRef, getHistorialVehiculosRef, connectorConfig } from '../../esm/index.esm.js';
+import { agregarComentarioComandaRef, resolverMiIncidenciaRef, autoAsignarComandaOperarioRef, getComandaDetalleOperarioRef, getMisComandasAsignadasRef, getInsumosOperarioRef, crearAvisoRef, getAvisosAdministracionRef, getAvisosParaEquipoRef, getSolicitudContactoConfirmadaRef, prepararLimiteContactoRef, getLimiteContactoRef, registrarSolicitudContactoRef, getSolicitudesContactoRef, actualizarEstadoSolicitudContactoRef, getInspeccionParaEvidenciasRef, getMovimientoFlotaPorInspeccionRef, registrarEvidenciaGuardadaRef, vincularMiFichaVerificadaRef, registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, registrarSalidaInventarioRef, getMisComandasRef, vincularMiComandaRef, autorizarGestionPrivacidadRef, getComprobanteDerechoRef, recibirSolicitudDerechoRef, listarSolicitudesDerechoRef, gestionarSolicitudDerechoRef, contarLimitesContactoVencidosRef, purgarLimitesContactoRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, configurarLimitesEtapasRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getComandasParaAlertasRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, getReporteVolumenRef, getReporteCuentasRef, getDetalleReporteCuentasRef, getFiltrosReportesRef, getReporteServiciosRef, getDetalleReporteServiciosRef, getSeguimientoPublicoPorQrRef, getSeguimientoPublicoPorNumeroRef, getComandaOperativaPorQrRef, registrarVehiculoFlotaRef, editarVehiculoFlotaRef, registrarSalidaFlotaRef, registrarRetornoFlotaRef, adjuntarFotoInspeccionFlotaRef, getFlotaVehiculosRef, getHistorialVehiculosRef, connectorConfig } from '../../esm/index.esm.js';
 import { validateArgs, CallerSdkTypeEnum } from 'firebase/data-connect';
 import { useDataConnectQuery, useDataConnectMutation, validateReactArgs } from '@tanstack-query-firebase/react/data-connect';
 
@@ -352,6 +352,54 @@ export function useVincularMiComanda(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
     return vincularMiComandaRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+
+export function useAutorizarGestionPrivacidad(dcOrOptions, options) {
+  const { dc: dcInstance, options: inputOpts } = validateReactArgs(connectorConfig, dcOrOptions, options);
+  const ref = autorizarGestionPrivacidadRef(dcInstance);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useGetComprobanteDerecho(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = getComprobanteDerechoRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+export function useRecibirSolicitudDerecho(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return recibirSolicitudDerechoRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+
+export function useListarSolicitudesDerecho(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  const ref = listarSolicitudesDerechoRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+export function useGestionarSolicitudDerecho(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return gestionarSolicitudDerechoRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+
+export function useContarLimitesContactoVencidos(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = contarLimitesContactoVencidosRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+export function usePurgarLimitesContacto(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return purgarLimitesContactoRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }

@@ -56,7 +56,8 @@ import {
 
 const auth = {} as Auth;
 const dataConnect = {} as DataConnect;
-const clientInput: ClientRegistrationInput = {
+const clientInput: ClientRegistrationInput & { autorizaDatos: boolean; versionPrivacidad: string } = {
+  autorizaDatos: true, versionPrivacidad: "2026-10-25",
   nombre: " Ana ",
   apellido: " Pérez ",
   rut: "123456785",
@@ -149,7 +150,7 @@ describe("registro público de clientes", () => {
     mocks.registerClient.mockResolvedValue({});
     await registerPublicClient({ auth, dataConnect }, {
       ...clientInput, rolId: "rol-admin", rol: "admin", activo: true,
-    } as ClientRegistrationInput);
+    } as typeof clientInput);
     const variables = mocks.registerClient.mock.calls[0][1];
     expect(variables).not.toHaveProperty("rolId");
     expect(variables).not.toHaveProperty("rol");
@@ -167,6 +168,7 @@ describe("registro público de clientes", () => {
 
     expect(mocks.createUser).toHaveBeenCalledWith(auth, "ana@example.com", "clave1");
     expect(mocks.registerClient).toHaveBeenCalledWith(dataConnect, {
+      versionPrivacidad: "2026-10-25",
       rut: "12.345.678-5",
       nombre: "Ana",
       apellido: "Pérez",
@@ -176,6 +178,11 @@ describe("registro público de clientes", () => {
       tipoCliente: "PARTICULAR",
     });
     expect(deleteUser).not.toHaveBeenCalled();
+  });
+  it("no crea una identidad Firebase sin autorización de datos de la versión vigente", async () => {
+    await expect(registerPublicClient({ auth, dataConnect }, { ...clientInput, autorizaDatos: false })).rejects.toThrow("autoriza");
+    await expect(registerPublicClient({ auth, dataConnect }, { ...clientInput, versionPrivacidad: "anterior" })).rejects.toThrow("vigente");
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
   it("elimina la cuenta Auth si falla la transacción de Usuario+Cliente", async () => {

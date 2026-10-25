@@ -1,5 +1,7 @@
 "use client";
 
+import { registrarError } from "@/lib/registro-seguro";
+
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -237,7 +239,7 @@ export default function ComandasPage() {
         setCatData(resCatalogos.data);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      registrarError("Error fetching data:", error);
     } finally {
       if (solicitud === solicitudActual.current) setLoading(false);
     }
@@ -515,7 +517,7 @@ export default function ComandasPage() {
       setNotice("Comanda actualizada correctamente.");
       setForm(null);
     } catch (err) {
-      console.error(err);
+      registrarError("Operación de comanda fallida", err);
       setFormError(form?.mode === "editar"
         ? "No se pudo confirmar la edición. Revisa la comanda actualizada antes de reintentar; otra persona pudo modificarla o iniciar su producción."
         : "Error al guardar la comanda.");
@@ -540,7 +542,7 @@ export default function ComandasPage() {
       setMotivo("");
       setDetalle(null);
     } catch (err) {
-      console.error(err);
+      registrarError("Operación de comanda fallida", err);
       setAnularError("Error al anular la comanda. Verifica que la comanda siga activa.");
     } finally {
       setIsSubmitting(false);
@@ -557,7 +559,7 @@ export default function ComandasPage() {
       setNotice(`Comanda ${entregar.id} entregada correctamente. Se registró la fecha y el historial.`);
       setEntregar(null);
     } catch (error) {
-      console.error(error);
+      registrarError("Operación de comanda fallida", error);
       setNotice("No se pudo marcar la comanda como entregada.");
     } finally {
       setEntregarLoading(false);

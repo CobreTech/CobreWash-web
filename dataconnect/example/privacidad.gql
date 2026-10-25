@@ -1,0 +1,47 @@
+query AutorizarGestionPrivacidad @auth(level: USER) {
+  usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this == 'admin'") }
+  }
+}
+
+query GetComprobanteDerecho($id: UUID!) @auth(level: NO_ACCESS) {
+  solicitudDerecho(id: $id) { id secretoHash contenidoHash estado creadoEn objetivoAtencion }
+}
+
+mutation RecibirSolicitudDerecho($id: UUID!, $secretoHash: String!, $contenidoHash: String!, $nombre: String!, $email: String!, $derecho: DerechoPrivacidad!, $detalle: String!, $versionAviso: String!, $objetivoAtencion: Timestamp!, $limiteId: String!) @auth(level: NO_ACCESS) @transaction {
+  limiteContacto_update(first: { where: { id: { eq: $limiteId }, contador: { lt: 5 } } }, data: { contador_update: { inc: 1 } })
+    @check(expr: "this != null", message: "LIMITE_DERECHOS")
+  solicitudDerecho_insert(data: { id: $id, secretoHash: $secretoHash, contenidoHash: $contenidoHash, nombre: $nombre, email: $email, derecho: $derecho, detalle: $detalle, versionAviso: $versionAviso, objetivoAtencion: $objetivoAtencion })
+}
+
+query ListarSolicitudesDerecho($offset: Int! = 0, $estados: [EstadoDerecho!]! = [RECIBIDA, VERIFICACION, EN_GESTION]) @auth(level: NO_ACCESS) {
+  solicitudDerechos(where: { estado: { in: $estados } }, orderBy: [{ objetivoAtencion: ASC }, { id: ASC }], limit: 20, offset: $offset) {
+    id nombre email derecho detalle versionAviso estado revision creadoEn actualizadoEn objetivoAtencion
+    actuacionDerechos_on_solicitud(orderBy: [{ creadoEn: DESC }]) {
+      id estado nota evidenciaIdentidad evidenciaEnvio creadoEn actor { id nombre }
+    }
+  }
+  total: solicitudDerechos(where: { estado: { in: $estados } }) { _count }
+}
+
+mutation GestionarSolicitudDerecho($id: UUID!, $revision: Int!, $actorId: String!, $estado: EstadoDerecho!, $nota: String!, $evidenciaIdentidad: String!, $evidenciaEnvio: String!) @auth(level: NO_ACCESS) @transaction {
+  query @redact {
+    usuario(id: $actorId) @check(expr: "this != null") { activo @check(expr: "this == true") rol { nombre @check(expr: "this == 'admin'") } }
+    solicitudDerecho(id: $id) @check(expr: "this != null") {
+      revision @check(expr: "this == vars.revision", message: "REVISION_PRIVACIDAD")
+      estado @check(expr: "this != 'RESPONDIDA'", message: "La solicitud ya fue respondida")
+      id @check(expr: "vars.estado != 'RECIBIDA' && (vars.estado != 'RESPONDIDA' || (vars.evidenciaIdentidad.size() > 0 && vars.evidenciaEnvio.size() > 0))", message: "Falta evidencia de identidad y envío")
+    }
+  }
+  solicitudDerecho_update(first: { where: { id: { eq: $id }, revision: { eq: $revision } } }, data: { estado: $estado, revision_update: { inc: 1 }, actualizadoEn_expr: "request.time" }) @check(expr: "this != null", message: "REVISION_PRIVACIDAD")
+  actuacionDerecho_insert(data: { solicitudId: $id, actorId: $actorId, estado: $estado, nota: $nota, evidenciaIdentidad: $evidenciaIdentidad, evidenciaEnvio: $evidenciaEnvio })
+}
+
+# Solo elimina contadores técnicos vencidos; no elimina solicitudes ni evidencia.
+query ContarLimitesContactoVencidos($antesDe: Timestamp!) @auth(level: NO_ACCESS) {
+  limiteContactos(where: { creadoEn: { lt: $antesDe } }) { _count }
+}
+mutation PurgarLimitesContacto($antesDe: Timestamp!) @auth(level: NO_ACCESS) {
+  limiteContacto_deleteMany(where: { creadoEn: { lt: $antesDe } })
+}

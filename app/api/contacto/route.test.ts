@@ -1,8 +1,9 @@
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 const m = vi.hoisted(() => ({ query: vi.fn(), mutation: vi.fn() }));
+vi.mock("@/lib/privacidad/configuracion", () => ({ configuracionLegal: () => ({ publicada: true }) }));
 vi.mock("@/lib/firebase/admin", () => ({ serviciosAdmin: () => ({ db: { executeQuery: m.query, executeMutation: m.mutation } }) }));
 import { POST } from "./route";
-const entrada = { id: "10000000-0000-4000-8000-000000000001", nombre: "Cliente de prueba", correo: "cliente@example.test", telefono: "+56912345678", servicio: "otro", mensaje: "Solicito una cotización." };
+const entrada = { autorizaDatos: true, versionPrivacidad: "2026-10-25", id: "10000000-0000-4000-8000-000000000001", nombre: "Cliente de prueba", correo: "cliente@example.test", telefono: "+56912345678", servicio: "otro", mensaje: "Solicito una cotización." };
 const solicitud = () => new Request("https://web.test/api/contacto", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(entrada) });
 beforeEach(() => {
   vi.resetAllMocks(); vi.stubEnv("CONTACT_RATE_LIMIT_SALT", "s".repeat(32));

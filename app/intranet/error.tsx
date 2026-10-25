@@ -1,5 +1,7 @@
 "use client";
 
+import { registrarError } from "@/lib/registro-seguro";
+
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
@@ -11,7 +13,7 @@ export default function IntranetError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Error en módulo de intranet:", error);
+    registrarError("Error en módulo de intranet:", error);
   }, [error]);
 
   return (
@@ -23,7 +25,7 @@ export default function IntranetError({
         Ocurrió un error al cargar la información
       </h2>
       <p className="mt-2 max-w-md text-sm text-stone-500 dark:text-stone-400">
-        {error.message || "No se pudo completar la operación. Por favor intenta recargar la vista."}
+        No se pudo completar la operación. Por favor intenta recargar la vista.
       </p>
       <button
         onClick={() => reset()}

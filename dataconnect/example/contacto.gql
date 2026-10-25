@@ -9,10 +9,10 @@ query GetLimiteContacto($id: String!) @auth(level: NO_ACCESS) {
   limiteContacto(id: $id) { id }
 }
 
-mutation RegistrarSolicitudContacto($id: UUID!, $nombre: String!, $email: String!, $telefono: String!, $servicio: String!, $mensaje: String!, $hashContenido: String!, $limiteId: String!) @auth(level: NO_ACCESS) @transaction {
+mutation RegistrarSolicitudContacto($id: UUID!, $nombre: String!, $email: String!, $telefono: String!, $servicio: String!, $mensaje: String!, $hashContenido: String!, $limiteId: String!, $versionPrivacidad: String!) @auth(level: NO_ACCESS) @transaction {
   limiteContacto_update(first: { where: { id: { eq: $limiteId }, contador: { lt: 5 } } }, data: { contador_update: { inc: 1 } })
     @check(expr: "this != null", message: "Límite de solicitudes alcanzado")
-  solicitudContacto_insert(data: { id: $id, nombre: $nombre, email: $email, telefono: $telefono, servicio: $servicio, mensaje: $mensaje, hashContenido: $hashContenido })
+  solicitudContacto_insert(data: { id: $id, nombre: $nombre, email: $email, telefono: $telefono, servicio: $servicio, mensaje: $mensaje, hashContenido: $hashContenido, versionPrivacidad: $versionPrivacidad, autorizadaEn_expr: "request.time" })
 }
 
 query GetSolicitudesContacto($estado: SolicitudContactoEstado, $limit: Int = 20, $offset: Int = 0) @auth(level: USER) {

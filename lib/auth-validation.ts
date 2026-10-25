@@ -1,5 +1,6 @@
 import { TipoCliente } from "@/src/dataconnect-generated";
 import { isValidRut, validatePassword } from "@/lib/validators";
+import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
 
 export interface ClientRegistrationInput {
   nombre: string;
@@ -14,6 +15,8 @@ export interface ClientRegistrationInput {
 
 export interface PublicClientRegistrationInput extends ClientRegistrationInput {
   confirmPassword: string;
+  autorizaDatos: boolean;
+  versionPrivacidad: string;
 }
 
 export interface ManagedUserRegistrationInput extends ClientRegistrationInput {
@@ -55,6 +58,8 @@ export function validatePublicClientRegistration(
   const passwordCheck = validatePassword(input.password);
   if (!passwordCheck.valid) return passwordCheck.message;
   if (input.password !== input.confirmPassword) return "Las contraseñas no coinciden.";
+
+  if (!input.autorizaDatos || input.versionPrivacidad !== VERSION_PRIVACIDAD) return "Lee el aviso vigente y autoriza el tratamiento para crear tu cuenta.";
 
   return null;
 }

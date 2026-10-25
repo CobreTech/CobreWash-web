@@ -72,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [production, vehiculos, reportes, avisos, portal, estabilizacion]
+        suite: [production, vehiculos, reportes, avisos, portal, estabilizacion, privacidad]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
