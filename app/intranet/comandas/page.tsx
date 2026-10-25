@@ -1,5 +1,7 @@
 "use client";
 
+import { limitesFechasConsulta } from "@/lib/reportes/fechas";
+
 import { registrarError } from "@/lib/registro-seguro";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
@@ -226,8 +228,7 @@ export default function ComandasPage() {
               offset: (page - 1) * PAGE_SIZE,
               estados: estadosSeleccionados.length ? estadosSeleccionados.map((estado) => ESTADO_DB[estado]) : undefined,
               cliente: search.trim() || undefined,
-              fechaDesde: fechaDesde ? `${fechaDesde}T00:00:00.000-04:00` : undefined,
-              fechaHasta: fechaHasta ? `${fechaHasta}T23:59:59.999-04:00` : undefined,
+              ...limitesFechasConsulta(fechaDesde, fechaHasta),
             },
           ),
           { fetchPolicy: "SERVER_ONLY" },

@@ -20,6 +20,13 @@ const DerechoPrivacidad = {
 }
 exports.DerechoPrivacidad = DerechoPrivacidad;
 
+const EstadoConteoInventario = {
+  PENDIENTE: "PENDIENTE",
+  APROBADO: "APROBADO",
+  RECHAZADO: "RECHAZADO",
+}
+exports.EstadoConteoInventario = EstadoConteoInventario;
+
 const EstadoDerecho = {
   RECIBIDA: "RECIBIDA",
   VERIFICACION: "VERIFICACION",
@@ -361,6 +368,123 @@ exports.vincularMiFichaVerificadaRef = vincularMiFichaVerificadaRef;
 exports.vincularMiFichaVerificada = function vincularMiFichaVerificada(dc) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
   return executeMutation(vincularMiFichaVerificadaRef(dcInstance, inputVars));
+}
+;
+
+const registrarConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarConteoInventario', inputVars);
+}
+registrarConteoInventarioRef.operationName = 'RegistrarConteoInventario';
+exports.registrarConteoInventarioRef = registrarConteoInventarioRef;
+
+exports.registrarConteoInventario = function registrarConteoInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarConteoInventarioRef(dcInstance, inputVars));
+}
+;
+
+const getMiConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMiConteoInventario', inputVars);
+}
+getMiConteoInventarioRef.operationName = 'GetMiConteoInventario';
+exports.getMiConteoInventarioRef = getMiConteoInventarioRef;
+
+exports.getMiConteoInventario = function getMiConteoInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getMiConteoInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getMisConteosInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetMisConteosInventario', inputVars);
+}
+getMisConteosInventarioRef.operationName = 'GetMisConteosInventario';
+exports.getMisConteosInventarioRef = getMisConteosInventarioRef;
+
+exports.getMisConteosInventario = function getMisConteosInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getMisConteosInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getConteosInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetConteosInventario', inputVars);
+}
+getConteosInventarioRef.operationName = 'GetConteosInventario';
+exports.getConteosInventarioRef = getConteosInventarioRef;
+
+exports.getConteosInventario = function getConteosInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getConteosInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const aprobarConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AprobarConteoInventario', inputVars);
+}
+aprobarConteoInventarioRef.operationName = 'AprobarConteoInventario';
+exports.aprobarConteoInventarioRef = aprobarConteoInventarioRef;
+
+exports.aprobarConteoInventario = function aprobarConteoInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(aprobarConteoInventarioRef(dcInstance, inputVars));
+}
+;
+
+const rechazarConteoInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RechazarConteoInventario', inputVars);
+}
+rechazarConteoInventarioRef.operationName = 'RechazarConteoInventario';
+exports.rechazarConteoInventarioRef = rechazarConteoInventarioRef;
+
+exports.rechazarConteoInventario = function rechazarConteoInventario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(rechazarConteoInventarioRef(dcInstance, inputVars));
+}
+;
+
+const getStockInventarioRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetStockInventario');
+}
+getStockInventarioRef.operationName = 'GetStockInventario';
+exports.getStockInventarioRef = getStockInventarioRef;
+
+exports.getStockInventario = function getStockInventario(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getStockInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getHistorialInventarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHistorialInventario', inputVars);
+}
+getHistorialInventarioRef.operationName = 'GetHistorialInventario';
+exports.getHistorialInventarioRef = getHistorialInventarioRef;
+
+exports.getHistorialInventario = function getHistorialInventario(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getHistorialInventarioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

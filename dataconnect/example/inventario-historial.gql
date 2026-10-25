@@ -1,0 +1,37 @@
+# El catálogo se refresca sin descargar el historial completo en cada actualización.
+query GetStockInventario @auth(level: USER) @refresh(every: { seconds: 10 }) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this == 'admin'") }
+  }
+  insumos(orderBy: [{ nombre: ASC }]) {
+    id codigoQr nombre unidadMedida stockActual stockMinimo activo creadoEn revisionStock
+  }
+}
+
+query GetHistorialInventario(
+  $insumoId: UUID
+  $tipo: TipoMovimiento
+  $fechaDesde: Timestamp
+  $fechaHastaExclusiva: Timestamp
+  $limit: Int = 20
+  $offset: Int = 0
+) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this == 'admin'") }
+  }
+  movimientoInventarios(
+    where: { insumoId: { eq: $insumoId }, tipoMovimiento: { eq: $tipo }, fecha: { ge: $fechaDesde, lt: $fechaHastaExclusiva } }
+    orderBy: [{ fecha: DESC }, { id: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id tipoMovimiento cantidad motivo fecha
+    insumo { id nombre unidadMedida }
+    usuario { id nombre apellido }
+  }
+  total: movimientoInventarios(
+    where: { insumoId: { eq: $insumoId }, tipoMovimiento: { eq: $tipo }, fecha: { ge: $fechaDesde, lt: $fechaHastaExclusiva } }
+  ) { _count }
+}

@@ -1,0 +1,92 @@
+mutation RegistrarConteoInventario($id: UUID!, $insumoId: UUID!, $cantidad: Float!, $revisionStock: Int!) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.cantidad >= 0 && vars.cantidad <= 9999999999.99", message: "Cantidad contada inválida") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null") {
+      activo @check(expr: "this == true")
+      rol { nombre @check(expr: "this in ['admin', 'operario']") }
+    }
+    insumo(id: $insumoId) @check(expr: "this != null") {
+      activo @check(expr: "this == true", message: "El insumo está inactivo")
+      stockActual
+      revisionStock @check(expr: "this == vars.revisionStock", message: "El stock cambió. Actualiza el insumo y vuelve a contar.")
+    }
+  }
+  conteoInventario_insert(data: {
+    id: $id, insumoId: $insumoId, cantidadContada: $cantidad,
+    stockSistema_expr: "response.query.insumo.stockActual",
+    revisionStock: $revisionStock, registradoPorId_expr: "auth.uid"
+  })
+}
+
+query GetMiConteoInventario($id: UUID!) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this in ['admin', 'operario']") }
+  }
+  conteoInventario(first: { where: { id: { eq: $id }, registradoPorId: { eq_expr: "auth.uid" } } }) {
+    id insumoId cantidadContada stockSistema revisionStock estado creadoEn
+  }
+}
+
+query GetMisConteosInventario($limit: Int = 50, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this in ['admin', 'operario']") }
+  }
+  conteoInventarios(where: { registradoPorId: { eq_expr: "auth.uid" } }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id insumoId cantidadContada stockSistema estado creadoEn motivoResolucion
+  }
+}
+
+query GetConteosInventario($estado: EstadoConteoInventario, $limit: Int = 20, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null") {
+    activo @check(expr: "this == true")
+    rol { nombre @check(expr: "this == 'admin'") }
+  }
+  conteoInventarios(where: { estado: { eq: $estado } }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id cantidadContada stockSistema revisionStock estado creadoEn resueltoEn motivoResolucion
+    insumo { id nombre unidadMedida stockActual revisionStock activo }
+    registradoPor { id nombre apellido }
+    resueltoPor { id nombre apellido }
+  }
+  total: conteoInventarios(where: { estado: { eq: $estado } }) { _count }
+}
+
+mutation AprobarConteoInventario($id: UUID!, $motivo: String!) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.motivo.size() > 0 && vars.motivo.size() <= 160", message: "Indica el motivo de la aprobación (hasta 160 caracteres)") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null") {
+      activo @check(expr: "this == true")
+      rol { nombre @check(expr: "this == 'admin'") }
+    }
+    conteoInventario(id: $id) @check(expr: "this != null") {
+      estado @check(expr: "this == 'PENDIENTE'", message: "El conteo ya fue revisado")
+      insumoId cantidadContada stockSistema revisionStock
+    }
+  }
+  conteoInventario_update(first: { where: { id: { eq: $id }, estado: { eq: PENDIENTE } } }, data: {
+    estado: APROBADO, resueltoPorId_expr: "auth.uid", resueltoEn_expr: "request.time", motivoResolucion: $motivo
+  }) @check(expr: "this != null", message: "El conteo ya fue revisado")
+  insumo_update(first: { where: {
+    id: { eq_expr: "response.query.conteoInventario.insumoId" }, activo: { eq: true },
+    revisionStock: { eq_expr: "response.query.conteoInventario.revisionStock" }
+  } }, data: {
+    stockActual_expr: "response.query.conteoInventario.cantidadContada", revisionStock_update: { inc: 1 }
+  }) @check(expr: "this != null", message: "El stock cambió desde el conteo. Solicita un nuevo conteo antes de aprobar.")
+  movimientoInventario_insert(data: {
+    insumoId_expr: "response.query.conteoInventario.insumoId", usuarioId_expr: "auth.uid",
+    tipoMovimiento_expr: "response.query.conteoInventario.cantidadContada >= response.query.conteoInventario.stockSistema ? 'ENTRADA' : 'SALIDA'",
+    cantidad_expr: "response.query.conteoInventario.cantidadContada >= response.query.conteoInventario.stockSistema ? response.query.conteoInventario.cantidadContada - response.query.conteoInventario.stockSistema : response.query.conteoInventario.stockSistema - response.query.conteoInventario.cantidadContada",
+    motivo_expr: "'Conteo físico aprobado: ' + vars.motivo"
+  })
+}
+
+mutation RechazarConteoInventario($id: UUID!, $motivo: String!) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.motivo.size() > 0 && vars.motivo.size() <= 160", message: "Indica el motivo del rechazo (hasta 160 caracteres)") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null") {
+      activo @check(expr: "this == true")
+      rol { nombre @check(expr: "this == 'admin'") }
+    }
+  }
+  conteoInventario_update(first: { where: { id: { eq: $id }, estado: { eq: PENDIENTE } } }, data: {
+    estado: RECHAZADO, resueltoPorId_expr: "auth.uid", resueltoEn_expr: "request.time", motivoResolucion: $motivo
+  }) @check(expr: "this != null", message: "El conteo ya fue revisado")
+}

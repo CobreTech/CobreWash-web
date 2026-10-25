@@ -152,6 +152,7 @@ type Insumo @table(name: "insumo") {
   unidadMedida: String! @col(dataType: "varchar(20)")
   stockActual: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
   stockMinimo: Float! @col(dataType: "numeric(12,2)") @default(value: 0)
+  revisionStock: Int! @default(value: 0)
   activo: Boolean! @default(value: true)
   creadoEn: Timestamp! @default(expr: "request.time")
 }
@@ -271,6 +272,22 @@ type ReasignacionOperario @table(name: "reasignacion_operario") {
 # ====================== MÓDULO 5: GESTIÓN DE INVENTARIO =======================
 
 # Entradas (compras/reposiciones) y salidas (consumo) que mantienen el stock.
+enum EstadoConteoInventario { PENDIENTE APROBADO RECHAZADO }
+
+type ConteoInventario @table(name: "conteo_inventario") {
+  id: UUID! @default(expr: "uuidV4()")
+  insumo: Insumo!
+  cantidadContada: Float! @col(dataType: "numeric(12,2)")
+  stockSistema: Float! @col(dataType: "numeric(12,2)")
+  revisionStock: Int!
+  registradoPor: Usuario!
+  creadoEn: Timestamp! @default(expr: "request.time")
+  estado: EstadoConteoInventario! @default(value: PENDIENTE)
+  resueltoPor: Usuario
+  resueltoEn: Timestamp
+  motivoResolucion: String @col(dataType: "varchar(200)")
+}
+
 type MovimientoInventario @table(name: "movimiento_inventario") {
   id: UUID! @default(expr: "uuidV4()")
   insumo: Insumo!

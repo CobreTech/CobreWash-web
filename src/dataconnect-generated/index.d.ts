@@ -26,6 +26,12 @@ export enum DerechoPrivacidad {
   REVOCACION = "REVOCACION",
 };
 
+export enum EstadoConteoInventario {
+  PENDIENTE = "PENDIENTE",
+  APROBADO = "APROBADO",
+  RECHAZADO = "RECHAZADO",
+};
+
 export enum EstadoDerecho {
   RECIBIDA = "RECIBIDA",
   VERIFICACION = "VERIFICACION",
@@ -202,6 +208,17 @@ export interface AnularComandaVariables {
   motivoAnulacion: string;
 }
 
+export interface AprobarConteoInventarioData {
+  conteoInventario_update?: ConteoInventario_Key | null;
+  insumo_update?: Insumo_Key | null;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+
+export interface AprobarConteoInventarioVariables {
+  id: UUIDString;
+  motivo: string;
+}
+
 export interface AsociarFlujoComandaPendienteData {
   comandaEtapa_insertMany: ComandaEtapa_Key[];
 }
@@ -313,6 +330,11 @@ export interface ContarLimitesContactoVencidosData {
 
 export interface ContarLimitesContactoVencidosVariables {
   antesDe: TimestampString;
+}
+
+export interface ConteoInventario_Key {
+  id: UUIDString;
+  __typename?: 'ConteoInventario_Key';
 }
 
 export interface CrearAvisoData {
@@ -977,6 +999,7 @@ export interface GetComandasPaginadasVariables {
   cliente?: string | null;
   fechaDesde?: TimestampString | null;
   fechaHasta?: TimestampString | null;
+  fechaHastaExclusiva?: TimestampString | null;
 }
 
 export interface GetComandasParaAlertasData {
@@ -1023,6 +1046,46 @@ export interface GetComprobanteDerechoData {
 
 export interface GetComprobanteDerechoVariables {
   id: UUIDString;
+}
+
+export interface GetConteosInventarioData {
+  conteoInventarios: ({
+    id: UUIDString;
+    cantidadContada: number;
+    stockSistema: number;
+    revisionStock: number;
+    estado: EstadoConteoInventario;
+    creadoEn: TimestampString;
+    resueltoEn?: TimestampString | null;
+    motivoResolucion?: string | null;
+    insumo: {
+      id: UUIDString;
+      nombre: string;
+      unidadMedida: string;
+      stockActual: number;
+      revisionStock: number;
+      activo: boolean;
+    } & Insumo_Key;
+    registradoPor: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+    resueltoPor?: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+  } & ConteoInventario_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetConteosInventarioVariables {
+  estado?: EstadoConteoInventario | null;
+  limit?: number | null;
+  offset?: number | null;
 }
 
 export interface GetDetalleReporteCuentasData {
@@ -1211,6 +1274,38 @@ export interface GetFlotaVehiculosVariables {
   offset?: number | null;
 }
 
+export interface GetHistorialInventarioData {
+  movimientoInventarios: ({
+    id: UUIDString;
+    tipoMovimiento: TipoMovimiento;
+    cantidad: number;
+    motivo?: string | null;
+    fecha: TimestampString;
+    insumo: {
+      id: UUIDString;
+      nombre: string;
+      unidadMedida: string;
+    } & Insumo_Key;
+    usuario?: {
+      id: string;
+      nombre: string;
+      apellido?: string | null;
+    } & Usuario_Key;
+  } & MovimientoInventario_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetHistorialInventarioVariables {
+  insumoId?: UUIDString | null;
+  tipo?: TipoMovimiento | null;
+  fechaDesde?: TimestampString | null;
+  fechaHastaExclusiva?: TimestampString | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetHistorialVehiculosData {
   salidas: ({
     id: UUIDString;
@@ -1311,6 +1406,7 @@ export interface GetInsumoPorQrData {
     unidadMedida: string;
     stockActual: number;
     stockMinimo: number;
+    revisionStock: number;
     activo: boolean;
   } & Insumo_Key;
 }
@@ -1328,6 +1424,7 @@ export interface GetInsumosOperarioData {
     stockActual: number;
     stockMinimo: number;
     activo: boolean;
+    revisionStock: number;
   } & Insumo_Key)[];
 }
 
@@ -1384,6 +1481,22 @@ export interface GetMiComandaGuardadaData {
 }
 
 export interface GetMiComandaGuardadaVariables {
+  id: UUIDString;
+}
+
+export interface GetMiConteoInventarioData {
+  conteoInventario?: {
+    id: UUIDString;
+    insumoId: UUIDString;
+    cantidadContada: number;
+    stockSistema: number;
+    revisionStock: number;
+    estado: EstadoConteoInventario;
+    creadoEn: TimestampString;
+  } & ConteoInventario_Key;
+}
+
+export interface GetMiConteoInventarioVariables {
   id: UUIDString;
 }
 
@@ -1530,6 +1643,23 @@ export interface GetMisComandasData {
 export interface GetMisComandasVariables {
   estado?: ComandaEstado | null;
   estados?: ComandaEstado[] | null;
+  limit?: number | null;
+  offset?: number | null;
+}
+
+export interface GetMisConteosInventarioData {
+  conteoInventarios: ({
+    id: UUIDString;
+    insumoId: UUIDString;
+    cantidadContada: number;
+    stockSistema: number;
+    estado: EstadoConteoInventario;
+    creadoEn: TimestampString;
+    motivoResolucion?: string | null;
+  } & ConteoInventario_Key)[];
+}
+
+export interface GetMisConteosInventarioVariables {
   limit?: number | null;
   offset?: number | null;
 }
@@ -1914,6 +2044,20 @@ export interface GetSolicitudesContactoVariables {
   offset?: number | null;
 }
 
+export interface GetStockInventarioData {
+  insumos: ({
+    id: UUIDString;
+    codigoQr: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+    stockMinimo: number;
+    activo: boolean;
+    creadoEn: TimestampString;
+    revisionStock: number;
+  } & Insumo_Key)[];
+}
+
 export interface GetUsuariosData {
   usuarios: ({
     id: string;
@@ -2063,6 +2207,15 @@ export interface ReasignarOperarioEtapaVariables {
   motivo?: string | null;
 }
 
+export interface RechazarConteoInventarioData {
+  conteoInventario_update?: ConteoInventario_Key | null;
+}
+
+export interface RechazarConteoInventarioVariables {
+  id: UUIDString;
+  motivo: string;
+}
+
 export interface RecibirSolicitudDerechoData {
   limiteContacto_update?: LimiteContacto_Key | null;
   solicitudDerecho_insert: SolicitudDerecho_Key;
@@ -2079,6 +2232,17 @@ export interface RecibirSolicitudDerechoVariables {
   versionAviso: string;
   objetivoAtencion: TimestampString;
   limiteId: string;
+}
+
+export interface RegistrarConteoInventarioData {
+  conteoInventario_insert: ConteoInventario_Key;
+}
+
+export interface RegistrarConteoInventarioVariables {
+  id: UUIDString;
+  insumoId: UUIDString;
+  cantidad: number;
+  revisionStock: number;
 }
 
 export interface RegistrarEntradaInventarioData {
@@ -2527,6 +2691,102 @@ export const vincularMiFichaVerificadaRef: VincularMiFichaVerificadaRef;
 
 export function vincularMiFichaVerificada(): MutationPromise<VincularMiFichaVerificadaData, undefined>;
 export function vincularMiFichaVerificada(dc: DataConnect): MutationPromise<VincularMiFichaVerificadaData, undefined>;
+
+interface RegistrarConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarConteoInventarioVariables): MutationRef<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarConteoInventarioVariables): MutationRef<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+  operationName: string;
+}
+export const registrarConteoInventarioRef: RegistrarConteoInventarioRef;
+
+export function registrarConteoInventario(vars: RegistrarConteoInventarioVariables): MutationPromise<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+export function registrarConteoInventario(dc: DataConnect, vars: RegistrarConteoInventarioVariables): MutationPromise<RegistrarConteoInventarioData, RegistrarConteoInventarioVariables>;
+
+interface GetMiConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetMiConteoInventarioVariables): QueryRef<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetMiConteoInventarioVariables): QueryRef<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+  operationName: string;
+}
+export const getMiConteoInventarioRef: GetMiConteoInventarioRef;
+
+export function getMiConteoInventario(vars: GetMiConteoInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+export function getMiConteoInventario(dc: DataConnect, vars: GetMiConteoInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMiConteoInventarioData, GetMiConteoInventarioVariables>;
+
+interface GetMisConteosInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetMisConteosInventarioVariables): QueryRef<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetMisConteosInventarioVariables): QueryRef<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+  operationName: string;
+}
+export const getMisConteosInventarioRef: GetMisConteosInventarioRef;
+
+export function getMisConteosInventario(vars?: GetMisConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+export function getMisConteosInventario(dc: DataConnect, vars?: GetMisConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMisConteosInventarioData, GetMisConteosInventarioVariables>;
+
+interface GetConteosInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetConteosInventarioVariables): QueryRef<GetConteosInventarioData, GetConteosInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetConteosInventarioVariables): QueryRef<GetConteosInventarioData, GetConteosInventarioVariables>;
+  operationName: string;
+}
+export const getConteosInventarioRef: GetConteosInventarioRef;
+
+export function getConteosInventario(vars?: GetConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetConteosInventarioData, GetConteosInventarioVariables>;
+export function getConteosInventario(dc: DataConnect, vars?: GetConteosInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetConteosInventarioData, GetConteosInventarioVariables>;
+
+interface AprobarConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AprobarConteoInventarioVariables): MutationRef<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AprobarConteoInventarioVariables): MutationRef<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+  operationName: string;
+}
+export const aprobarConteoInventarioRef: AprobarConteoInventarioRef;
+
+export function aprobarConteoInventario(vars: AprobarConteoInventarioVariables): MutationPromise<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+export function aprobarConteoInventario(dc: DataConnect, vars: AprobarConteoInventarioVariables): MutationPromise<AprobarConteoInventarioData, AprobarConteoInventarioVariables>;
+
+interface RechazarConteoInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RechazarConteoInventarioVariables): MutationRef<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RechazarConteoInventarioVariables): MutationRef<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+  operationName: string;
+}
+export const rechazarConteoInventarioRef: RechazarConteoInventarioRef;
+
+export function rechazarConteoInventario(vars: RechazarConteoInventarioVariables): MutationPromise<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+export function rechazarConteoInventario(dc: DataConnect, vars: RechazarConteoInventarioVariables): MutationPromise<RechazarConteoInventarioData, RechazarConteoInventarioVariables>;
+
+interface GetStockInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetStockInventarioData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetStockInventarioData, undefined>;
+  operationName: string;
+}
+export const getStockInventarioRef: GetStockInventarioRef;
+
+export function getStockInventario(options?: ExecuteQueryOptions): QueryPromise<GetStockInventarioData, undefined>;
+export function getStockInventario(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetStockInventarioData, undefined>;
+
+interface GetHistorialInventarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetHistorialInventarioVariables): QueryRef<GetHistorialInventarioData, GetHistorialInventarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetHistorialInventarioVariables): QueryRef<GetHistorialInventarioData, GetHistorialInventarioVariables>;
+  operationName: string;
+}
+export const getHistorialInventarioRef: GetHistorialInventarioRef;
+
+export function getHistorialInventario(vars?: GetHistorialInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialInventarioData, GetHistorialInventarioVariables>;
+export function getHistorialInventario(dc: DataConnect, vars?: GetHistorialInventarioVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialInventarioData, GetHistorialInventarioVariables>;
 
 interface RegistrarseRef {
   /* Allow users to create refs without passing in DataConnect */

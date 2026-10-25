@@ -784,6 +784,7 @@ mutation ActualizarInsumo(
       unidadMedida: $unidadMedida
       stockMinimo: $stockMinimo
       activo: $activo
+      revisionStock_update: { inc: 1 }
     }
   ) @check(expr: "this != null", message: "Insumo no encontrado")
 }
@@ -804,7 +805,7 @@ mutation RegistrarEntradaInventario(
   }
   insumo_update(
     id: $insumoId
-    data: { stockActual_update: { inc: $cantidad } }
+    data: { stockActual_update: { inc: $cantidad }, revisionStock_update: { inc: 1 } }
   ) @check(expr: "this != null", message: "Insumo no encontrado")
   movimientoInventario_insert(data: {
     insumo: { id: $insumoId }
@@ -835,7 +836,7 @@ mutation RegistrarSalidaInventario(
   }
   insumo_update(
     id: $insumoId
-    data: { stockActual_update: { dec: $cantidad } }
+    data: { stockActual_update: { dec: $cantidad }, revisionStock_update: { inc: 1 } }
   ) @check(expr: "this != null", message: "Insumo no encontrado")
   movimientoInventario_insert(data: {
     insumo: { id: $insumoId }
