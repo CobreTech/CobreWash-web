@@ -263,6 +263,12 @@ await check("RF-VE04: consulta historial completo con inspecciones ANTES/DESPUES
     flota.conductores.length >= 2 &&
       flota.conductores.every((c) => ["conductor", "repartidor"].includes(c.rol.nombre)),
   );
+  // La web envía ambos parámetros; el conector debe aceptarlos antes de cargar el historial.
+  for (const offset of [0, 1, flota.salidas.length]) {
+    const pagina = await execute(queries, "GetFlotaVehiculos", { limit: 1, offset }, "test-admin");
+    assert.deepEqual(pagina.salidas.map(s => s.id), flota.salidas.slice(offset, offset + 1).map(s => s.id));
+    assert.deepEqual(pagina.vehiculos, flota.vehiculos);
+  }
 
   const hist = await execute(
     queries,
@@ -287,7 +293,7 @@ await check("RF-VE04: consulta historial completo con inspecciones ANTES/DESPUES
 
 await check("restringe todas las consultas y mutaciones de flota exclusivamente a administradores activos", async () => {
   for (const user of [null, "test-recepcion", "test-operario", "test-cliente", "test-inactivo", "sin-perfil"]) {
-    await assert.rejects(execute(queries, "GetFlotaVehiculos", {}, user));
+    await assert.rejects(execute(queries, "GetFlotaVehiculos", { limit: 200, offset: 0 }, user));
     await assert.rejects(execute(queries, "GetHistorialVehiculos", {}, user));
     await assert.rejects(
       execute(

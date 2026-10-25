@@ -13,7 +13,7 @@ it("el QR visible decodifica el código persistido de la comanda y el dominio of
   const { data, info } = await sharp(Buffer.from(svg!)).resize(360, 360).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const url = "https://lavanderia-elcobre.vercel.app/seguimiento?qr=12345678-1234-4234-8234-123456789abc";
   expect(jsQR(new Uint8ClampedArray(data), info.width, info.height)?.data).toBe(url);
-  expect(html).toContain(`href="${url}"`);
+  expect(html).not.toContain("Abrir seguimiento");
 });
 it.each([undefined, "inválido"])("no inventa un QR cuando el código es %s", codigoQr => {
   vi.stubEnv("NEXT_PUBLIC_SEGUIMIENTO_BASE_URL", "https://lavanderia-elcobre.vercel.app");

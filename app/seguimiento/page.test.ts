@@ -41,7 +41,8 @@ it("muestra el QR del pedido recibido, su avance real y ninguna identidad ni imp
   expect(screen.getByRole("heading", { name: pedido.numeroComanda })).toBeTruthy();
   expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("33");
   expect(screen.getByRole("region", { name: `QR de la comanda ${pedido.numeroComanda}` })).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Abrir seguimiento" }).getAttribute("href")).toBe(`https://lavanderia-elcobre.vercel.app/seguimiento?qr=${pedido.codigoQr}`);
+  expect(screen.getByTitle("Escanea para seguir tu pedido")).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "Abrir seguimiento" })).toBeNull();
   for (const valor of ["privado@example.test", "987654", "Persona privada"]) expect(container.textContent).not.toContain(valor);
   if (process.env.COBRE_EXPORT_PREVIEW === "1") {
     await waitFor(() => expect(container.querySelector("[aria-label=\"Seguimiento de ELCOBRE-14r3\"]")?.parentElement?.style.opacity).toBe("1"));
@@ -58,6 +59,6 @@ it("una actualización fallida mantiene el QR del pedido anterior y permite rein
   m.hook.mockReturnValue(estado({ pedido, error: "No se pudo consultar", consulta: { tipo: "numero", valor: pedido.numeroComanda } }));
   render(createElement(SeguimientoPage));
   expect(screen.getByText("Se muestra la última información recibida.")).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Abrir seguimiento" }).getAttribute("href")).toContain(pedido.codigoQr);
+  expect(screen.getByTitle("Escanea para seguir tu pedido")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Reintentar" })); expect(m.actualizar).toHaveBeenCalled();
 });

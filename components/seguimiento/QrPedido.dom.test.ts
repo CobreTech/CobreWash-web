@@ -1,35 +1,35 @@
 // @vitest-environment jsdom
-import { Blob as NodeBlob } from "node:buffer";
 import { createElement } from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ exportar: vi.fn() }));
+vi.mock("@/lib/seguimiento/exportar", () => ({ exportarComandaQr: mocks.exportar }));
 import QrPedido from "./QrPedido";
-const crear = vi.fn(), revocar = vi.fn();
+const props = { codigoQr: "12345678-1234-4234-8234-123456789abc", numeroComanda: "ELCOBRE-14r3" };
 beforeEach(() => {
-  vi.useFakeTimers(); crear.mockReset(); revocar.mockReset();
-  const OriginalURL = globalThis.URL;
-  class URLPrueba extends OriginalURL { static createObjectURL = crear; static revokeObjectURL = revocar; }
-  vi.stubGlobal("URL", URLPrueba); vi.stubGlobal("Blob", NodeBlob);
+  mocks.exportar.mockReset().mockResolvedValue(undefined);
   vi.stubEnv("NEXT_PUBLIC_SEGUIMIENTO_BASE_URL", "https://lavanderia-elcobre.vercel.app");
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.useRealTimers(); });
-it("descarga un SVG del QR mostrado, con nombre de comanda y liberación del archivo temporal", async () => {
-  crear.mockReturnValue("blob:qr-de-prueba");
-  let nombre = "";
-  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) { nombre = this.download; });
-  render(createElement(QrPedido, { codigoQr: "12345678-1234-4234-8234-123456789abc", numeroComanda: "ELCOBRE-14r3" }));
-  fireEvent.click(screen.getByRole("button", { name: "Descargar QR" }));
-  expect(nombre).toBe("qr-ELCOBRE-14r3.svg");
-  const svg = await (crear.mock.calls[0][0] as NodeBlob).text();
-  expect(svg).toContain("<svg"); expect(svg).toContain("Escanea para seguir tu pedido");
-  await act(() => vi.advanceTimersByTimeAsync(1000)); expect(revocar).toHaveBeenCalledWith("blob:qr-de-prueba");
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
+it.each([['Descargar imagen', 'png'], ['Descargar PDF', 'pdf']])("%s exporta el QR visible y el número de la comanda", async (boton, formato) => {
+  const { container } = render(createElement(QrPedido, props));
+  fireEvent.click(screen.getByRole("button", { name: boton }));
+  await waitFor(() => expect(mocks.exportar).toHaveBeenCalledWith(container.querySelector("svg title")?.parentElement, props.numeroComanda, formato));
+  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("iniciada"));
+  expect(screen.queryByRole("link", { name: "Abrir seguimiento" })).toBeNull();
 });
-it("si falla la descarga mantiene el enlace de seguimiento y muestra un error real", () => {
-  crear.mockImplementation(() => { throw new Error("Sin permiso"); });
-  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-  render(createElement(QrPedido, { codigoQr: "12345678-1234-4234-8234-123456789abc", numeroComanda: "ELCOBRE-14r3" }));
-  fireEvent.click(screen.getByRole("button", { name: "Descargar QR" }));
-  expect(screen.getByRole("alert").textContent).toContain("No pudimos descargar");
-  expect(screen.getByRole("link", { name: "Abrir seguimiento" }).getAttribute("href")).toContain("qr=12345678");
-  expect(click).not.toHaveBeenCalled();
+it("evita descargas simultáneas y permite reintentar después de un fallo", async () => {
+  let rechazar!: (error: Error) => void;
+  mocks.exportar.mockImplementationOnce(() => new Promise((_, reject) => { rechazar = reject; }));
+  render(createElement(QrPedido, props));
+  fireEvent.click(screen.getByRole("button", { name: "Descargar PDF" }));
+  await waitFor(() => expect(mocks.exportar).toHaveBeenCalledTimes(1));
+  expect(screen.getByRole("button", { name: "Preparando PDF…" }).hasAttribute("disabled")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Descargar imagen" }));
+  expect(mocks.exportar).toHaveBeenCalledTimes(1);
+  await act(async () => rechazar(new Error("Sin permiso")));
+  expect(screen.getByRole("alert").textContent).toContain("No pudimos preparar");
+  expect(screen.getByTitle("Escanea para seguir tu pedido")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Descargar PDF" }));
+  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("PDF"));
 });
