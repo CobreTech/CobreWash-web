@@ -8,7 +8,8 @@ export const TAMANO_PAGINA = 10;
 
 export async function consultarMisComandas(estado: ComandaEstado | null, pagina: number, vista: VistaPedidos = "todos") {
   const { data } = await getMisComandas(dataConnect, {
-    estado, estados: ESTADOS_POR_VISTA[vista], limit: TAMANO_PAGINA, offset: pagina * TAMANO_PAGINA,
+    ...(estado === null ? {} : { estado }),
+    estados: ESTADOS_POR_VISTA[vista], limit: TAMANO_PAGINA, offset: pagina * TAMANO_PAGINA,
   }, { fetchPolicy: "SERVER_ONLY" });
   return { pedidos: data.comandas, total: data.total[0]?._count ?? 0 };
 }

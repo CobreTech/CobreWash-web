@@ -56,6 +56,11 @@ await check("vinculación repetida no duplica y no altera al dueño de la ficha"
  assert.deepEqual(d.comandas.map(c=>c.numeroComanda),["ELCOBRE-aa02","ELCOBRE-aa01"]);
  const ficha=await execute("query Ficha($id: UUID!){cliente(id:$id){usuarioId}}","Ficha",{id:clienteId}); assert.equal(ficha.cliente.usuarioId,null);
 });
+await check("variables de la pantalla muestran pedidos propios y vinculados sin filtro de estado", async () => {
+ const d = await listar(verified, { estados: ["PENDIENTE", "EN_PROCESO", "FINALIZADA", "ENTREGADA", "ANULADA"], limit: 10, offset: 0 });
+ assert.equal(d.total[0]._count, 2);
+ assert.deepEqual(d.comandas.map(c => c.numeroComanda), ["ELCOBRE-aa02", "ELCOBRE-aa01"]);
+});
 await check("filtros, total, paginación y detalle real", async () => {
  const d=await listar(verified,{estado:"PENDIENTE",limit:1,offset:0}); assert.equal(d.total[0]._count,1);
  assert.equal(d.comandas[0].valorTotal,3000); assert.equal(d.comandas[0].comandaDetalles_on_comanda[0].subtotal,3000);
