@@ -13,7 +13,8 @@ query GetSeguimientoPublicoPorQr($codigoQr: UUID!)
 
 query GetSeguimientoPublicoPorNumero($numeroComanda: String!)
   @auth(level: PUBLIC, insecureReason: "Consulta por número público: solo estado, fechas, servicios y etapas, sin datos personales") {
-  comanda(first: { where: { numeroComanda: { eq: $numeroComanda } } }) {
+  comanda(first: { where: { numeroComanda: { pattern: { like: $numeroComanda, ignoreCase: true } } } })
+    @check(expr: "vars.numeroComanda.matches('^[A-Za-z0-9-]{1,20}$')", message: "Número de comanda inválido") {
     codigoQr numeroComanda estado fechaRecepcion fechaEntregaEstimada fechaEntregaReal actualizadoEn
     comandaDetalles_on_comanda { tipoServicio { nombre } }
     comandaEtapas_on_comanda(orderBy: [{ ordenEtapa: ASC }]) {

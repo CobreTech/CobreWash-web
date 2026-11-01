@@ -51,7 +51,7 @@ await check("un número público no permite vincular sin correo verificado coinc
  assert.equal((await listar()).total[0]._count,1);
 });
 await check("vinculación repetida no duplica y no altera al dueño de la ficha", async () => {
- await vincular("ELCOBRE-aa01"); await vincular("ELCOBRE-aa01");
+ await vincular("elcobre-AA01"); await vincular("ELCOBRE-aa01");
  const d=await listar(); assert.equal(d.total[0]._count,2);
  assert.deepEqual(d.comandas.map(c=>c.numeroComanda),["ELCOBRE-aa02","ELCOBRE-aa01"]);
  const ficha=await execute("query Ficha($id: UUID!){cliente(id:$id){usuarioId}}","Ficha",{id:clienteId}); assert.equal(ficha.cliente.usuarioId,null);
@@ -71,7 +71,9 @@ await check("filtros, total, paginación y detalle real", async () => {
 await check("seguimiento anónimo por número y QR: timeline sin datos privados", async () => {
  const numero=await execute(publico,"GetSeguimientoPublicoPorNumero",{numeroComanda:"ELCOBRE-aa01"},null);
  const codigo=await execute(publico,"GetSeguimientoPublicoPorQr",{codigoQr:qr},null);
- assert.deepEqual(numero,codigo); assert.equal(numero.comanda.comandaEtapas_on_comanda[1].estado,"EN_PROCESO");
+ assert.deepEqual(numero,codigo);
+ assert.deepEqual(await execute(publico,"GetSeguimientoPublicoPorNumero",{numeroComanda:"elcobre-AA01"},null),numero);
+ await assert.rejects(vincular("ELCOBRE-____")); assert.equal(numero.comanda.comandaEtapas_on_comanda[1].estado,"EN_PROCESO");
  assert.equal(numero.comanda.codigoQr.replaceAll("-", ""), qr.replaceAll("-", ""));
  const desdeQrMostrado=await execute(publico,"GetSeguimientoPublicoPorQr",{codigoQr:qr},null);
  assert.deepEqual(desdeQrMostrado.comanda,codigo.comanda);

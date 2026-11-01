@@ -512,7 +512,7 @@ mutation CrearComanda(
   $valorTotal: Float!
   $observaciones: String
 ) @auth(level: USER) @transaction {
-  query @redact {
+  query @redact @check(expr: "vars.numeroComanda.matches('^[A-Za-z0-9-]{1,20}$') && (!vars.numeroComanda.upperAscii().startsWith('ELCOBRE-') || (vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]{4}$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[A-Z][A-Z0-9]*$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[0-9][A-Z0-9]*$')))", message: "Usa ELCOBRE y cuatro caracteres con letras y números") {
     etapas: etapaProduccions(orderBy: [{ orden: ASC }], limit: 6)
       @check(expr: "this.size() == 5 && this[0].orden == 1 && this[1].orden == 2 && this[2].orden == 3 && this[3].orden == 4 && this[4].orden == 5", message: "Configura las cinco etapas de producción antes de guardar") {
       id nombre orden descripcion tiempoEstimadoMin
@@ -523,9 +523,11 @@ mutation CrearComanda(
         nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para crear comandas")
       }
     }
+    numeroDisponible: comanda(first: { where: { numeroComanda: { pattern: { like: $numeroComanda, ignoreCase: true } } } })
+      @check(expr: "this == null", message: "El número de comanda ya existe") { id }
   }
   comanda_insert(data: {
-    numeroComanda: $numeroComanda
+    numeroComanda_expr: "vars.numeroComanda.upperAscii().startsWith('ELCOBRE-') ? vars.numeroComanda.upperAscii() : vars.numeroComanda"
     cliente: { id: $clienteId }
     empresa: $empresa
     proyecto: $proyecto

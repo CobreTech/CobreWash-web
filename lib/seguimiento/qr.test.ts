@@ -22,7 +22,10 @@ describe("contrato QR", () => {
     expect(obtenerEnlaceSeguimiento(uuid).error).toMatch(/dominio/);
   });
   it.each(["14R3", " ELCOBRE-14r3 ", "elcobre-14R3", "COBRE-14r3"])("admite el número público %s", (numero) => {
-    expect(normalizarNumeroComanda(numero)).toBe("ELCOBRE-14r3");
+    expect(normalizarNumeroComanda(numero)).toBe("ELCOBRE-14R3");
+  });
+  it.each(["tqnj", "1234"])("mantiene consultables los números históricos %s", numero => {
+    expect(normalizarNumeroComanda(numero)).toBe(`ELCOBRE-${numero.toUpperCase()}`);
   });
   it.each(["", "14", "14r3otro", "https://example.com", "%14r3"])("rechaza números inválidos %s", (numero) => {
     expect(() => normalizarNumeroComanda(numero)).toThrow();

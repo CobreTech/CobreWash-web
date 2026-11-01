@@ -38,12 +38,12 @@ query GetMisComandas($estado: ComandaEstado, $estados: [ComandaEstado!], $limit:
 # Un número público no prueba propiedad. Para pedidos anteriores se exige
 # el correo verificado del comprobante y que la ficha no pertenezca a otra cuenta.
 mutation VincularMiComanda($numeroComanda: String!) @auth(level: USER) @transaction {
-  query @redact {
+  query @redact @check(expr: "vars.numeroComanda.matches('^[A-Za-z0-9-]{1,20}$')", message: "Número de comanda inválido") {
     yo: usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol { nombre @check(expr: "this == 'cliente'", message: "Acceso reservado a clientes") }
     }
-    pedido: comanda(first: { where: { numeroComanda: { eq: $numeroComanda } } })
+    pedido: comanda(first: { where: { numeroComanda: { pattern: { like: $numeroComanda, ignoreCase: true } } } })
       @check(expr: "this != null", message: "No se pudo vincular. Revisa el número y el correo de tu comprobante.") {
       id
       cliente @check(

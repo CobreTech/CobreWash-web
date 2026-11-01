@@ -132,6 +132,17 @@ Los datos del emulador se persisten en `dataconnect/.dataconnect/pgliteData`.
 
 ---
 
+## Códigos de comanda
+
+Los códigos nuevos `ELCOBRE-…` tienen cuatro caracteres en mayúsculas e incluyen
+al menos una letra y un número, por ejemplo `ELCOBRE-1ABC`. El seguimiento y la
+vinculación aceptan el código en minúsculas o mayúsculas, con o sin prefijo desde
+los formularios web. Los códigos históricos siguen consultables sin modificarlos.
+El servidor normaliza las nuevas altas ELCOBRE y rechaza códigos sin mezcla o
+duplicados, incluida una coincidencia con históricos que solo difiera por letras
+mayúsculas/minúsculas. Se conservan los formatos anteriores ajenos al prefijo
+ELCOBRE para compatibilidad. Publicar web y conectores coordinadamente.
+
 ## Adecuación de privacidad
 
 Estado y matriz legal: [docs/cumplimiento-21719.md](docs/cumplimiento-21719.md).
