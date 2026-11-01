@@ -1,16 +1,16 @@
 # Proveedores, riesgos y continuidad
 
-Pendiente de validación por cliente, 1/11/2026. No se presume que un plan pagado,
+Pendiente de validación operativa, 1/11/2026. No se presume que un plan pagado,
 región del conector o contrato estándar pruebe cumplimiento o residencia en Chile.
 
 ## Registro de encargados y transferencias (arts. 15 bis y 27 a 29)
 
 | Servicio identificado | Función/datos | Evidencia por obtener |
 |---|---|---|
-| Firebase Authentication / Google | Identidad, correo y autenticación | Entidad contractual, DPA vigente, países, soporte, subencargados, eliminación y exportación |
+| Firebase Authentication / Google | Identidad, correo y autenticación; Google documenta tratamiento en EE. UU. | Entidad contractual, términos aplicables, soporte, subencargados, eliminación y exportación |
 | Data Connect / PostgreSQL / Google | Fichas, pedidos, personal y derechos | Región efectiva (configuración menciona southamerica-west1), respaldos, IAM y países de acceso; no inferir ubicación de Auth/Storage |
-| Firebase Storage / Google | Evidencias fotográficas | Región real, reglas, accesos, logs, copias, retención y eliminación conciliada |
-| Vercel | Web/API y registros de peticiones | Regiones de ejecución y logs, cachés, DPA, subencargados, soporte y duración |
+| Firebase Storage / Google | Evidencias fotográficas; Chile según confirmación del usuario | Conservar evidencia de configuración; reglas, accesos, logs, copias, retención y eliminación conciliada |
+| Vercel | Web/API; Brasil según confirmación del usuario; registros de peticiones | Conservar evidencia de configuración; logs, cachés, términos/DPA, subencargados, soporte y duración |
 | Desarrollo, soporte y equipos del negocio | Acceso técnico/operacional | Rol responsable/encargado, instrucciones, confidencialidad, accesos y baja |
 | Correo, mensajería, facturación y otros | Por inventariar con cliente | Destinatarios, contratos, países y finalidad; no asumir su ausencia |
 
@@ -23,6 +23,12 @@ Por transferencia: país/organización, finalidad, categorías, destinatario,
 mecanismo aplicable, garantías, acceso de soporte/subencargados y evidencia.
 No dar por adecuada una jurisdicción sin decisión/base aplicable. Actualizar el
 aviso cuando cambie el circuito. Revisar cesiones separadamente del encargo.
+
+Detalle comprobado en los repositorios y límites de la inferencia:
+[infraestructura-datos-21719.md](infraestructura-datos-21719.md). Los datos técnicos
+conocidos se completan desde código y fuentes del proveedor; no se pide al cliente
+que vuelva a describir la arquitectura. Las condiciones aceptadas y las opciones
+de consola requieren verificación de quien administra las cuentas.
 
 ## Evaluación previa de impacto e interés legítimo
 

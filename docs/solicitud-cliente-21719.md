@@ -1,31 +1,28 @@
-# Antecedentes pendientes para solicitar al cliente
+# Información de identificación pendiente del cliente
 
-Plantilla preparada, no enviada. No incluir contraseñas, claves privadas ni datos
-personales de clientes/trabajadores en la respuesta o en el repositorio.
+Según la indicación recibida el 1/11/2026, solicitar únicamente:
 
-1. Razón social exacta, RUT, domicilio, representante legal y rol contractual de
-   quien desarrolla/opera la plataforma. Correo de privacidad si se habilitará.
-2. Responsable de atender derechos y suplente, horarios de revisión, canal de
-   emergencia y quién autoriza incidentes, bloqueos, borrados y políticas.
-3. Fines y bases de cada actividad; uso real de RUT, teléfono, fotos y datos
-   laborales. Publicidad, perfiles, decisiones automatizadas o reutilización.
-4. Inventario fuera de web/app: papel, correo, mensajería, planillas, contabilidad,
-   nóminas, cámaras, asistencia y soporte; volumen de personas y registros.
-5. Si existen menores, salud, biometría, ubicación u otros datos especialmente
-   protegidos y cómo se obtienen. No asumir ausencia sin confirmación.
-6. Retención por categoría, norma/documento tributario aplicable, litigios o
-   reclamaciones y aprobación del asesor contable para conservación legal.
-7. Lista de proveedores/encargados, entidades contratantes, contratos/DPA y fechas,
-   subencargados, regiones, países de acceso/soporte y garantías de transferencia.
-8. Destinatarios de cesiones y base/autorización; canales para comunicar cambios.
-9. Gestión real de accesos/MFA, bajas de personal, inventario de equipos y pérdidas.
-10. Respaldos, duración, RPO/RTO, responsables y evidencia de restauración; alertas,
-    simulacro de incidentes y canales oficiales de reporte confirmados.
-11. Revisión del aviso propuesto, aprobación de versión, política de conservación,
-    atención de derechos, proveedores, riesgos y cambios laborales/contractuales.
-12. Decisión sobre adopción voluntaria de modelo, delegado y certificación; no se
-    requiere inventar una designación para completar el formulario.
+1. Razón social exacta.
+2. RUT de la empresa.
+3. Domicilio del responsable.
+4. Nombre del representante legal.
 
-Las referencias a evidencia deben apuntar a un expediente restringido, con autor,
-fecha de revisión y aprobación. Hasta recibir estos antecedentes, la publicación
-legal y la declaración de cumplimiento integral siguen pendientes.
+No inventar estos datos ni completar aprobaciones a su nombre. El formulario
+público es el canal de derechos; un correo adicional es opcional si se habilita.
+No pedir contraseñas, claves privadas o datos de clientes/trabajadores.
+
+## Información que se prepara desde el proyecto
+
+Arquitectura, proveedores identificados, categorías de datos, finalidades
+funcionales, canales, permisos y medidas visibles se documentan a partir del código.
+Ver [infraestructura-datos-21719.md](infraestructura-datos-21719.md).
+
+La política de conservación, bases jurídicas y procedimientos se dejan redactados
+como propuestas coherentes con el proyecto. No se necesita pedir al cliente que
+redacte esa documentación. Su adopción efectiva y las decisiones de su negocio no
+se presentan como hechas solo por estar en el repositorio.
+
+Las verificaciones de consolas, términos aplicables y procesos reales quedan en
+[validaciones-operativas-21719.md](validaciones-operativas-21719.md), para quienes
+administran el sistema y operan el negocio. No son otros campos de identificación
+que deban añadirse a esta solicitud.

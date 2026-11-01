@@ -252,5 +252,26 @@
       "evidencia": "",
       "verificadoEn": null
     }
-  ]
+  ],
+  "infraestructuraDocumentada": {
+    "revisadaEn": "2026-11-01",
+    "dataConnect": {
+      "regionConfigurada": "southamerica-west1",
+      "pais": "Chile",
+      "fuente": "dataconnect/dataconnect.yaml y SDK web/Android"
+    },
+    "storage": {
+      "pais": "Chile",
+      "fuente": "Confirmación del usuario en este chat; no consulta de consola"
+    },
+    "vercel": {
+      "pais": "Brasil",
+      "fuente": "Confirmación del usuario en este chat; no consulta de consola"
+    },
+    "authentication": {
+      "pais": "Estados Unidos",
+      "fuente": "Uso de Firebase Auth en código y https://firebase.google.com/support/privacy"
+    },
+    "limite": "Ubicaciones principales; no acredita por sí solo copias, logs, soporte ni mecanismo jurídico de transferencia"
+  }
 }

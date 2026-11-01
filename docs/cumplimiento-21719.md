@@ -55,6 +55,10 @@ acceso completa ni entrega todo el inventario de datos personales.
 - [Procedimiento de derechos](procedimiento-derechos.md).
 - [Proveedores, riesgos y continuidad](proveedores-riesgos-21719.md).
 - [Antecedentes para pedir al cliente](solicitud-cliente-21719.md).
+- [Infraestructura documentada](infraestructura-datos-21719.md) y
+  [comprobaciones internas](validaciones-operativas-21719.md). La solicitud de
+  identificación al cliente queda limitada a razón social, RUT, domicilio y
+  representante. Storage en Chile y Vercel en Brasil fueron confirmados por el usuario.
 - `cumplimiento-21719.json`: registro de controles pendientes y evidencia.
 
 Solicitar los antecedentes, aprobar bases/plazos/contratos y asignar responsables.
