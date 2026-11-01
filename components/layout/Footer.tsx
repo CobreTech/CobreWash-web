@@ -157,6 +157,7 @@ export default async function Footer() {
             © {new Date().getFullYear()} {legal.identidadCompleta ? legal.razonSocial : "Lavandería El Cobre"}. Todos los derechos reservados.
           </p>
           <nav aria-label="Información legal y ayuda" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:justify-end">
+            <a href="https://github.com/CobreTech" target="_blank" rel="noopener noreferrer" className="hover:text-brand-650 underline">Desarrollado por CobreTech</a>
             <Link href="/privacidad" className="hover:text-brand-650 underline">Privacidad</Link>
             <Link href="/privacidad/derechos" className="hover:text-brand-650 underline">Mis datos personales</Link>
             <Link href="/terminos" className="hover:text-brand-650 underline">Información del portal</Link>

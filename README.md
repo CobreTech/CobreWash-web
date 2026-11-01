@@ -5,7 +5,7 @@ para clientes y una **intranet de gestión operacional** para el equipo interno.
 Desde una sola aplicación se presenta el negocio al público y se administran las
 comandas, la producción, el inventario y los usuarios de la lavandería.
 
-Desarrollado por **CobreTech**.
+Desarrollado por **[CobreTech](https://github.com/CobreTech)**.
 
 ---
 
