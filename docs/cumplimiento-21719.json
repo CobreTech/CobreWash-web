@@ -1,0 +1,256 @@
+{
+  "revision": "2026-11-01",
+  "estado": "no_acredita_cumplimiento_integral",
+  "controles": [
+    {
+      "id": "responsable",
+      "articulos": "1, 2, 14 ter",
+      "descripcion": "Identidad y responsable/suplente",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "inventario",
+      "articulos": "3, 14",
+      "descripcion": "Inventario de todas las fuentes",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "bases",
+      "articulos": "12, 13",
+      "descripcion": "Bases jurídicas por finalidad y balance",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "aviso",
+      "articulos": "14 ter",
+      "descripcion": "Aviso aprobado y publicado",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "consentimiento",
+      "articulos": "12",
+      "descripcion": "Archivo de versiones y revocación efectiva",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "acceso",
+      "articulos": "5, 10, 11",
+      "descripcion": "Respuesta íntegra y entrega",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "rectificacion",
+      "articulos": "6",
+      "descripcion": "Corrección efectiva y destinatarios",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "supresion",
+      "articulos": "7",
+      "descripcion": "Borrado/anonimización y excepciones",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "oposicion",
+      "articulos": "8",
+      "descripcion": "Cese efectivo del tratamiento",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "bloqueo",
+      "articulos": "8 ter, 11",
+      "descripcion": "Suspensión efectiva y decisión urgente",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "portabilidad",
+      "articulos": "9",
+      "descripcion": "Exportación completa aplicable y transmisión",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "procedimiento",
+      "articulos": "10, 11",
+      "descripcion": "Identidad, plazos, respuesta y reclamación",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "confidencialidad",
+      "articulos": "14 bis",
+      "descripcion": "Acuerdos, formación y bajas",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "seguridad",
+      "articulos": "14 quáter, 14 quinquies",
+      "descripcion": "IAM/MFA y revisión de controles",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "continuidad",
+      "articulos": "14 quinquies",
+      "descripcion": "Respaldo y restauración demostrada",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "brechas",
+      "articulos": "14 sexies",
+      "descripcion": "Canales, responsable y simulacro",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "estandares",
+      "articulos": "14 septies",
+      "descripcion": "Instrucciones vigentes según tamaño y volumen",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "encargados",
+      "articulos": "15, 15 bis",
+      "descripcion": "Contratos, cesiones y subencargados",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "impacto",
+      "articulos": "15 ter",
+      "descripcion": "Evaluación previa y EIPD si corresponde",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "especiales",
+      "articulos": "16 a 16 sexies",
+      "descripcion": "Confirmación de datos especiales y medidas",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "transferencias",
+      "articulos": "27 a 29",
+      "descripcion": "Países, garantías y mecanismo válido",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "retencion",
+      "articulos": "3, 7",
+      "descripcion": "Política aprobada y ejecución verificable",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "prevencion",
+      "articulos": "48",
+      "descripcion": "Procedimientos y formación implantados",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "despliegue",
+      "articulos": "14",
+      "descripcion": "Verificación coordinada web/app y producción",
+      "obligatorio": true,
+      "estado": "pendiente_cliente",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    },
+    {
+      "id": "modelo_voluntario",
+      "articulos": "49 a 53",
+      "descripcion": "Decisión sobre modelo, delegado y certificación voluntarios",
+      "obligatorio": false,
+      "estado": "pendiente_decision",
+      "responsable": "",
+      "evidencia": "",
+      "verificadoEn": null
+    }
+  ]
+}

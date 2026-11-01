@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "verify:privacy": "node scripts/verificar-privacidad.mjs",
+    "privacy:incident": "node scripts/evaluar-incidente.mjs",
     "test": "vitest run",
     "test:portal": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-portal.mjs\"",
     "test:vehiculos": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-vehiculos.mjs\"",

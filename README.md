@@ -132,6 +132,19 @@ Los datos del emulador se persisten en `dataconnect/.dataconnect/pgliteData`.
 
 ---
 
+## Adecuación de privacidad
+
+Estado y matriz legal: [docs/cumplimiento-21719.md](docs/cumplimiento-21719.md).
+Antecedentes pendientes: [docs/solicitud-cliente-21719.md](docs/solicitud-cliente-21719.md).
+No se declara cumplimiento integral ni se aprueba el aviso sin los antecedentes
+y decisiones del cliente. Versión propuesta: `2026-11-01`.
+
+`pnpm verify:privacy` informa controles sin evidencia (código 2 mientras existan
+pendientes). `pnpm privacy:incident indicadores.json` orienta la evaluación local
+de brechas sin enviar comunicaciones; esta utilidad usa el runtime Node 26.13
+preparado para las pruebas. Ejecutar los comandos de validación dentro del
+[entorno aislado](docs/pruebas-aisladas.md).
+
 ## 📄 Licencia
 
 Proyecto privado — © CobreTech. Todos los derechos reservados.

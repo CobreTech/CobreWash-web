@@ -39,7 +39,7 @@ it("no acepta actor inyectado ni cerrar sin evidencia", async () => {
   const datos = { estado: "RESPONDIDA", revision: 1, nota: "Fundamento y respuesta", actorId: "atacante" };
   expect((await gestionar(request(datos, "token"), ctx)).status).toBe(400);
   expect(m.mutation).not.toHaveBeenCalled();
-  expect((await gestionar(request({ ...datos, evidenciaIdentidad: "Verificación", evidenciaEnvio: "Envío confirmado" }, "token"), ctx)).status).toBe(200);
+  expect((await gestionar(request({ ...datos, evidenciaIdentidad: "Verificación", evidenciaEnvio: "Envío confirmado", resultado: "ACOGIDA", evidenciaEjecucion: "Copia entregada", comunicacionDestinatarios: "No procede: acceso" }, "token"), ctx)).status).toBe(200);
   expect(m.mutation.mock.calls[0][1].actorId).toBe("admin-real");
 });
 it("rechaza cuerpos enormes antes de consultar el backend", async () => {

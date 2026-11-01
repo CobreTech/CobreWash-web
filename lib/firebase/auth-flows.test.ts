@@ -57,7 +57,7 @@ import {
 const auth = {} as Auth;
 const dataConnect = {} as DataConnect;
 const clientInput: ClientRegistrationInput & { autorizaDatos: boolean; versionPrivacidad: string } = {
-  autorizaDatos: true, versionPrivacidad: "2026-10-25",
+  autorizaDatos: true, versionPrivacidad: "2026-11-01",
   nombre: " Ana ",
   apellido: " Pérez ",
   rut: "123456785",
@@ -168,7 +168,7 @@ describe("registro público de clientes", () => {
 
     expect(mocks.createUser).toHaveBeenCalledWith(auth, "ana@example.com", "clave1");
     expect(mocks.registerClient).toHaveBeenCalledWith(dataConnect, {
-      versionPrivacidad: "2026-10-25",
+      versionPrivacidad: "2026-11-01",
       rut: "12.345.678-5",
       nombre: "Ana",
       apellido: "Pérez",

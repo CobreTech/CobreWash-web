@@ -81,7 +81,7 @@ mutation RegistrarseComoCliente(
 
     rolCliente: rol(first: { where: { nombre: { eq: "cliente" } } })
       @check(expr: "this != null", message: "El rol cliente no está configurado") {
-      id @check(expr: "vars.versionPrivacidad == '2026-10-25'", message: "Debes autorizar el aviso de privacidad vigente")
+      id @check(expr: "vars.versionPrivacidad == '2026-11-01'", message: "Debes autorizar el aviso de privacidad vigente")
     }
   }
   usuario_insert(data: {

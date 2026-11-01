@@ -37,7 +37,7 @@ describe("validación del registro público de clientes", () => {
   const validRegistration: PublicClientRegistrationInput = {
     ...validClient,
     confirmPassword: "clave1",
-    autorizaDatos: true, versionPrivacidad: "2026-10-25",
+    autorizaDatos: true, versionPrivacidad: "2026-11-01",
   };
 
   it("exige los datos personales y credenciales obligatorios", () => {

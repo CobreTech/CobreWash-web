@@ -16,7 +16,7 @@ const contactos = await readFile("dataconnect/example/contacto.gql", "utf8");
 const registro = await readFile("dataconnect/example/mutations.gql", "utf8");
 const id = randomUUID(), limiteId = `derechos-prueba-${randomUUID()}`;
 await execute(contactos, "PrepararLimiteContacto", { id: limiteId });
-const entrada = { id, limiteId, secretoHash: "a".repeat(64), contenidoHash: "b".repeat(64), nombre: "Titular de prueba", email: "titular@example.test", derecho: "BLOQUEO", detalle: "Suspender el tratamiento indicado", versionAviso: "2026-10-25", objetivoAtencion: "2026-10-26T12:00:00Z" };
+const entrada = { id, limiteId, secretoHash: "a".repeat(64), contenidoHash: "b".repeat(64), nombre: "Titular de prueba", email: "titular@example.test", derecho: "BLOQUEO", detalle: "Suspender el tratamiento indicado", versionAviso: "2026-11-01", objetivoAtencion: "2026-10-26T12:00:00Z" };
 await check("solo el servidor recibe derechos y conserva el comprobante", async () => {
   for (const user of [null, "test-admin", "test-cliente", "test-operario"]) await assert.rejects(execute(ops, "RecibirSolicitudDerecho", entrada, user));
   await execute(ops, "RecibirSolicitudDerecho", entrada);
@@ -54,9 +54,9 @@ await check("se preserva la trazabilidad y el cierre es definitivo", async () =>
 await check("el alta pública exige y guarda versión y fecha de autorización", async () => {
   const vars = { versionPrivacidad: "obsoleta", rut: "12.345.678-5", nombre: "Nuevo", apellido: "Cliente", email: "nuevo-privacidad@example.test", tipoCliente: "PARTICULAR" };
   await assert.rejects(execute(registro, "RegistrarseComoCliente", vars, "nuevo-privacidad"));
-  await execute(registro, "RegistrarseComoCliente", { ...vars, versionPrivacidad: "2026-10-25" }, "nuevo-privacidad");
+  await execute(registro, "RegistrarseComoCliente", { ...vars, versionPrivacidad: "2026-11-01" }, "nuevo-privacidad");
   const d = await execute('query Verificar { usuario(id:"nuevo-privacidad") { versionPrivacidad autorizadaEn } }', "Verificar");
-  assert.equal(d.usuario.versionPrivacidad, "2026-10-25"); assert(d.usuario.autorizadaEn);
+  assert.equal(d.usuario.versionPrivacidad, "2026-11-01"); assert(d.usuario.autorizadaEn);
 });
 await check("la limpieza técnica no elimina solicitudes y no está disponible a clientes", async () => {
   const antesDe = "2001-01-01T00:00:00Z", viejo = `vencido-${randomUUID()}`;
@@ -70,9 +70,9 @@ await check("la limpieza técnica no elimina solicitudes y no está disponible a
 });
 await check("cotización sin teléfono registra autorización sin atribuirla a datos antiguos", async () => {
   const cotizacion = randomUUID();
-  await execute(contactos, "RegistrarSolicitudContacto", { id: cotizacion, nombre: "Cotización", email: "cotizacion@example.test", telefono: "", servicio: "otro", mensaje: "Consulta", hashContenido: "f".repeat(64), limiteId, versionPrivacidad: "2026-10-25" });
+  await execute(contactos, "RegistrarSolicitudContacto", { id: cotizacion, nombre: "Cotización", email: "cotizacion@example.test", telefono: "", servicio: "otro", mensaje: "Consulta", hashContenido: "f".repeat(64), limiteId, versionPrivacidad: "2026-11-01" });
   const d = await execute('query Revisar($id:UUID!){solicitudContacto(id:$id){telefono versionPrivacidad autorizadaEn} usuario(id:"test-cliente"){versionPrivacidad autorizadaEn}}', "Revisar", { id: cotizacion });
-  assert.equal(d.solicitudContacto.telefono, ""); assert.equal(d.solicitudContacto.versionPrivacidad, "2026-10-25"); assert(d.solicitudContacto.autorizadaEn);
+  assert.equal(d.solicitudContacto.telefono, ""); assert.equal(d.solicitudContacto.versionPrivacidad, "2026-11-01"); assert(d.solicitudContacto.autorizadaEn);
   assert.equal(d.usuario.versionPrivacidad, null); assert.equal(d.usuario.autorizadaEn, null);
 });
 console.log(`Privacidad: ${count} escenarios aprobados.`);
