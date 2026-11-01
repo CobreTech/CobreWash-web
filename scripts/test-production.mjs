@@ -307,6 +307,24 @@ await check("reportes concurrentes no sobrescriben al autor confirmado", async (
   assert.equal(c.comandaEtapas_on_comanda[0].operarioId, users[resultados.findIndex(r => r.status === "fulfilled")]);
   assert.equal(c.comandaHistorialEstados_on_comanda.length, 2);
 });
+await check("un avance concurrente no puede reabrir una cancelación confirmada", async () => {
+  const v = variables();
+  await execute(mutation, "CrearComandaConFlujo", v, "test-recepcion");
+  const [avance, cancelacion] = await Promise.allSettled([
+    execute(production, "CompletarEtapaComanda", { comandaId: v.id, etapaId: etapaIds[0], orden: 1, estadoComanda: "EN_PROCESO" }, "test-operario"),
+    execute(legacy, "AnularComanda", { id: v.id, motivoAnulacion: "Cancelación de prueba" }, "test-recepcion"),
+  ]);
+  const c = await read(v.id);
+  if (cancelacion.status === "fulfilled") {
+    assert.equal(c.estado, "ANULADA");
+    const antes = await read(v.id);
+    await assert.rejects(execute(production, "CompletarEtapaComanda", { comandaId: v.id, etapaId: etapaIds[0], orden: 1, estadoComanda: "EN_PROCESO" }, "test-operario"));
+    assert.deepEqual(await read(v.id), antes);
+    if (avance.status === "rejected") assert(c.comandaEtapas_on_comanda.every(e => e.estado === "PENDIENTE"));
+  } else {
+    assert.equal(avance.status, "fulfilled"); assert.equal(c.estado, "EN_PROCESO");
+  }
+});
 await check("entrega histórica sin flujo no inventa etapas ni responsables anteriores", async () => {
   const v = variables();
   await execute(`mutation Old($id:UUID!,$numero:String!,$clienteId:UUID!) { comanda_insert(data:{id:$id,numeroComanda:$numero,clienteId:$clienteId,estado:FINALIZADA}) }`, "Old", {id:v.id,numero:v.numeroComanda,clienteId});

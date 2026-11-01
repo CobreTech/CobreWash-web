@@ -80,8 +80,13 @@ mutation EditarVehiculoFlota(
       anio: $anio
       descripcion: $descripcion
       activo: $activo
+      revision_update: { inc: 1 }
     }
-  )
+  ) @check(expr: "this != null", message: "Vehículo no encontrado")
+  revision: query @redact {
+    salidaVehiculo(first: { where: { vehiculoId: { eq: $id }, estado: { in: [PROGRAMADA, EN_SERVICIO] } } })
+      @check(expr: "vars.activo || this == null", message: "No se puede desactivar un vehículo con una salida en curso") { id }
+  }
 }
 
 # RF-VE02: Registra la salida a terreno de un vehículo junto con su inspección inicial (ANTES).

@@ -66,6 +66,10 @@ cp .env.example .env.local
 Luego edita `.env.local` con los valores del **SDK web** de tu proyecto
 (Firebase Console → Configuración del proyecto → Tus apps).
 
+Los formularios públicos también requieren `CONTACT_RATE_LIMIT_SALT` y un origen
+verificable: Vercel aporta su encabezado de plataforma; otros hosts usan un proxy
+firmado. Configuración en [docs/seguridad-solicitudes.md](docs/seguridad-solicitudes.md).
+
 Para emitir QR reales configura `NEXT_PUBLIC_SEGUIMIENTO_BASE_URL` como origen
 HTTPS estable (actualmente `https://lavanderia-elcobre.vercel.app`). También debe
 estar configurado en Vercel antes del build. No se usa el dominio de previews

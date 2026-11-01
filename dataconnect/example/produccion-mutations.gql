@@ -139,7 +139,8 @@ mutation CompletarEtapaComanda($comandaId: UUID!, $etapaId: UUID!, $orden: Int!,
     data: { estado: EN_PROCESO, fechaInicio_expr: "request.time" }
   ) @check(expr: "(vars.orden < 5 && this == 1) || (vars.orden == 5 && this == 0)", message: "No se pudo activar la etapa siguiente")
   comanda_update(
-    id: $comandaId
+    # Si hubo cancelación o entrega después de la lectura, se revierte también el avance de etapas.
+    first: { where: { id: { eq: $comandaId }, estado: { eq_expr: "response.query.comanda.estado" } } }
     data: {
       estado: $estadoComanda
       actualizadoEn_expr: "request.time"

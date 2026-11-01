@@ -3,6 +3,7 @@ import { serviciosAdmin } from "@/lib/firebase/admin";
 import { validarContacto } from "@/lib/contacto/validar";
 import { configuracionLegal } from "@/lib/privacidad/configuracion";
 import { VERSION_PRIVACIDAD } from "@/lib/privacidad/modelo";
+import { ErrorOrigenSolicitud, origenSolicitud } from "@/lib/solicitudes/origen";
 
 export const runtime = "nodejs";
 type Confirmacion = { solicitudContacto?: { id: string; hashContenido: string } | null };
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
     if (previo) return previo.hashContenido === hashContenido ? Response.json({ id: previo.id }) : Response.json({ error: "Esa solicitud ya fue recibida con otros datos." }, { status: 409 });
     const salt = process.env.CONTACT_RATE_LIMIT_SALT;
     if (!salt || salt.length < 32) return Response.json({ error: "El canal de solicitudes no está disponible. Contáctanos por teléfono o correo." }, { status: 503 });
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "sin-origen";
+    const ip = origenSolicitud(request);
     const origen = createHmac("sha256", salt).update(ip).digest("hex");
     const limiteId = `${Math.floor(Date.now() / 3_600_000)}:${origen}`;
     try { await db.executeMutation("PrepararLimiteContacto", { id: limiteId }); }
@@ -47,5 +48,8 @@ export async function POST(request: Request) {
       throw error;
     }
     return Response.json({ id: entrada.id }, { status: 201 });
-  } catch { return Response.json({ error: "No pudimos guardar tu solicitud. Conservamos tus datos para que puedas reintentar." }, { status: 503 }); }
+  } catch (error) {
+    if (error instanceof ErrorOrigenSolicitud) return Response.json({ error: error.message }, { status: error.status });
+    return Response.json({ error: "No pudimos guardar tu solicitud. Conservamos tus datos para que puedas reintentar." }, { status: 503 });
+  }
 }

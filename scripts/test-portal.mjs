@@ -82,7 +82,7 @@ await check("registro crea perfil de cliente y distingue empresa de particular",
  const mutations=await readFile("dataconnect/example/mutations.gql","utf8");
  for (const tipoCliente of ["HOTEL","PARTICULAR"]) {
  const nuevo="registro-"+tipoCliente;
- await execute(mutations,"RegistrarseComoCliente",{versionPrivacidad:"2026-10-25",rut:tipoCliente === "HOTEL" ? "12.345.678-5" : "11.111.111-1",nombre:"Registro",apellido:"Prueba",email:nuevo+"@example.test",tipoCliente},{uid:nuevo});
+ await execute(mutations,"RegistrarseComoCliente",{versionPrivacidad:"2026-10-25",rut:tipoCliente === "HOTEL" ? "12.345.678-5" : "11.111.111-1",nombre:"Registro",apellido:"Prueba",email:nuevo+"@example.test",tipoCliente},{uid:nuevo,email:nuevo+"@example.test"});
  const data=await execute(await readFile("dataconnect/example/queries.gql","utf8"),"GetMiPerfil",{}, {uid:nuevo});
  assert.equal(data.usuario.rol.nombre,"cliente"); assert.equal(data.usuario.clientes_on_usuario[0].tipoCliente,tipoCliente);
  }
@@ -95,7 +95,7 @@ await check("el servidor impone cliente aunque se envíe el ID de un rol interno
   await execute(mutations,"RegistrarseComoCliente",{versionPrivacidad:"2026-10-25",
    rolId:`00000000-0000-4000-8000-00000000000${indice}`,
    rut:`20.000.00${indice}-${dv}`,nombre:"Registro",apellido:"Prueba",email:`${nuevo}@example.test`,tipoCliente:"PARTICULAR",
-  },{uid:nuevo});
+  },{uid:nuevo,email:`${nuevo}@example.test`});
   const data=await execute(queries,"GetMiPerfil",{},{uid:nuevo});
   assert.equal(data.usuario.rol.nombre,"cliente");
  }
@@ -136,5 +136,17 @@ await check("activos e historial filtran todos los registros antes de paginar, s
  assert.equal(historial.total[0]._count,5);assert.equal(historial.comandas.length,2);assert(historial.comandas.every(c=>estadosHistorial.includes(c.estado)));
  const incompatible=await listar(verified,{estados:estadosActivos,estado:"ENTREGADA"});assert.equal(incompatible.comandas.length,0);
  const otro=await listar({uid:"otro-cliente",email:"otro@example.test",verified:true},{estados:estadosActivos});assert.deepEqual(otro.comandas.map(c=>c.numeroComanda),["ELCOBRE-aa03"]);
+});
+await check("un correo ajeno no puede reservarse durante el registro de otra identidad", async () => {
+ const mutations=await readFile("dataconnect/example/mutations.gql","utf8");
+ const a={uid:"registro-correo-a",email:"registro-a@example.test"};
+ const b={uid:"registro-correo-b",email:"registro-b@example.test"};
+ const datos={versionPrivacidad:"2026-10-25",rut:"20.000.010-2",nombre:"Prueba",apellido:"Correo",email:b.email,tipoCliente:"PARTICULAR"};
+ await assert.rejects(execute(mutations,"RegistrarseComoCliente",datos,a),/correo debe coincidir/);
+ const rechazado=await execute('query Perfil($id:String!){usuario(id:$id){id}}',"Perfil",{id:a.uid});
+ assert.equal(rechazado.usuario,null);
+ await execute(mutations,"RegistrarseComoCliente",{...datos,rut:"20.000.011-0"},b);
+ const perfil=await execute(await readFile("dataconnect/example/queries.gql","utf8"),"GetMiPerfil",{},b);
+ assert.equal(perfil.usuario.email,b.email);
 });
 console.log(`${checks} pruebas de integración del portal completadas.`);

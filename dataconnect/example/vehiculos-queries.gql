@@ -70,7 +70,7 @@ query GetFlotaVehiculos($limit: Int = 200, $offset: Int = 0) @auth(level: USER) 
       kilometraje
       observaciones
       registradoEn
-      fotos: fotoInspeccionVehiculos_on_inspeccion(orderBy: [{ orden: ASC }]) {
+      fotos: fotoInspeccionVehiculos_on_inspeccion(where: { guardada: { eq: true } }, orderBy: [{ orden: ASC }]) {
         id
         rutaStorage
         descripcion
@@ -143,7 +143,7 @@ query GetHistorialVehiculos(
       kilometraje
       observaciones
       registradoEn
-      fotos: fotoInspeccionVehiculos_on_inspeccion(orderBy: [{ orden: ASC }]) {
+      fotos: fotoInspeccionVehiculos_on_inspeccion(where: { guardada: { eq: true } }, orderBy: [{ orden: ASC }]) {
         id
         rutaStorage
         descripcion

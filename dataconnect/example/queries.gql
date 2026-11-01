@@ -191,7 +191,7 @@ query GetMisSalidasVehiculo @auth(level: USER) {
       kilometraje
       observaciones
       registradoEn
-      fotoInspeccionVehiculos_on_inspeccion(orderBy: [{ orden: ASC }]) {
+      fotoInspeccionVehiculos_on_inspeccion(where: { guardada: { eq: true } }, orderBy: [{ orden: ASC }]) {
         id
         rutaStorage
         descripcion

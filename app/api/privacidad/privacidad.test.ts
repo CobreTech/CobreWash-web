@@ -8,8 +8,8 @@ import { POST as gestionar } from "./gestion/[id]/route";
 import { hash } from "@/lib/privacidad/servidor";
 const id = "10000000-0000-4000-8000-000000000001", secreto = "c".repeat(64);
 const body = { id, secreto, nombre: "Titular", email: "titular@example.test", derecho: "ACCESO", detalle: "" };
-const request = (datos: unknown, bearer = "") => new Request("https://web.test/api/privacidad", { method: "POST", headers: { "Content-Type": "application/json", ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) }, body: JSON.stringify(datos) });
-beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("CONTACT_RATE_LIMIT_SALT", "s".repeat(32)); m.verify.mockResolvedValue({ uid: "admin-real", sub: "admin-real" }); m.query.mockResolvedValue({ data: {} }); m.mutation.mockResolvedValue({ data: {} }); });
+const request = (datos: unknown, bearer = "") => new Request("https://web.test/api/privacidad", { method: "POST", headers: { "Content-Type": "application/json", "x-vercel-forwarded-for": "203.0.113.10", ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) }, body: JSON.stringify(datos) });
+beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("VERCEL", "1"); vi.stubEnv("CONTACT_RATE_LIMIT_SALT", "s".repeat(32)); m.verify.mockResolvedValue({ uid: "admin-real", sub: "admin-real" }); m.query.mockResolvedValue({ data: {} }); m.mutation.mockResolvedValue({ data: {} }); });
 afterEach(() => vi.unstubAllEnvs());
 it("recepción idempotente tras perderse la respuesta: un solo registro y sin almacenar el secreto", async () => {
   let guardada: unknown = null;
@@ -50,4 +50,9 @@ it("normaliza UUID de la bandeja para que la gestión acepte comprobantes serial
   m.query.mockImplementation(async op => ({ data: op === "AutorizarGestionPrivacidad" ? {} : { solicitudDerechos: [{ id: id.replaceAll("-", ""), estado: "RECIBIDA" }], total: [{ _count: 1 }] } }));
   const r = await listar(new Request("https://web.test", { headers: { Authorization: "Bearer token" } }));
   expect(r.status).toBe(200); expect((await r.json()).solicitudDerechos[0].id).toBe(id);
+});
+it("no recibe solicitudes nuevas con un origen no verificado", async () => {
+  const r = new Request("https://web.test/api/privacidad/solicitudes", { method: "POST", headers: { "x-forwarded-for": "198.51.100.1" }, body: JSON.stringify(body) });
+  expect((await recibir(r)).status).toBe(503);
+  expect(m.mutation).not.toHaveBeenCalled();
 });

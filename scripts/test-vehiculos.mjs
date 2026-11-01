@@ -37,6 +37,12 @@ async function check(name, fn) {
   console.log("OK " + name);
 }
 
+// Simula las dos fases de la API; una confirmación sin reserva no crea filas.
+async function guardarEvidencia(variables) {
+  await execute(evidencias, "RegistrarEvidenciaGuardada", { ...variables, confirmar: false });
+  return execute(evidencias, "RegistrarEvidenciaGuardada", { ...variables, confirmar: true });
+}
+
 await execute(await readFile("dataconnect/seed_data.gql", "utf8"), "SeedProduccion");
 
 const patente = "HLRT-" + String(Math.floor(10 + Math.random() * 89));
@@ -157,7 +163,7 @@ await check("RF-VE02: registra salida con inspección inicial, adjunta fotos y b
     },
     "test-admin",
   ));
-  await execute(evidencias, "RegistrarEvidenciaGuardada", {
+  await guardarEvidencia({
     id: randomUUID(), inspeccionId: inspeccionAntesId,
     rutaStorage: "fixture-servidor/antes.jpg", descripcion: "Vista frontal", orden: 1,
   });
@@ -227,9 +233,7 @@ await check("RF-VE03: valida odómetro no decreciente al regresar y cierra la sa
   inspeccionDespuesId = retorno.inspeccion.id;
   assert.ok(inspeccionDespuesId);
 
-  await execute(
-    evidencias,
-    "RegistrarEvidenciaGuardada",
+  await guardarEvidencia(
     {
       id: randomUUID(),
       inspeccionId: inspeccionDespuesId,

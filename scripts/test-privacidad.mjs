@@ -52,7 +52,7 @@ await check("se preserva la trazabilidad y el cierre es definitivo", async () =>
   assert.equal(d.solicitudDerechos[0].estado, "RESPONDIDA");
 });
 await check("el alta pública exige y guarda versión y fecha de autorización", async () => {
-  const vars = { versionPrivacidad: "obsoleta", rut: "12.345.678-5", nombre: "Nuevo", apellido: "Cliente", email: "nuevo@example.test", tipoCliente: "PARTICULAR" };
+  const vars = { versionPrivacidad: "obsoleta", rut: "12.345.678-5", nombre: "Nuevo", apellido: "Cliente", email: "nuevo-privacidad@example.test", tipoCliente: "PARTICULAR" };
   await assert.rejects(execute(registro, "RegistrarseComoCliente", vars, "nuevo-privacidad"));
   await execute(registro, "RegistrarseComoCliente", { ...vars, versionPrivacidad: "2026-10-25" }, "nuevo-privacidad");
   const d = await execute('query Verificar { usuario(id:"nuevo-privacidad") { versionPrivacidad autorizadaEn } }', "Verificar");
