@@ -92,3 +92,7 @@ AGENTS.md
 skills-lock.json
 .aider*
 .artifacts/
+
+# Mantener solo el README principal; las guías Markdown generadas no se versionan.
+*.md
+!/README.md
