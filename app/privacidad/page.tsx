@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle, UserRound, Database, FileCheck2, Building2, MessageSquareText, LockKeyhole, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { AlertCircle, UserRound, Database, FileCheck2, Building2, MessageSquareText, LockKeyhole, ArrowUpRight } from "lucide-react";
 import PaginaLegal, { SeccionLegal } from "@/components/privacidad/PaginaLegal";
 import { configuracionLegal } from "@/lib/privacidad/configuracion";
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- La regresión verifica las entradas CommonJS de Firebase Admin. */
 // Ejecutar con --no-experimental-require-module, como el runtime que fallaba.
 const assert = require('node:assert/strict');
 const { generateKeyPairSync, sign, verify } = require('node:crypto');
