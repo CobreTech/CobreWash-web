@@ -1,4 +1,4 @@
-export const VERSION_PRIVACIDAD = "2026-10-25";
+export const VERSION_PRIVACIDAD = "2026-11-01";
 export const DERECHOS = ["ACCESO", "RECTIFICACION", "SUPRESION", "OPOSICION", "BLOQUEO", "PORTABILIDAD", "REVOCACION"] as const;
 export type Derecho = typeof DERECHOS[number];
 export const ETIQUETAS_DERECHOS: Record<Derecho, string> = {
@@ -33,8 +33,18 @@ export function validarGestionDerecho(body: unknown) {
   const b = body as Record<string, unknown> | null;
   if (!b || !["VERIFICACION", "EN_GESTION", "RESPONDIDA"].includes(String(b.estado))) throw new Error("Estado inválido.");
   const campo = (key: string, max: number) => typeof b[key] === "string" && (b[key] as string).trim().length <= max ? (b[key] as string).trim() : "";
-  const nota = campo("nota", 4000), evidenciaIdentidad = campo("evidenciaIdentidad", 500), evidenciaEnvio = campo("evidenciaEnvio", 500);
+  let nota = campo("nota", 4000);
+  const evidenciaIdentidad = campo("evidenciaIdentidad", 500), evidenciaEnvio = campo("evidenciaEnvio", 500);
   if (!nota) throw new Error("Registra la actuación o respuesta y su fundamento.");
   if (b.estado === "RESPONDIDA" && (!evidenciaIdentidad || !evidenciaEnvio)) throw new Error("Antes de cerrar, registra cómo verificaste la identidad y la evidencia del envío de la respuesta.");
+  if (b.estado === "RESPONDIDA") {
+    const resultado = campo("resultado", 20), ejecucion = campo("evidenciaEjecucion", 500), destinatarios = campo("comunicacionDestinatarios", 500);
+    if (!["ACOGIDA", "PARCIAL", "DENEGADA"].includes(resultado) || !ejecucion || !destinatarios) {
+      throw new Error("Registra el resultado, las medidas ejecutadas o la causa de rechazo y la comunicación a destinatarios (o su no procedencia).");
+    }
+    if (resultado !== "ACOGIDA" && b.reclamacionInformada !== true) throw new Error("Confirma que la respuesta enviada explica la vía y el plazo de reclamación aplicable.");
+    nota = `Resultado: ${resultado}\nEjecución o motivo de no ejecución: ${ejecucion}\nDestinatarios: ${destinatarios}\nReclamación informada: ${resultado === "ACOGIDA" ? "No hay denegación" : "Sí"}\nRespuesta íntegra o referencia protegida a su contenido:\n${nota}`;
+    if (nota.length > 4000) throw new Error("La actuación completa supera 4000 caracteres. Usa una referencia protegida para la respuesta extensa.");
+  }
   return { estado: b.estado as "VERIFICACION" | "EN_GESTION" | "RESPONDIDA", nota, evidenciaIdentidad, evidenciaEnvio };
 }

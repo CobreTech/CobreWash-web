@@ -6,6 +6,44 @@ import { DERECHOS, ETIQUETAS_DERECHOS, type Derecho } from "@/lib/privacidad/mod
 const campo = "w-full rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-3 text-sm font-medium normal-case tracking-normal text-stone-900 placeholder:text-stone-400 transition-colors focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/10";
 const etiqueta = "block space-y-2 text-xs font-bold uppercase tracking-wider text-stone-600";
 const boton = "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-3.5 text-sm font-bold text-white shadow-premium transition-all hover:shadow-lg disabled:opacity-50";
+const GUIA_DERECHOS: Record<Derecho, { articulo: string; plazo: string; descripcion: string }> = {
+  ACCESO: {
+    articulo: "Art. 5° Ley 21.719",
+    plazo: "Plazo legal: máx. 30 días corridos",
+    descripcion: "Solicita confirmación sobre si tratamos tus datos, categorías almacenadas, finalidades y destinatarios.",
+  },
+  RECTIFICACION: {
+    articulo: "Art. 6° Ley 21.719",
+    plazo: "Plazo legal: máx. 30 días corridos",
+    descripcion: "Solicita la modificación de datos erróneos, inexactos, desactualizados o incompletos, acompañando los antecedentes sustentatorios.",
+  },
+  SUPRESION: {
+    articulo: "Art. 7° Ley 21.719",
+    plazo: "Plazo legal: máx. 30 días corridos",
+    descripcion: "Pide el borrado o anonimización de tus datos si ya no son necesarios para los fines del servicio o si revocaste el consentimiento.",
+  },
+  OPOSICION: {
+    articulo: "Art. 8° Ley 21.719",
+    plazo: "Plazo legal: máx. 30 días corridos",
+    descripcion: "Oponte al tratamiento de tus datos fundado en interés legítimo por una situación particular, o al envío de comunicaciones comerciales.",
+  },
+  BLOQUEO: {
+    articulo: "Art. 8° ter y 11 Ley 21.719",
+    plazo: "Plazo urgente prioritario: máx. 2 días hábiles",
+    descripcion: "Medida cautelar de suspensión temporal del tratamiento mientras se resuelve una impugnación o para conservación judicial.",
+  },
+  PORTABILIDAD: {
+    articulo: "Art. 9° Ley 21.719",
+    plazo: "Plazo legal: máx. 30 días corridos",
+    descripcion: "Solicita una copia de tus datos en formato digital estructurado y de uso común (JSON) para transferirlos a otro servicio.",
+  },
+  REVOCACION: {
+    articulo: "Art. 12 Ley 21.719",
+    plazo: "Plazo legal: máx. 30 días corridos",
+    descripcion: "Revoca la autorización otorgada para tratamientos no esenciales (ej. promociones directas), sin efectos retroactivos.",
+  },
+};
+
 type Recibo = { id: string; secreto: string; recibidoEn: string; estado: string; objetivoAtencion: string };
 export default function FormularioDerechos() {
   const [nombre, setNombre] = useState(""); const [email, setEmail] = useState("");
@@ -47,7 +85,19 @@ export default function FormularioDerechos() {
           <form onSubmit={enviar} className="space-y-5">
             <label className={etiqueta}><span>Nombre del titular o representante</span><input className={campo} required maxLength={160} autoComplete="name" placeholder="Nombre completo" value={nombre} onChange={e => setNombre(e.target.value)} /></label>
             <label className={etiqueta}><span>Correo para coordinar la respuesta</span><input className={campo} required type="email" maxLength={120} autoComplete="email" placeholder="nombre@correo.cl" value={email} onChange={e => setEmail(e.target.value)} /></label>
-            <div className="space-y-2"><p className="text-xs font-bold uppercase tracking-wider text-stone-600">Solicitud</p><GlassSelect ariaLabel="Solicitud sobre tus datos personales" value={derecho} onChange={value => setDerecho(value as Derecho)} options={DERECHOS.map(d => ({ value: d, label: ETIQUETAS_DERECHOS[d] }))} /></div>
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-stone-600">Solicitud</p>
+              <GlassSelect ariaLabel="Solicitud sobre tus datos personales" value={derecho} onChange={value => setDerecho(value as Derecho)} options={DERECHOS.map(d => ({ value: d, label: ETIQUETAS_DERECHOS[d] }))} />
+              {GUIA_DERECHOS[derecho] && (
+                <div className="rounded-xl border border-brand-200/80 bg-brand-50/60 p-3.5 text-xs text-stone-700">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 font-bold text-brand-900">
+                    <span>{GUIA_DERECHOS[derecho].articulo}</span>
+                    <span className="rounded-md bg-brand-100/80 px-2 py-0.5 text-[11px] font-semibold text-brand-800">{GUIA_DERECHOS[derecho].plazo}</span>
+                  </div>
+                  <p className="mt-1.5 leading-relaxed text-stone-600">{GUIA_DERECHOS[derecho].descripcion}</p>
+                </div>
+              )}
+            </div>
             <label className={etiqueta}><span>Detalle {derecho === "ACCESO" ? "(opcional)" : "y fundamento"}</span><textarea className={campo} rows={5} required={derecho !== "ACCESO"} maxLength={3000} placeholder="Describe tu solicitud. Si representas a otra persona, indícalo aquí." value={detalle} onChange={e => setDetalle(e.target.value)} /></label>
             <p className="rounded-xl bg-stone-50/80 p-3 text-xs leading-relaxed text-stone-500">Utilizamos estos datos para tramitar tu petición, verificar identidad y responderte. No adjuntes documentos, claves, datos bancarios ni información sensible.</p>
             <button disabled={ocupado} className={boton}>{ocupado ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{ocupado ? "Enviando…" : "Presentar solicitud"}</button>

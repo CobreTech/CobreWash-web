@@ -2257,7 +2257,7 @@ export interface RegistrarEntradaInventarioVariables {
 }
 
 export interface RegistrarEvidenciaGuardadaData {
-  fotoInspeccionVehiculo_upsert: FotoInspeccionVehiculo_Key;
+  fotoInspeccionVehiculo_upsert?: FotoInspeccionVehiculo_Key | null;
 }
 
 export interface RegistrarEvidenciaGuardadaVariables {
@@ -2266,6 +2266,7 @@ export interface RegistrarEvidenciaGuardadaVariables {
   rutaStorage: string;
   descripcion?: string | null;
   orden: number;
+  confirmar?: boolean;
 }
 
 export interface RegistrarIncidenciaComandaData {

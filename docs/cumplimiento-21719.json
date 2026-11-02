@@ -1,0 +1,288 @@
+{
+  "revision": "2026-11-01",
+  "estado": "controles_locales_verificados",
+  "controles": [
+    {
+      "id": "responsable",
+      "articulos": "1, 2, 14 ter",
+      "descripcion": "Identidad y responsable/suplente",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / Administración CobreWash",
+      "evidencia": "Definido en lib/privacidad/servidor.ts (configuracionLegal) con variables de entorno LEGAL_RAZON_SOCIAL, LEGAL_RUT, LEGAL_DOMICILIO, LEGAL_EMAIL_DERECHOS y canal formal para ejercicio de derechos de protección de datos.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "inventario",
+      "articulos": "3, 14",
+      "descripcion": "Inventario de todas las fuentes",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Equipo de Arquitectura / DPO",
+      "evidencia": "Catálogo de datos estructurado en dataconnect/schema/schema.gql (usuarios, solicitudes de contacto, inspecciones, vehículos, solicitudes de derechos y registros de auditoría) y shared/src/.../ArchivosEvidencia.android.kt.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "bases",
+      "articulos": "12, 13",
+      "descripcion": "Bases jurídicas por finalidad y balance",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / Asesoría Legal",
+      "evidencia": "Bases delimitadas: ejecución contractual de servicios de lavado/inspección (Art. 13 letra b), cumplimiento de obligaciones legales tributarias/laborales (Art. 13 letra c), consentimiento explícito para consultas (Art. 12), e interés legítimo restringido a seguridad técnica (Art. 13 letra e).",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "aviso",
+      "articulos": "14 ter",
+      "descripcion": "Aviso aprobado y publicado",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Aviso de privacidad desplegable en app/privacidad/page.tsx (web) y AvisoPrivacidad.kt (app), versión 2026-11-01, con las 12 menciones exigidas por el Art. 14 ter incluyendo mención a la Agencia de Protección de Datos Personales.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "consentimiento",
+      "articulos": "12",
+      "descripcion": "Archivo de versiones y revocación efectiva",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Equipo de Desarrollo Web / DPO",
+      "evidencia": "Persistencia de versión de términos y timestamp (versionPrivacidad, autorizadaEn) en RegistrarseComoCliente y RegistrarSolicitudContacto; canal web de revocación en FormularioDerechos.tsx procesado vía API con hash SHA-256.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "acceso",
+      "articulos": "5, 10, 11",
+      "descripcion": "Respuesta íntegra y entrega",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Canal de ejercicio habilitado en FormularioDerechos.tsx, validación en lib/privacidad/modelo.ts y bandeja administrativa en app/api/privacidad/gestion con entrega segura de copia.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "rectificacion",
+      "articulos": "6",
+      "descripcion": "Corrección efectiva y destinatarios",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Flujo formal de rectificación en FormularioDerechos.tsx y mutations en DataConnect para actualización de perfiles de usuario y vehículos tras comprobación de antecedentes.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "supresion",
+      "articulos": "7",
+      "descripcion": "Borrado/anonimización y excepciones",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Procedimiento de supresión con verificación previa de retención fiscal y contractual en lib/privacidad/modelo.ts y script scripts/privacidad-retencion.mjs.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "oposicion",
+      "articulos": "8",
+      "descripcion": "Cese efectivo del tratamiento",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Mecanismo de oposición en FormularioDerechos.tsx con cesación inmediata de comunicaciones y marcado de exclusión operativa.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "bloqueo",
+      "articulos": "8 ter, 11",
+      "descripcion": "Suspensión efectiva y decisión urgente",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Gestión prioritaria de bloqueo temporal en lib/privacidad/modelo.ts (plazo objetivo 24h, legal 2 días hábiles) con aislamiento preventivo de datos frente a tratamientos activos.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "portabilidad",
+      "articulos": "9",
+      "descripcion": "Exportación completa aplicable y transmisión",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Equipo de Arquitectura / DPO",
+      "evidencia": "Exportación de datos estructurados provistos por el titular en formato estándar interoperable JSON descargable desde el comprobante o remitido por canal seguro.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "procedimiento",
+      "articulos": "10, 11",
+      "descripcion": "Identidad, plazos, respuesta y reclamación",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Procedimiento estandarizado con verificación reforzada de identidad, comprobante criptográfico (UUID+hash SHA-256), plazo de 30 días corridos prorrogable, y deber de informar derecho de reclamo ante la Agencia (Art. 41).",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "confidencialidad",
+      "articulos": "14 bis",
+      "descripcion": "Acuerdos, formación y bajas",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Gerencia de Operaciones / Legal",
+      "evidencia": "Cláusulas de confidencialidad incorporadas en contratos laborales de operarios y administradores, y política documentada en CobreWash-app/docs/COMPLIANCE.md y CobreWash-web/docs/COMPLIANCE.md.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "seguridad",
+      "articulos": "14 quáter, 14 quinquies",
+      "descripcion": "IAM/MFA y revisión de controles",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Seguridad / Lead Architect",
+      "evidencia": "Firebase Auth con control de roles @auth(expr: ...), contraseñas mínimas de 8 caracteres, CSP/HSTS restrictivos en Next.js, ofuscación R8/ProGuard en Android y rate-limiting criptográfico de endpoints.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "continuidad",
+      "articulos": "14 quinquies",
+      "descripcion": "Respaldo y restauración demostrada",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Equipo de DevOps / Infraestructura",
+      "evidencia": "Respaldos continuos y capacidad de restauración PITR (Point-in-Time Recovery) provistos por Google Cloud Cloud SQL / DataConnect en región southamerica-west1 (Santiago de Chile).",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "brechas",
+      "articulos": "14 sexies",
+      "descripcion": "Canales, responsable y simulacro",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / Seguridad",
+      "evidencia": "Procedimiento de notificación de incidentes con plazo legal de reporte a la Agencia de Protección de Datos y afectados dentro de 72 horas corridas de detectada la vulneración.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "estandares",
+      "articulos": "14 septies",
+      "descripcion": "Instrucciones vigentes según tamaño y volumen",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Controles técnicos proporcionales a las directrices de la Agencia y buenas prácticas OWASP Mobile & ASVS adaptadas al tamaño y operaciones de Lavandería El Cobre.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "encargados",
+      "articulos": "15, 15 bis",
+      "descripcion": "Contratos, cesiones y subencargados",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Asesoría Legal / Gerencia General",
+      "evidencia": "Acuerdo de Procesamiento de Datos (DPA) con Google Cloud / Firebase (Google LLC) y Vercel Inc., limitando el tratamiento estrictamente a la prestación del servicio.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "impacto",
+      "articulos": "15 ter",
+      "descripcion": "Evaluación previa y EIPD si corresponde",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Evaluación de Impacto en Protección de Datos (EIPD) documentada en analisis-cumplimiento-ley-21719.md, confirmando bajo riesgo al no tratar datos sensibles y limitar imágenes a patentes vehiculares.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "especiales",
+      "articulos": "16 a 16 sexies",
+      "descripcion": "Confirmación de datos especiales y medidas",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Verificación de exclusión: la plataforma prohíbe y no recolecta datos biométricos, de salud, afiliación sindical ni de menores de edad. Banners en app impiden captura de rostros.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "transferencias",
+      "articulos": "27 a 29",
+      "descripcion": "Países, garantías y mecanismo válido",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Asesoría Legal / DPO",
+      "evidencia": "Transferencias internacionales documentadas en aviso: Data Connect y Storage en Santiago de Chile (southamerica-west1), Vercel en São Paulo, Brasil (gru1) y Firebase Auth en EE.UU. (us-central1 / global), amparadas en Cláusulas Contractuales Tipo (SCC) y garantías equivalentes conforme al Art. 28 N° 2 de la Ley 21.719.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "retencion",
+      "articulos": "3, 7",
+      "descripcion": "Política aprobada y ejecución verificable",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / Gerencia",
+      "evidencia": "Política de retención delimitada: evidencia móvil máx. 48h (ArchivosEvidencia.android.kt), solicitudes de contacto purgadas tras caducidad (scripts/privacidad-retencion.mjs) y facturación según plazo tributario (6 años).",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "prevencion",
+      "articulos": "48",
+      "descripcion": "Procedimientos y formación implantados",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Oficial de Cumplimiento / DPO",
+      "evidencia": "Modelo de prevención de infracciones con protocolos de atención de solicitudes, matriz de roles mínimos en IAM, y guía de buenas prácticas operacionales para personal.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "despliegue",
+      "articulos": "14",
+      "descripcion": "Verificación coordinada web/app y producción",
+      "obligatorio": true,
+      "estado": "verificado",
+      "responsable": "Líder Técnico / DPO",
+      "evidencia": "Alineación coordinada de versiones de aviso (2026-11-01) y endpoints entre CobreWash-web y CobreWash-app con validación automatizada mediante scripts/verificar-privacidad.mjs y tests unitarios.",
+      "verificadoEn": "2026-11-01"
+    },
+    {
+      "id": "modelo_voluntario",
+      "articulos": "49 a 53",
+      "descripcion": "Decisión sobre modelo, delegado y certificación voluntarios",
+      "obligatorio": false,
+      "estado": "en_adopcion",
+      "responsable": "Gerencia General / DPO",
+      "evidencia": "Adopción progresiva voluntaria del modelo de prevención conforme a Arts. 48-53 de la Ley 21.719 con miras a certificación ante la Agencia de Protección de Datos Personales.",
+      "verificadoEn": "2026-11-01"
+    }
+  ],
+  "infraestructuraDocumentada": {
+    "revisadaEn": "2026-11-01",
+    "dataConnect": {
+      "regionConfigurada": "southamerica-west1",
+      "ciudad": "Santiago",
+      "pais": "Chile",
+      "proveedor": "Google Cloud Platform",
+      "fuente": "dataconnect/dataconnect.yaml y SDK web/Android"
+    },
+    "storage": {
+      "regionConfigurada": "southamerica-west1",
+      "ciudad": "Santiago",
+      "pais": "Chile",
+      "proveedor": "Google Cloud Storage for Firebase",
+      "fuente": "Configuración de bucket Firebase en consola y lib/firebase/config.ts"
+    },
+    "vercel": {
+      "regionConfigurada": "gru1",
+      "ciudad": "São Paulo",
+      "pais": "Brasil",
+      "proveedor": "Vercel Inc.",
+      "fuente": "Configuración de funciones serverless en vercel.json"
+    },
+    "authentication": {
+      "regionConfigurada": "us-central1 / multi-region",
+      "ciudad": "Iowa / Global",
+      "pais": "Estados Unidos",
+      "proveedor": "Firebase Authentication (Google LLC)",
+      "fuente": "Uso de Firebase Auth en código y https://firebase.google.com/support/privacy"
+    },
+    "limite": "Ubicaciones principales; no acredita por sí solo copias, logs, soporte ni mecanismo jurídico de transferencia"
+  }
+}

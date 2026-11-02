@@ -307,6 +307,24 @@ await check("reportes concurrentes no sobrescriben al autor confirmado", async (
   assert.equal(c.comandaEtapas_on_comanda[0].operarioId, users[resultados.findIndex(r => r.status === "fulfilled")]);
   assert.equal(c.comandaHistorialEstados_on_comanda.length, 2);
 });
+await check("un avance concurrente no puede reabrir una cancelación confirmada", async () => {
+  const v = variables();
+  await execute(mutation, "CrearComandaConFlujo", v, "test-recepcion");
+  const [avance, cancelacion] = await Promise.allSettled([
+    execute(production, "CompletarEtapaComanda", { comandaId: v.id, etapaId: etapaIds[0], orden: 1, estadoComanda: "EN_PROCESO" }, "test-operario"),
+    execute(legacy, "AnularComanda", { id: v.id, motivoAnulacion: "Cancelación de prueba" }, "test-recepcion"),
+  ]);
+  const c = await read(v.id);
+  if (cancelacion.status === "fulfilled") {
+    assert.equal(c.estado, "ANULADA");
+    const antes = await read(v.id);
+    await assert.rejects(execute(production, "CompletarEtapaComanda", { comandaId: v.id, etapaId: etapaIds[0], orden: 1, estadoComanda: "EN_PROCESO" }, "test-operario"));
+    assert.deepEqual(await read(v.id), antes);
+    if (avance.status === "rejected") assert(c.comandaEtapas_on_comanda.every(e => e.estado === "PENDIENTE"));
+  } else {
+    assert.equal(avance.status, "fulfilled"); assert.equal(c.estado, "EN_PROCESO");
+  }
+});
 await check("entrega histórica sin flujo no inventa etapas ni responsables anteriores", async () => {
   const v = variables();
   await execute(`mutation Old($id:UUID!,$numero:String!,$clienteId:UUID!) { comanda_insert(data:{id:$id,numeroComanda:$numero,clienteId:$clienteId,estado:FINALIZADA}) }`, "Old", {id:v.id,numero:v.numeroComanda,clienteId});
@@ -520,5 +538,30 @@ await check("límites configurables, permisos, validación y copia estable por c
   }
   const v = variables(); await execute(mutation, "CrearComandaConFlujo", v, "test-admin");
   assert.deepEqual((await read(v.id)).comandaEtapas_on_comanda.map(e => e.tiempoEstimadoMin), [20, 120, 45, 90, 2880]);
+});
+await check("los códigos ELCOBRE nuevos se guardan en mayúsculas y se consultan sin distinguir capitalización", async () => {
+  const v = { ...variables(), numeroComanda: "elcobre-a1b2" };
+  await execute(mutation, "CrearComandaConFlujo", v, "test-recepcion");
+  for (const numeroComanda of ["ELCOBRE-A1B2", "elcobre-a1b2", "ElCoBrE-a1B2"]) {
+    const d = await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda }, null);
+    assert.equal(d.comanda.numeroComanda, "ELCOBRE-A1B2");
+  }
+  await assert.rejects(execute(mutation, "CrearComandaConFlujo", { ...v, id: randomUUID(), numeroComanda: "ELCOBRE-A1B2" }, "test-recepcion"));
+  const old = await execute(legacy, "CrearComanda", { numeroComanda: "elcobre-c3d4", clienteId, valorTotal: 0 }, "test-recepcion");
+  assert(old.comanda_insert.id);
+  assert.equal((await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda: "elcobre-c3d4" }, null)).comanda.numeroComanda, "ELCOBRE-C3D4");
+});
+await check("ambas altas exigen letras y números, impiden comodines y respetan códigos históricos", async () => {
+  for (const numeroComanda of ["ELCOBRE-ABCD", "ELCOBRE-1234", "ELCOBRE-A_B1", "ELCOBRE-%", "ELCOBRE-A1B22"]) {
+    const v = { ...variables(), numeroComanda };
+    await assert.rejects(execute(mutation, "CrearComandaConFlujo", v, "test-recepcion"));
+    assert.equal(await read(v.id), null);
+    await assert.rejects(execute(legacy, "CrearComanda", { numeroComanda, clienteId, valorTotal: 0 }, "test-recepcion"));
+  }
+  await execute('mutation Historico($cliente:UUID!){comanda_insert(data:{numeroComanda:"ELCOBRE-tqnj",clienteId:$cliente})}', "Historico", { cliente: clienteId });
+  assert.equal((await execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda: "elcobre-TQNJ" }, null)).comanda.numeroComanda, "ELCOBRE-tqnj");
+  for (const numeroComanda of ["%", "ELCOBRE-____", "ELCOBRE-A1%_"]) await assert.rejects(execute(trackingQueries, "GetSeguimientoPublicoPorNumero", { numeroComanda }, null));
+  await execute('mutation Historico($cliente:UUID!){comanda_insert(data:{numeroComanda:"ELCOBRE-z8y7",clienteId:$cliente})}', "Historico", { cliente: clienteId });
+  await assert.rejects(execute(mutation, "CrearComandaConFlujo", { ...variables(), numeroComanda: "ELCOBRE-Z8Y7" }, "test-recepcion"));
 });
 console.log(count + " escenarios de integración aprobados.");

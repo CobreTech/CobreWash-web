@@ -33,6 +33,7 @@ await check('ningún cliente puede insertar una ruta que no pasó por la API',as
 });
 await check('los adjuntos de la API son idempotentes y un ID no se reasigna a otra inspección',async()=>{
  const args={id:randomUUID(),inspeccionId,rutaStorage:`vehiculos/inspecciones/${inspeccionId}/${randomUUID()}.jpg`,orden:1,descripcion:null};
+ await execute(evidencias,'RegistrarEvidenciaGuardada',{...args,confirmar:false});
  await execute(evidencias,'RegistrarEvidenciaGuardada',args);await execute(evidencias,'RegistrarEvidenciaGuardada',args);
  await assert.rejects(execute(evidencias,'RegistrarEvidenciaGuardada',{...args,inspeccionId:randomUUID()}));
 });
@@ -46,7 +47,7 @@ await check('solo se confirma una salida concurrente para un vehículo',async()=
  assert.equal(result.filter(r=>r.status==='fulfilled').length,1);
 });
 await check('la bandeja es privada, limita solicitudes y preserva estados',async()=>{
- const base={versionPrivacidad:'2026-10-25',nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'a'.repeat(64),limiteId:'test-'+randomUUID()};
+ const base={versionPrivacidad:'2026-11-01',nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'a'.repeat(64),limiteId:'test-'+randomUUID()};
  await execute(contactos,'PrepararLimiteContacto',{id:base.limiteId});
  let id;
  for(let i=0;i<5;i++){id=randomUUID();await execute(contactos,'RegistrarSolicitudContacto',{...base,id});}
@@ -57,7 +58,7 @@ await check('la bandeja es privada, limita solicitudes y preserva estados',async
  for(const user of [null,'test-admin'])await assert.rejects(execute(contactos,'RegistrarSolicitudContacto',{...base,id:randomUUID()},user));
 });
 await check('el contador de contactos también limita peticiones simultáneas',async()=>{
- const base={versionPrivacidad:'2026-10-25',nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'b'.repeat(64),limiteId:'concurrente-'+randomUUID()};
+ const base={versionPrivacidad:'2026-11-01',nombre:'Prueba',email:'prueba@example.test',telefono:'+56912345678',servicio:'otro',mensaje:'Cotización',hashContenido:'b'.repeat(64),limiteId:'concurrente-'+randomUUID()};
  await execute(contactos,'PrepararLimiteContacto',{id:base.limiteId});
  const resultados=await Promise.allSettled(Array.from({length:8},()=>execute(contactos,'RegistrarSolicitudContacto',{...base,id:randomUUID()})));
  assert.equal(resultados.filter(r=>r.status==='fulfilled').length,5);
@@ -65,14 +66,74 @@ await check('el contador de contactos también limita peticiones simultáneas',a
 await check('registro conserva RUT y ficha anterior solo se vincula con correo verificado coincidente',async()=>{
  const cliente=randomUUID(); const rut='11.111.111-1';
  await execute('mutation Cliente($id:UUID!,$rut:String!){cliente_insert(data:{id:$id,rut:$rut,nombre:"Anterior",email:"anterior@example.test"})}','Cliente',{id:cliente,rut});
- const args={versionPrivacidad:'2026-10-25',rut,nombre:'Registro',apellido:'Prueba',email:'anterior@example.test',tipoCliente:'PARTICULAR',crearFicha:false};
- await execute(registro,'RegistrarseComoCliente',args,'nuevo-con-anterior');
+ const args={versionPrivacidad:'2026-11-01',rut,nombre:'Registro',apellido:'Prueba',email:'anterior@example.test',tipoCliente:'PARTICULAR',crearFicha:false};
+ await execute(registro,'RegistrarseComoCliente',args,{uid:'nuevo-con-anterior',email:args.email});
  const usuario={uid:'nuevo-con-anterior',email:'anterior@example.test',verified:false};
  await assert.rejects(execute(ficha,'VincularMiFichaVerificada',{},usuario));
  await assert.rejects(execute(ficha,'VincularMiFichaVerificada',{},{...usuario,verified:true,email:'otra@example.test'}));
  await execute(ficha,'VincularMiFichaVerificada',{},{...usuario,verified:true});
  const d=await execute('query Cliente($rut:String!){clientes(where:{rut:{eq:$rut}}){id usuarioId}}','Cliente',{rut});assert.equal(d.clientes.length,1);assert.equal(d.clientes[0].usuarioId,usuario.uid);
- await execute(registro,'RegistrarseComoCliente',{...args,rut:'12.345.678-5',email:'nuevo@example.test',crearFicha:true},'cliente-nuevo-rut');
+ await execute(registro,'RegistrarseComoCliente',{...args,rut:'12.345.678-5',email:'nuevo@example.test',crearFicha:true},{uid:'cliente-nuevo-rut',email:'nuevo@example.test'});
  const nueva=await execute('query Ficha($rut:String!){cliente(first:{where:{rut:{eq:$rut}}}){usuarioId}}','Ficha',{rut:'12.345.678-5'});assert.equal(nueva.cliente.usuarioId,'cliente-nuevo-rut');
+});
+await check('las reservas de fotos limitan también peticiones concurrentes y no publican archivos pendientes',async()=>{
+ const nuevaFoto=()=>{const id=randomUUID();return {id,inspeccionId,rutaStorage:`vehiculos/inspecciones/${inspeccionId}/${id}.jpg`,orden:1,confirmar:false};};
+ await assert.rejects(execute(evidencias,'RegistrarEvidenciaGuardada',{...nuevaFoto(),confirmar:true}),/EVIDENCIA_SIN_RESERVA/);
+ // La inspección tiene una foto confirmada del caso idempotente anterior.
+ for(let i=0;i<18;i++)await execute(evidencias,'RegistrarEvidenciaGuardada',nuevaFoto());
+ const candidatas=[nuevaFoto(),nuevaFoto()];
+ const resultados=await Promise.allSettled(candidatas.map(args=>execute(evidencias,'RegistrarEvidenciaGuardada',args)));
+ assert.equal(resultados.filter(r=>r.status==='fulfilled').length,1);
+ await assert.rejects(execute(evidencias,'RegistrarEvidenciaGuardada',nuevaFoto()),/LIMITE_FOTOS/);
+ const consulta='query Fotos($id:UUID!){fotoInspeccionVehiculos(where:{inspeccionId:{eq:$id}}){id guardada}}';
+ const filas=(await execute(consulta,'Fotos',{id:inspeccionId})).fotoInspeccionVehiculos;
+ assert.equal(filas.length,20);assert.equal(filas.filter(f=>f.guardada).length,1);
+ const ganadora=candidatas[resultados.findIndex(r=>r.status==='fulfilled')];
+ await execute(evidencias,'RegistrarEvidenciaGuardada',{...ganadora,confirmar:true});
+ await execute(evidencias,'RegistrarEvidenciaGuardada',ganadora); // No degrada una foto ya confirmada.
+ const despues=(await execute(consulta,'Fotos',{id:inspeccionId})).fotoInspeccionVehiculos;
+ assert.equal(despues.length,20);assert.equal(despues.filter(f=>f.guardada).length,2);
+ const datos=await execute(await readFile('dataconnect/example/vehiculos-queries.gql','utf8'),'GetFlotaVehiculos',{},'test-admin');
+ const inspeccion=datos.salidas.flatMap(s=>s.inspecciones).find(i=>i.id.replaceAll('-','')===inspeccionId.replaceAll('-',''));
+ assert.equal(inspeccion.fotos.length,2);
+});
+await check('dos inspecciones no pueden apropiarse concurrentemente del mismo ID de foto',async()=>{
+ const salidas=[randomUUID(),randomUUID()],inspecciones=[randomUUID(),randomUUID()],fotoId=randomUUID();
+ await execute(`mutation Escenario($vehiculo:UUID!,$s1:UUID!,$s2:UUID!,$i1:UUID!,$i2:UUID!) @transaction {
+  salidaVehiculo_insertMany(data:[{id:$s1,vehiculoId:$vehiculo,repartidorId:"test-repartidor",estado:FINALIZADA},{id:$s2,vehiculoId:$vehiculo,repartidorId:"test-repartidor",estado:FINALIZADA}])
+  inspeccionVehiculo_insertMany(data:[{id:$i1,salidaId:$s1,momento:ANTES,estadoVehiculo:APTO,kilometraje:100},{id:$i2,salidaId:$s2,momento:ANTES,estadoVehiculo:APTO,kilometraje:100}])
+ }`,'Escenario',{vehiculo:vehiculoId,s1:salidas[0],s2:salidas[1],i1:inspecciones[0],i2:inspecciones[1]});
+ const intentos=inspecciones.map(inspeccionId=>({id:fotoId,inspeccionId,rutaStorage:`vehiculos/inspecciones/${inspeccionId}/${fotoId}.jpg`,orden:1,confirmar:false}));
+ const resultados=await Promise.allSettled(intentos.map(args=>execute(evidencias,'RegistrarEvidenciaGuardada',args)));
+ assert.equal(resultados.filter(r=>r.status==='fulfilled').length,1);
+ const consulta='query Foto($id:UUID!){fotoInspeccionVehiculo(id:$id){inspeccionId rutaStorage}}';
+ const ganadora=intentos[resultados.findIndex(r=>r.status==='fulfilled')];
+ const foto=(await execute(consulta,'Foto',{id:fotoId})).fotoInspeccionVehiculo;
+ assert.equal(foto.inspeccionId.replaceAll('-',''),ganadora.inspeccionId.replaceAll('-',''));
+ assert.equal(foto.rutaStorage,ganadora.rutaStorage);
+ await assert.rejects(execute(evidencias,'RegistrarEvidenciaGuardada',intentos[resultados.findIndex(r=>r.status==='rejected')]));
+ assert.deepEqual((await execute(consulta,'Foto',{id:fotoId})).fotoInspeccionVehiculo,foto);
+});
+await check('los flujos antiguos no desactivan vehículos programados ni inician vehículos ya inactivos',async()=>{
+ const id=randomUUID(),datos={id,patente:'SEG-'+id.slice(0,4).toUpperCase(),marca:'Prueba',modelo:'Prueba',anio:null,descripcion:null,activo:false};
+ await execute('mutation Vehiculo($id:UUID!,$patente:String!){vehiculo_insert(data:{id:$id,patente:$patente,marca:"Prueba",modelo:"Prueba"})}','Vehiculo',{id,patente:datos.patente});
+ const salida=await execute(registro,'CrearSalidaVehiculo',{vehiculoId:id,repartidorId:'test-repartidor'},'test-admin');
+ const salidaId=salida.salidaVehiculo_insert.id;
+ await execute(registro,'RegistrarInspeccionAntes',{salidaId,estadoVehiculo:'APTO',kilometraje:100},'test-repartidor');
+ await assert.rejects(execute(registro,'ActualizarVehiculo',datos,'test-admin'),/salida en curso/);
+ await assert.rejects(execute(flota,'EditarVehiculoFlota',datos,'test-admin'),/salida en curso/);
+ // Simula un registro histórico incoherente sin usar una operación del conductor.
+ await execute('mutation Desactivar($id:UUID!){vehiculo_update(id:$id,data:{activo:false})}','Desactivar',{id});
+ await assert.rejects(execute(registro,'IniciarSalidaVehiculo',{salidaId},'test-repartidor'),/inactivo/);
+ const consulta='query Salida($id:UUID!){salidaVehiculo(id:$id){estado vehiculo{activo}}}';
+ const bloqueada=(await execute(consulta,'Salida',{id:salidaId})).salidaVehiculo;
+ assert.equal(bloqueada.estado,'PROGRAMADA');assert.equal(bloqueada.vehiculo.activo,false);
+ await execute(registro,'ActualizarVehiculo',{...datos,activo:true},'test-admin');
+ await execute(flota,'EditarVehiculoFlota',{...datos,activo:true,modelo:'Prueba editada'},'test-admin');
+ const editado=await execute('query Vehiculo($id:UUID!){vehiculo(id:$id){activo modelo}}','Vehiculo',{id});
+ assert.equal(editado.vehiculo.activo,true);assert.equal(editado.vehiculo.modelo,'Prueba editada');
+ await execute(registro,'IniciarSalidaVehiculo',{salidaId},'test-repartidor');
+ assert.equal((await execute(consulta,'Salida',{id:salidaId})).salidaVehiculo.estado,'EN_SERVICIO');
+ await assert.rejects(execute(registro,'IniciarSalidaVehiculo',{salidaId},'test-repartidor'));
 });
 console.log(`${count} escenarios de estabilización aprobados.`);

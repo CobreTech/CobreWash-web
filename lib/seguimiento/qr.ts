@@ -27,7 +27,8 @@ export function obtenerEnlaceSeguimiento(codigoQr?: string | null) {
 }
 
 export function normalizarNumeroComanda(value: string): string {
-  const sufijo = value.trim().replace(/^(?:ELCOBRE|COBRE)-/i, "").toLowerCase();
-  if (!/^[a-z0-9]{4}$/.test(sufijo)) throw new Error("Ingresa el número de comanda completo o su código de cuatro caracteres.");
+  const sufijo = value.trim().replace(/^(?:ELCOBRE|COBRE)-/i, "").toUpperCase();
+  // Aceptar también históricos de solo letras o números; la mezcla se exige al crear.
+  if (!/^[A-Z0-9]{4}$/.test(sufijo)) throw new Error("Ingresa el número de comanda completo o su código de cuatro caracteres.");
   return `ELCOBRE-${sufijo}`;
 }

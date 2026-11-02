@@ -31,15 +31,15 @@ describe("RUT", () => {
 
 describe("contraseña", () => {
   it.each([
-    ["abc1", "Mínimo 6 caracteres"],
-    ["123456", "Debe incluir al menos una letra"],
-    ["abcdef", "Debe incluir al menos un número"],
+    ["abc1", "Mínimo 8 caracteres"],
+    ["12345678", "Debe incluir al menos una letra"],
+    ["abcdefgh", "Debe incluir al menos un número"],
   ])("rechaza %s con el mensaje de negocio correspondiente", (password, message) => {
     expect(validatePassword(password)).toEqual({ valid: false, message });
   });
 
-  it("acepta una contraseña con seis o más caracteres, letras y números", () => {
-    expect(validatePassword("clave1")).toEqual({
+  it("acepta una contraseña con ocho o más caracteres, letras y números", () => {
+    expect(validatePassword("clave123")).toEqual({
       valid: true,
       message: "Contraseña válida",
     });

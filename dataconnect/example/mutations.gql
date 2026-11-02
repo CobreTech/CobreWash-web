@@ -72,13 +72,16 @@ mutation RegistrarseComoCliente(
   $tipoCliente: TipoCliente!
   $versionPrivacidad: String!
 ) @auth(level: USER) @transaction {
-  query @redact {
+  query @redact @check(
+    expr: "auth.token.email != null && vars.email == auth.token.email"
+    message: "El correo debe coincidir con la cuenta autenticada"
+  ) {
     previa: cliente(first: { where: { rut: { eq: $rut } } })
       @check(expr: "vars.crearFicha == (this == null)", message: "FICHA_RUT_EXISTENTE: vuelve a preparar la cuenta sin duplicar la ficha") { id }
 
     rolCliente: rol(first: { where: { nombre: { eq: "cliente" } } })
       @check(expr: "this != null", message: "El rol cliente no está configurado") {
-      id @check(expr: "vars.versionPrivacidad == '2026-10-25'", message: "Debes autorizar el aviso de privacidad vigente")
+      id @check(expr: "vars.versionPrivacidad == '2026-11-01'", message: "Debes autorizar el aviso de privacidad vigente")
     }
   }
   usuario_insert(data: {
@@ -90,7 +93,7 @@ mutation RegistrarseComoCliente(
     nombre: $nombre
     apellido: $apellido
     telefono: $telefono
-    email: $email
+    email_expr: "auth.token.email"
   })
   cliente_insert(data: {
     rut: $rut
@@ -98,7 +101,7 @@ mutation RegistrarseComoCliente(
     nombre: $nombre
     tipoCliente: $tipoCliente
     telefono: $telefono
-    email: $email
+    email_expr: "auth.token.email"
     direccion: $direccion
   }) @include(if: $crearFicha)
 }
@@ -225,6 +228,8 @@ mutation ActualizarVehiculo(
       }
     }
   }
+  # Una sola escritura adquiere el bloqueo y aplica los datos; el control posterior
+  # revierte la transacción completa si existe una salida activa.
   vehiculo_update(
     id: $id
     data: {
@@ -234,8 +239,13 @@ mutation ActualizarVehiculo(
       anio: $anio
       descripcion: $descripcion
       activo: $activo
+      revision_update: { inc: 1 }
     }
   ) @check(expr: "this != null", message: "Vehículo no encontrado")
+  revision: query @redact {
+    salidaVehiculo(first: { where: { vehiculoId: { eq: $id }, estado: { in: [PROGRAMADA, EN_SERVICIO] } } })
+      @check(expr: "vars.activo || this == null", message: "No se puede desactivar un vehículo con una salida en curso") { id }
+  }
 }
 
 mutation CrearSalidaVehiculo(
@@ -264,6 +274,7 @@ mutation CrearSalidaVehiculo(
   }
   bloqueo: vehiculo_update(id: $vehiculoId, data: { revision_update: { inc: 1 } })
   revision: query @redact {
+    vehiculo(id: $vehiculoId) { activo @check(expr: "this == true", message: "El vehículo está inactivo") }
     salidaVehiculo(first: { where: { vehiculoId: { eq: $vehiculoId }, estado: { in: [PROGRAMADA, EN_SERVICIO] } } })
       @check(expr: "this == null", message: "El vehículo ya tiene una salida activa") { id }
   }
@@ -331,10 +342,25 @@ mutation IniciarSalidaVehiculo($salidaId: UUID!) @auth(level: USER) @transaction
       }
     } }) @check(expr: "this != null", message: "Falta una inspección previa apta") {
       id
+      salida { vehiculoId }
+    }
+  }
+  bloqueo: vehiculo_update(
+    first: { where: { id: { eq_expr: "response.query.inspeccionVehiculo.salida.vehiculoId" } } }
+    data: { revision_update: { inc: 1 } }
+  ) @redact @check(expr: "this != null", message: "Vehículo no encontrado")
+  revision: query @redact {
+    vehiculo(first: { where: { id: { eq_expr: "response.query.inspeccionVehiculo.salida.vehiculoId" } } }) {
+      activo @check(expr: "this == true", message: "El vehículo está inactivo")
     }
   }
   salidaVehiculo_update(
-    id: $salidaId
+    first: { where: {
+      id: { eq: $salidaId }
+      repartidorId: { eq_expr: "auth.uid" }
+      estado: { eq: PROGRAMADA }
+      vehiculo: { activo: { eq: true } }
+    } }
     data: {
       estado: EN_SERVICIO
       fechaSalida_expr: "request.time"
@@ -486,7 +512,7 @@ mutation CrearComanda(
   $valorTotal: Float!
   $observaciones: String
 ) @auth(level: USER) @transaction {
-  query @redact {
+  query @redact @check(expr: "vars.numeroComanda.matches('^[A-Za-z0-9-]{1,20}$') && (!vars.numeroComanda.upperAscii().startsWith('ELCOBRE-') || (vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]{4}$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[A-Z][A-Z0-9]*$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[0-9][A-Z0-9]*$')))", message: "Usa ELCOBRE y cuatro caracteres con letras y números") {
     etapas: etapaProduccions(orderBy: [{ orden: ASC }], limit: 6)
       @check(expr: "this.size() == 5 && this[0].orden == 1 && this[1].orden == 2 && this[2].orden == 3 && this[3].orden == 4 && this[4].orden == 5", message: "Configura las cinco etapas de producción antes de guardar") {
       id nombre orden descripcion tiempoEstimadoMin
@@ -497,9 +523,11 @@ mutation CrearComanda(
         nombre @check(expr: "this == 'admin' || this == 'recepcionista'", message: "No autorizado para crear comandas")
       }
     }
+    numeroDisponible: comanda(first: { where: { numeroComanda: { pattern: { like: $numeroComanda, ignoreCase: true } } } })
+      @check(expr: "this == null", message: "El número de comanda ya existe") { id }
   }
   comanda_insert(data: {
-    numeroComanda: $numeroComanda
+    numeroComanda_expr: "vars.numeroComanda.upperAscii().startsWith('ELCOBRE-') ? vars.numeroComanda.upperAscii() : vars.numeroComanda"
     cliente: { id: $clienteId }
     empresa: $empresa
     proyecto: $proyecto
@@ -610,7 +638,7 @@ mutation AnularComanda(
     }
   }
   comanda_update(
-    id: $id
+    first: { where: { id: { eq: $id }, estado: { in: [PENDIENTE, EN_PROCESO, FINALIZADA] } } }
     data: {
       estado: ANULADA
       motivoAnulacion: $motivoAnulacion

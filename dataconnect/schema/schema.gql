@@ -397,6 +397,7 @@ type InspeccionVehiculo
   estadoVehiculo: EstadoVehiculo!
   kilometraje: Float! @col(dataType: "numeric(12,1)")
   observaciones: String @col(dataType: "varchar(500)")
+  revisionFotos: Int! @default(value: 0)
   registradoEn: Timestamp! @default(expr: "request.time")
 }
 
@@ -407,5 +408,7 @@ type FotoInspeccionVehiculo @table(name: "foto_inspeccion_vehiculo") {
   rutaStorage: String! @unique @col(dataType: "varchar(500)")
   descripcion: String @col(dataType: "varchar(200)")
   orden: Int! @default(value: 1)
+  # Las filas anteriores a la reserva en dos fases ya corresponden a archivos guardados.
+  guardada: Boolean! @default(value: true)
   creadoEn: Timestamp! @default(expr: "request.time")
 }

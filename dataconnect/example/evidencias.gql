@@ -18,10 +18,39 @@ query GetMovimientoFlotaPorInspeccion($id: UUID!) @auth(level: USER) {
   inspeccionVehiculo(id: $id) { id salidaId momento kilometraje }
 }
 
-mutation RegistrarEvidenciaGuardada($id: UUID!, $inspeccionId: UUID!, $rutaStorage: String!, $descripcion: String, $orden: Int!)
+mutation RegistrarEvidenciaGuardada($id: UUID!, $inspeccionId: UUID!, $rutaStorage: String!, $descripcion: String, $orden: Int!, $confirmar: Boolean! = true)
   @auth(level: NO_ACCESS) @transaction {
-  query @redact {
-    fotoInspeccionVehiculo(id: $id) @check(expr: "this == null || (this.inspeccionId == vars.inspeccionId && this.rutaStorage == vars.rutaStorage)", message: "El identificador de evidencia ya está en uso") { inspeccionId rutaStorage }
+  # Una reserva consume cupo incluso si Storage falla. Reintentar el mismo ID lo recupera;
+  # no liberarlo ante un fallo ambiguo evita dejar archivos fuera del límite.
+  bloqueo: inspeccionVehiculo_update(id: $inspeccionId, data: { revisionFotos_update: { inc: 1 } }) @redact
+    @check(expr: "this != null", message: "Inspección no encontrada")
+  query @redact @check(expr: "vars.orden >= 1 && vars.orden <= 20", message: "Orden de fotografía inválido") {
+    fotoInspeccionVehiculo(id: $id)
+      @check(expr: "this != null || !vars.confirmar", message: "EVIDENCIA_SIN_RESERVA")
+      @check(expr: "this == null || (this.inspeccionId == vars.inspeccionId && this.rutaStorage == vars.rutaStorage && this.orden == vars.orden)", message: "El identificador de evidencia ya está en uso") {
+      inspeccionId rutaStorage orden guardada
+    }
+    fotos: fotoInspeccionVehiculos(where: { inspeccionId: { eq: $inspeccionId } }, limit: 20)
+      @check(expr: "response.query.fotoInspeccionVehiculo != null || this.size() < 20", message: "LIMITE_FOTOS") { id }
   }
-  fotoInspeccionVehiculo_upsert(data: { id: $id, inspeccionId: $inspeccionId, rutaStorage: $rutaStorage, descripcion: $descripcion, orden: $orden })
+  # Dos inspecciones tienen bloqueos distintos: un UPSERT podría reasignar un ID
+  # que ambas leyeron como ausente. INSERT sin sobrescritura + UPDATE condicionado
+  # mantiene la pertenencia también ante esa carrera.
+  reserva: _execute(
+    sql: """
+      INSERT INTO public.foto_inspeccion_vehiculo
+        (id, inspeccion_id, ruta_storage, orden, guardada, creado_en)
+      VALUES ($1::uuid, $2::uuid, $3::text, $4::integer, false, CURRENT_TIMESTAMP)
+      ON CONFLICT (id) DO NOTHING
+    """
+    params: [$id, $inspeccionId, $rutaStorage, $orden]
+  ) @redact
+  # Alias de respuesta conservado para los SDK existentes.
+  fotoInspeccionVehiculo_upsert: fotoInspeccionVehiculo_update(
+    first: { where: { id: { eq: $id }, inspeccionId: { eq: $inspeccionId }, rutaStorage: { eq: $rutaStorage }, orden: { eq: $orden } } }
+    data: {
+      descripcion: $descripcion
+      guardada_expr: "vars.confirmar || (response.query.fotoInspeccionVehiculo != null && response.query.fotoInspeccionVehiculo.guardada)"
+    }
+  ) @check(expr: "this != null", message: "El identificador de evidencia ya está en uso")
 }

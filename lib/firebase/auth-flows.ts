@@ -110,8 +110,10 @@ export async function registerPublicClient(
   );
 
   try {
+    const email = credential.user.email;
+    if (!email) throw new Error("No se pudo confirmar el correo de la cuenta autenticada.");
     const variables = {
-      ...registrationVariables(input), direccion: input.direccion.trim() || null, tipoCliente: input.tipoCliente as TipoCliente, versionPrivacidad: VERSION_PRIVACIDAD,
+      ...registrationVariables(input), email, direccion: input.direccion.trim() || null, tipoCliente: input.tipoCliente as TipoCliente, versionPrivacidad: VERSION_PRIVACIDAD,
     };
     try { await registrarseComoCliente(context.dataConnect, variables); }
     catch (error) {

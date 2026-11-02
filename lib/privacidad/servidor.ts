@@ -1,5 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
 import { serviciosAdmin } from "@/lib/firebase/admin";
+import { ErrorOrigenSolicitud, origenSolicitud } from "@/lib/solicitudes/origen";
 
 export class ErrorPrivacidad extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -26,7 +27,12 @@ export async function leerJsonLimitado(request: Request) {
 export async function limitarDerechos(request: Request, db: ReturnType<typeof serviciosAdmin>["db"]) {
   const salt = process.env.CONTACT_RATE_LIMIT_SALT;
   if (!salt || salt.length < 32) throw new ErrorPrivacidad(503, "El canal está temporalmente indisponible. Utiliza los datos de contacto de la página de privacidad.");
-  const origen = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "sin-origen";
+  let origen: string;
+  try { origen = origenSolicitud(request); }
+  catch (error) {
+    if (error instanceof ErrorOrigenSolicitud) throw new ErrorPrivacidad(error.status, error.message);
+    throw error;
+  }
   const id = `derechos:${Math.floor(Date.now() / 3_600_000)}:${createHmac("sha256", salt).update(origen).digest("hex")}`;
   try { await db.executeMutation("PrepararLimiteContacto", { id }); }
   catch {

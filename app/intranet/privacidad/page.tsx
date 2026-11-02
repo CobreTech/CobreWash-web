@@ -44,7 +44,7 @@ export default function GestionPrivacidadPage() {
         e.preventDefault(); const form = e.currentTarget; const f = new FormData(form); const user = auth.currentUser; setOcupado(true); setError("");
         try {
           if (!user) throw new Error("Inicia sesión.");
-          const r = await fetch(`/api/privacidad/gestion/${s.id}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` }, body: JSON.stringify({ estado: f.get("estado"), nota: f.get("nota"), evidenciaIdentidad: f.get("identidad"), evidenciaEnvio: f.get("envio"), revision: s.revision }) });
+          const r = await fetch(`/api/privacidad/gestion/${s.id}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` }, body: JSON.stringify({ estado: f.get("estado"), nota: f.get("nota"), evidenciaIdentidad: f.get("identidad"), evidenciaEnvio: f.get("envio"), resultado: f.get("resultado"), evidenciaEjecucion: f.get("ejecucion"), comunicacionDestinatarios: f.get("destinatarios"), reclamacionInformada: f.get("reclamacion") == "on", revision: s.revision }) });
           const d = await r.json(); if (!r.ok) throw new Error(d.error); await cargar();
         } catch (e) { setError((e as Error).message); } finally { setOcupado(false); }
       }} />}
@@ -61,6 +61,13 @@ function FormularioActuacion({ ocupado, onSubmit }: { ocupado: boolean; onSubmit
     <div className="max-w-sm space-y-2"><p className={etiquetaInterna}>Nueva actuación</p><GlassSelect ariaLabel="Nueva actuación" value={estado} onChange={setEstado} disabled={ocupado} options={[{ value: "VERIFICACION", label: "Verificando identidad" }, { value: "EN_GESTION", label: "En gestión" }, { value: "RESPONDIDA", label: "Respuesta enviada" }]} /></div>
     <label className={etiquetaInterna}>Actuación o respuesta fundada<textarea name="nota" required maxLength={4000} rows={3} className={campoInterno} /></label>
     <div className="grid gap-4 lg:grid-cols-2"><label className={etiquetaInterna}>Cómo se verificó identidad y representación<input name="identidad" maxLength={500} className={campoInterno} /></label><label className={etiquetaInterna}>Evidencia de envío, fecha y referencia del canal<input name="envio" maxLength={500} className={campoInterno} /></label></div>
+    {estado === "RESPONDIDA" && <fieldset className="space-y-3 rounded-xl border border-stone-200 p-4 dark:border-white/10"><legend className="text-sm font-bold">Resultado y ejecución efectiva</legend>
+      <label className={etiquetaInterna}>Resultado<select name="resultado" required className={campoInterno}><option value="">Selecciona un resultado</option><option value="ACOGIDA">Acogida íntegramente</option><option value="PARCIAL">Acogida parcialmente</option><option value="DENEGADA">Denegada</option></select></label>
+      <label className={etiquetaInterna}>Medidas realizadas y evidencia, o motivo de no ejecución<input name="ejecucion" required maxLength={500} className={campoInterno} /></label>
+      <label className={etiquetaInterna}>Comunicación a destinatarios de rectificación, supresión u oposición; o justificación de no procedencia<input name="destinatarios" required maxLength={500} className={campoInterno} /></label>
+      <label className="flex items-start gap-2 text-xs"><input type="checkbox" name="reclamacion" />Si existe denegación total o parcial, la respuesta enviada informa fundamento, vía y plazo de reclamación. Desde la vigencia de la reforma: 30 días hábiles ante la Agencia; antes, aplicar el régimen judicial vigente.</label>
+      <p className="text-xs">Conserva el contenido íntegro de la respuesta y la constancia real de entrega en un expediente protegido. Registrar esta actuación no ejecuta cambios ni envía comunicaciones.</p>
+    </fieldset>}
     <p className="text-xs leading-relaxed text-stone-500 dark:text-stone-400">Para cerrar, documenta la verificación y el envío real de la respuesta. No pegues contraseñas, tokens ni documentos de identidad. Si rechazas total o parcialmente, indica fundamento y vía de reclamación aplicable.</p>
     <button disabled={ocupado} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-bold text-white shadow-premium transition-shadow hover:shadow-lg disabled:opacity-50"><Save className="h-4 w-4" />Guardar actuación</button>
   </form>;

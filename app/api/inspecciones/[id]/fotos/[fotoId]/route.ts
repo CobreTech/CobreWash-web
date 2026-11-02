@@ -21,6 +21,15 @@ export async function PUT(request: Request, context: Context) {
     const path = rutaFoto(id, fotoId);
     const file = admin.bucket.file(path);
     const hash = hashFoto(imagen);
+    const registro = { id: fotoId, inspeccionId: id, rutaStorage: path, descripcion, orden };
+    // El contador se serializa por inspección e incluye reservas pendientes.
+    // Una solicitud sin cupo nunca llega a escribir en el bucket.
+    try { await admin.db.executeMutation("RegistrarEvidenciaGuardada", { ...registro, confirmar: false }); }
+    catch (error) {
+      if (String(error).includes("LIMITE_FOTOS")) throw new ErrorEvidencia(409, "La inspección ya tiene 20 fotografías o cargas pendientes. Reintenta con el mismo archivo si una carga no terminó.");
+      if (String(error).includes("El identificador de evidencia ya está en uso")) throw new ErrorEvidencia(409, "Ese identificador ya corresponde a otra fotografía.");
+      throw error;
+    }
     // El ID es estable al reintentar. No se sobrescribe una foto distinta.
     try { await file.save(imagen, { resumable: false, contentType: "image/jpeg", preconditionOpts: { ifGenerationMatch: 0 }, metadata: { metadata: { sha256: hash } } }); }
     catch (error) {
@@ -28,8 +37,8 @@ export async function PUT(request: Request, context: Context) {
       const [metadata] = await file.getMetadata();
       if (metadata.metadata?.sha256 !== hash) throw new ErrorEvidencia(409, "Ese identificador ya corresponde a otra fotografía.");
     }
-    // NO_ACCESS: solo esta API, después de guardar y autorizar el archivo, registra la ruta.
-    await admin.db.executeMutation("RegistrarEvidenciaGuardada", { id: fotoId, inspeccionId: id, rutaStorage: path, descripcion, orden });
+    // La reserva solo se publica en las consultas de flota después de guardar el archivo.
+    await admin.db.executeMutation("RegistrarEvidenciaGuardada", { ...registro, confirmar: true });
     return Response.json({ rutaStorage: path }, { status: 200 });
   } catch (error) { return respuestaErrorEvidencia(error); }
 }

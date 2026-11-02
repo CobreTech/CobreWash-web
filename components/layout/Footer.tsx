@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
-import { Phone, Mail, MapPin, ExternalLink, ShieldCheck } from "lucide-react";
+import { Phone, Mail, MapPin, ExternalLink, ShieldCheck, Clock } from "lucide-react";
 import { configuracionLegal } from "@/lib/privacidad/configuracion";
 import { formatRut } from "@/lib/validators";
 
@@ -104,8 +104,19 @@ export default async function Footer() {
                 <div>
                   <p className="font-semibold text-stone-850">Dirección Sucursal:</p>
                   <p className="text-xs text-stone-550 mt-0.5">
-                    Avenida Balmaceda N°1276,<br />
+                    Avenida Balmaceda N°1276 - 1364,<br />
                     Calama, Región de Antofagasta
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3 text-stone-600 text-sm">
+                <Clock className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-stone-850">Horario de Atención:</p>
+                  <p className="text-xs text-stone-550 mt-0.5">
+                    Lunes a Viernes: 11:30 - 20:00 hrs.<br />
+                    Sábados: 10:00 - 14:00 hrs.<br />
+                    Domingos: Cerrado
                   </p>
                 </div>
               </li>
@@ -157,6 +168,7 @@ export default async function Footer() {
             © {new Date().getFullYear()} {legal.identidadCompleta ? legal.razonSocial : "Lavandería El Cobre"}. Todos los derechos reservados.
           </p>
           <nav aria-label="Información legal y ayuda" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:justify-end">
+            <a href="https://github.com/CobreTech" target="_blank" rel="noopener noreferrer" className="hover:text-brand-650 underline">Desarrollado por CobreTech</a>
             <Link href="/privacidad" className="hover:text-brand-650 underline">Privacidad</Link>
             <Link href="/privacidad/derechos" className="hover:text-brand-650 underline">Mis datos personales</Link>
             <Link href="/terminos" className="hover:text-brand-650 underline">Información del portal</Link>

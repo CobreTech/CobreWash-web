@@ -1,4 +1,5 @@
 "use client";
+import { generarNumeroComanda } from "@/lib/seguimiento/numero";
 
 import { limitesFechasConsulta } from "@/lib/reportes/fechas";
 
@@ -86,12 +87,7 @@ const PRENDAS_HOTEL = [
 const normalizarCatalogo = (value: string) =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("es-CL");
 
-const generarNumeroComanda = () => {
-  const alfabeto = "0123456789abcdefghijklmnopqrstuvwxyz";
-  const bytes = crypto.getRandomValues(new Uint8Array(4));
-  const sufijo = Array.from(bytes, (byte) => alfabeto[byte % alfabeto.length]).join("");
-  return `ELCOBRE-${sufijo}`;
-};
+
 
 const leerDetalleHotel = (value?: string | null) => {
   const match = value?.match(/^Entregado: \d+ · Recibido: (\d+) · Pendiente: \d+(?: · (.*))?$/);

@@ -12,6 +12,10 @@ ignoredBuiltDependencies:
 packages:
   - '.'
 
+patchedDependencies:
+  # jose 6 is ESM-only; import it asynchronously from jwks-rsa's CommonJS code.
+  jwks-rsa@4.1.0: patches/jwks-rsa@4.1.0.patch
+
 overrides:
   # Patched transitive dependencies used by Firebase CLI and the test toolchain.
   basic-ftp: "^6.2.1"
@@ -29,6 +33,8 @@ overrides:
   postcss: ">=8.5.18"
   # Fix both gRPC advisories, including Firebase's older transitive dependency.
   '@grpc/grpc-js': "^1.14.5"
+  # Patch the RE2JS lookbehind denial of service pulled in by Firestore.
+  re2js: "2.8.7"
   # Next's plugin only uses globSync with onlyDirectories. tinyglobby supports
   # that API without pulling in vulnerable braces (no patched release yet).
   '@next/eslint-plugin-next>fast-glob': "npm:tinyglobby@0.2.17"

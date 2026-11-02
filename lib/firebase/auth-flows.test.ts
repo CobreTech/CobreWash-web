@@ -57,7 +57,7 @@ import {
 const auth = {} as Auth;
 const dataConnect = {} as DataConnect;
 const clientInput: ClientRegistrationInput & { autorizaDatos: boolean; versionPrivacidad: string } = {
-  autorizaDatos: true, versionPrivacidad: "2026-10-25",
+  autorizaDatos: true, versionPrivacidad: "2026-11-01",
   nombre: " Ana ",
   apellido: " Pérez ",
   rut: "123456785",
@@ -146,7 +146,7 @@ describe("registro público de clientes", () => {
   );
 
   it("descarta roles inyectados y solo llama a la operación de clientes", async () => {
-    mocks.createUser.mockResolvedValue({ user: { delete: vi.fn() } });
+    mocks.createUser.mockResolvedValue({ user: { email: "ana@example.com", delete: vi.fn() } });
     mocks.registerClient.mockResolvedValue({});
     await registerPublicClient({ auth, dataConnect }, {
       ...clientInput, rolId: "rol-admin", rol: "admin", activo: true,
@@ -161,14 +161,14 @@ describe("registro público de clientes", () => {
 
   it("crea Auth y luego Usuario+Cliente con datos normalizados", async () => {
     const deleteUser = vi.fn();
-    mocks.createUser.mockResolvedValue({ user: { delete: deleteUser } });
+    mocks.createUser.mockResolvedValue({ user: { email: "ana@example.com", delete: deleteUser } });
     mocks.registerClient.mockResolvedValue({});
 
     await registerPublicClient({ auth, dataConnect }, clientInput);
 
     expect(mocks.createUser).toHaveBeenCalledWith(auth, "ana@example.com", "clave1");
     expect(mocks.registerClient).toHaveBeenCalledWith(dataConnect, {
-      versionPrivacidad: "2026-10-25",
+      versionPrivacidad: "2026-11-01",
       rut: "12.345.678-5",
       nombre: "Ana",
       apellido: "Pérez",
@@ -185,10 +185,24 @@ describe("registro público de clientes", () => {
     expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
+  it("envía el correo canónico de Firebase aunque la entrada use otras mayúsculas", async () => {
+    mocks.createUser.mockResolvedValue({ user: { email: "ana@example.com", delete: vi.fn() } });
+    mocks.registerClient.mockResolvedValue({});
+    await registerPublicClient({ auth, dataConnect }, { ...clientInput, email: "ANA@example.com" });
+    expect(mocks.registerClient).toHaveBeenCalledWith(dataConnect, expect.objectContaining({ email: "ana@example.com" }));
+  });
+
+  it("no registra un perfil si Firebase no devuelve el correo autenticado", async () => {
+    const borrar = vi.fn().mockResolvedValue(undefined);
+    mocks.createUser.mockResolvedValue({ user: { email: null, delete: borrar } });
+    await expect(registerPublicClient({ auth, dataConnect }, clientInput)).rejects.toThrow("correo de la cuenta");
+    expect(mocks.registerClient).not.toHaveBeenCalled(); expect(borrar).toHaveBeenCalledOnce();
+  });
+
   it("elimina la cuenta Auth si falla la transacción de Usuario+Cliente", async () => {
     const databaseError = new Error("Data Connect no disponible");
     const deleteUser = vi.fn().mockResolvedValue(undefined);
-    mocks.createUser.mockResolvedValue({ user: { delete: deleteUser } });
+    mocks.createUser.mockResolvedValue({ user: { email: "ana@example.com", delete: deleteUser } });
     mocks.registerClient.mockRejectedValue(databaseError);
 
     await expect(registerPublicClient({ auth, dataConnect }, clientInput)).rejects.toBe(databaseError);
@@ -198,7 +212,7 @@ describe("registro público de clientes", () => {
   it("conserva el error original aunque también falle el rollback", async () => {
     const databaseError = new Error("Data Connect no disponible");
     const deleteUser = vi.fn().mockRejectedValue(new Error("falló delete"));
-    mocks.createUser.mockResolvedValue({ user: { delete: deleteUser } });
+    mocks.createUser.mockResolvedValue({ user: { email: "ana@example.com", delete: deleteUser } });
     mocks.registerClient.mockRejectedValue(databaseError);
 
     await expect(registerPublicClient({ auth, dataConnect }, clientInput)).rejects.toBe(databaseError);
