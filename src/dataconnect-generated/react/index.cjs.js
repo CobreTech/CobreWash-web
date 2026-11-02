@@ -1,4 +1,4 @@
-const { agregarComentarioComandaRef, resolverMiIncidenciaRef, autoAsignarComandaOperarioRef, getComandaDetalleOperarioRef, getMisComandasAsignadasRef, getInsumosOperarioRef, crearAvisoRef, getAvisosAdministracionRef, getAvisosParaEquipoRef, getSolicitudContactoConfirmadaRef, prepararLimiteContactoRef, getLimiteContactoRef, registrarSolicitudContactoRef, getSolicitudesContactoRef, actualizarEstadoSolicitudContactoRef, getInspeccionParaEvidenciasRef, getMovimientoFlotaPorInspeccionRef, registrarEvidenciaGuardadaRef, vincularMiFichaVerificadaRef, registrarConteoInventarioRef, getMiConteoInventarioRef, getMisConteosInventarioRef, getConteosInventarioRef, aprobarConteoInventarioRef, rechazarConteoInventarioRef, getStockInventarioRef, getHistorialInventarioRef, registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, registrarSalidaInventarioRef, getMisComandasRef, vincularMiComandaRef, autorizarGestionPrivacidadRef, getComprobanteDerechoRef, recibirSolicitudDerechoRef, listarSolicitudesDerechoRef, gestionarSolicitudDerechoRef, contarLimitesContactoVencidosRef, purgarLimitesContactoRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, configurarLimitesEtapasRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getComandasParaAlertasRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, getReporteVolumenRef, getReporteCuentasRef, getDetalleReporteCuentasRef, getFiltrosReportesRef, getReporteServiciosRef, getDetalleReporteServiciosRef, getSeguimientoPublicoPorQrRef, getSeguimientoPublicoPorNumeroRef, getComandaOperativaPorQrRef, registrarVehiculoFlotaRef, editarVehiculoFlotaRef, registrarSalidaFlotaRef, registrarRetornoFlotaRef, adjuntarFotoInspeccionFlotaRef, getFlotaVehiculosRef, getHistorialVehiculosRef, connectorConfig } = require('../index.cjs.js');
+const { agregarComentarioComandaRef, resolverMiIncidenciaRef, autoAsignarComandaOperarioRef, getComandaDetalleOperarioRef, getMisComandasAsignadasRef, getInsumosOperarioRef, crearAvisoRef, getAvisosAdministracionRef, getAvisosParaEquipoRef, getSolicitudContactoConfirmadaRef, prepararLimiteContactoRef, getLimiteContactoRef, registrarSolicitudContactoRef, getSolicitudesContactoRef, actualizarEstadoSolicitudContactoRef, getInspeccionParaEvidenciasRef, getMovimientoFlotaPorInspeccionRef, registrarEvidenciaGuardadaRef, vincularMiFichaVerificadaRef, autorizarModuloIaRef, getPanelIaRef, getHistorialAjustesIaRef, guardarTasaConsumoRef, eliminarTasaConsumoRef, guardarConfiguracionIaRef, registrarConteoFisicoIaRef, registrarConteoInventarioRef, getMiConteoInventarioRef, getMisConteosInventarioRef, getConteosInventarioRef, aprobarConteoInventarioRef, rechazarConteoInventarioRef, getStockInventarioRef, getHistorialInventarioRef, registrarseRef, crearUsuarioAdministradoRef, registrarseComoClienteRef, crearClienteAdministradoRef, actualizarUsuarioRef, crearVehiculoRef, actualizarVehiculoRef, crearSalidaVehiculoRef, registrarInspeccionAntesRef, iniciarSalidaVehiculoRef, registrarInspeccionDespuesRef, agregarFotoInspeccionVehiculoRef, crearClienteComandaRef, editarFichaClienteRef, crearComandaRef, agregarComandaDetalleRef, anularComandaRef, entregarComandaRef, editarComandaRef, eliminarDetallesComandaRef, crearTipoPrendaRef, crearTipoServicioRef, crearInsumoRef, actualizarInsumoRef, registrarEntradaInventarioRef, registrarSalidaInventarioRef, getMisComandasRef, vincularMiComandaRef, autorizarGestionPrivacidadRef, getComprobanteDerechoRef, recibirSolicitudDerechoRef, listarSolicitudesDerechoRef, gestionarSolicitudDerechoRef, contarLimitesContactoVencidosRef, purgarLimitesContactoRef, asociarFlujoComandaPendienteRef, configurarEtapaProduccionRef, configurarLimitesEtapasRef, completarEtapaComandaRef, registrarIncidenciaComandaRef, actualizarEstadoIncidenciaRef, reasignarOperarioEtapaRef, getEtapasProduccionRef, getSeguimientoProduccionRef, getPanelProduccionRef, getComandasParaAlertasRef, getIncidenciasRef, getMiComandaGuardadaRef, getRolesRef, getMiPerfilRef, getUsuariosRef, getComandaPorQrRef, getInsumoPorQrRef, getInventarioRef, getVehiculosRef, getMisSalidasVehiculoRef, getComandasPaginadasRef, getComandasActivasCountRef, getComandaDetalleRef, getCatalogosComandaRef, diagnosticoComandasRef, getFichasClientesRef, getReporteVolumenRef, getReporteCuentasRef, getDetalleReporteCuentasRef, getFiltrosReportesRef, getReporteServiciosRef, getDetalleReporteServiciosRef, getSeguimientoPublicoPorQrRef, getSeguimientoPublicoPorNumeroRef, getComandaOperativaPorQrRef, registrarVehiculoFlotaRef, editarVehiculoFlotaRef, registrarSalidaFlotaRef, registrarRetornoFlotaRef, adjuntarFotoInspeccionFlotaRef, getFlotaVehiculosRef, getHistorialVehiculosRef, connectorConfig } = require('../index.cjs.js');
 const { validateArgs, CallerSdkTypeEnum } = require('firebase/data-connect');
 const { useDataConnectQuery, useDataConnectMutation, validateReactArgs } = require('@tanstack-query-firebase/react/data-connect');
 
@@ -130,6 +130,56 @@ exports.useVincularMiFichaVerificada = function useVincularMiFichaVerificada(dcO
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory() {
     return vincularMiFichaVerificadaRef(dcInstance);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+
+exports.useAutorizarModuloIa = function useAutorizarModuloIa(dcOrOptions, options) {
+  const { dc: dcInstance, options: inputOpts } = validateReactArgs(connectorConfig, dcOrOptions, options);
+  const ref = autorizarModuloIaRef(dcInstance);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useGetPanelIa = function useGetPanelIa(dcOrOptions, options) {
+  const { dc: dcInstance, options: inputOpts } = validateReactArgs(connectorConfig, dcOrOptions, options);
+  const ref = getPanelIaRef(dcInstance);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useGetHistorialAjustesIa = function useGetHistorialAjustesIa(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  const ref = getHistorialAjustesIaRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+exports.useGuardarTasaConsumo = function useGuardarTasaConsumo(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return guardarTasaConsumoRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useEliminarTasaConsumo = function useEliminarTasaConsumo(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return eliminarTasaConsumoRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useGuardarConfiguracionIa = function useGuardarConfiguracionIa(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return guardarConfiguracionIaRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useRegistrarConteoFisicoIa = function useRegistrarConteoFisicoIa(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return registrarConteoFisicoIaRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }

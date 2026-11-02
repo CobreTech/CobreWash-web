@@ -1,0 +1,139 @@
+# ====================== MÓDULO IA: PREDICCIÓN DE INSUMOS ======================
+# Todas las operaciones de esta sección son exclusivas del administrador.
+# La IA nunca escribe stock: solo el conteo físico lo reemplaza.
+
+# Usada por los route handlers del módulo para confirmar el rol en el servidor.
+query AutorizarModuloIa @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+    id
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Acceso reservado a administración") }
+  }
+}
+
+query GetPanelIa @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Acceso reservado a administración") }
+  }
+  configuracionIa(id: "global") { margenSeguridad lambda incluirSimulado actualizadoEn }
+  tasaConsumos {
+    tipoServicioId insumoId tasaInicial tasaActual unidad fuente actualizadoEn
+    tipoServicio { id nombre }
+    insumo { id nombre unidadMedida }
+  }
+  modeloVigente: modeloIas(where: { activo: { eq: true } }, orderBy: [{ fechaEntrenamiento: DESC }, { id: DESC }], limit: 1) {
+    id version fechaEntrenamiento mae mape desviacionRelativa observaciones lambda margenSeguridad incluyeSimulado tasasJson
+  }
+  insumos(where: { activo: { eq: true } }, orderBy: [{ nombre: ASC }, { id: ASC }]) {
+    id nombre unidadMedida stockActual stockMinimo revisionStock
+  }
+  tipoServicios(where: { activo: { eq: true } }, orderBy: [{ nombre: ASC }, { id: ASC }]) { id nombre unidadCobro }
+  conteosReales: conteoInventarios(where: { estado: { eq: APROBADO }, origen: { eq: REAL } }) { _count }
+  conteosSimulados: conteoInventarios(where: { estado: { eq: APROBADO }, origen: { eq: SIMULADO } }) { _count }
+  simulaciones: simulacionIas(orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: 20) { id semanas creadoEn }
+}
+
+query GetHistorialAjustesIa($limit: Int = 20, $offset: Int = 0) @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this == 'admin'", message: "Acceso reservado a administración") }
+  }
+  modeloIas(orderBy: [{ fechaEntrenamiento: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+    id version fechaEntrenamiento activo mae mape desviacionRelativa observaciones lambda margenSeguridad incluyeSimulado tasasJson
+    ejecutadoPor { nombre apellido }
+  }
+  total: modeloIas { _count }
+}
+
+# Crea o edita la tasa de un servicio para un insumo. La unidad de la tasa debe
+# ser compatible con la del insumo (volumen con volumen, masa con masa).
+mutation GuardarTasaConsumo(
+  $tipoServicioId: UUID!
+  $insumoId: UUID!
+  $tasaInicial: Float!
+  $tasaActual: Float!
+  $unidad: String!
+  $fuente: String
+) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.tasaInicial >= 0 && vars.tasaInicial <= 100000 && vars.tasaActual >= 0 && vars.tasaActual <= 100000 && vars.unidad in ['ml', 'L', 'g', 'kg'] && (!has(vars.fuente) || vars.fuente == null || vars.fuente.size() <= 300)", message: "Tasa, unidad o fuente inválidas") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar tasas") }
+    }
+    tipoServicio(id: $tipoServicioId) @check(expr: "this != null", message: "Servicio no encontrado") { id }
+    insumo(id: $insumoId) @check(expr: "this != null", message: "Insumo no encontrado") {
+      unidadMedida @check(expr: "(vars.unidad in ['ml', 'L'] && this in ['ml', 'L']) || (vars.unidad in ['g', 'kg'] && this in ['g', 'kg'])", message: "La unidad de la tasa no es compatible con la del insumo")
+    }
+  }
+  tasaConsumo_upsert(data: {
+    tipoServicioId: $tipoServicioId
+    insumoId: $insumoId
+    tasaInicial: $tasaInicial
+    tasaActual: $tasaActual
+    unidad: $unidad
+    fuente: $fuente
+    actualizadoPorId_expr: "auth.uid"
+    actualizadoEn_expr: "request.time"
+  })
+}
+
+mutation EliminarTasaConsumo($tipoServicioId: UUID!, $insumoId: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden editar tasas") }
+    }
+  }
+  tasaConsumo_delete(key: { tipoServicioId: $tipoServicioId, insumoId: $insumoId })
+    @check(expr: "this != null", message: "La tasa ya no existe")
+}
+
+mutation GuardarConfiguracionIa($margenSeguridad: Float!, $lambda: Float!, $incluirSimulado: Boolean!) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.margenSeguridad >= 0 && vars.margenSeguridad <= 1 && vars.lambda >= 0 && vars.lambda <= 10000", message: "El margen debe estar entre 0% y 100% y λ entre 0 y 10.000") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden configurar el modelo") }
+    }
+  }
+  configuracionIa_upsert(data: {
+    id: "global"
+    margenSeguridad: $margenSeguridad
+    lambda: $lambda
+    incluirSimulado: $incluirSimulado
+    actualizadoPorId_expr: "auth.uid"
+    actualizadoEn_expr: "request.time"
+  })
+}
+
+# Conteo físico hecho por administración: queda aprobado en el acto, reemplaza
+# el stock y deja el ajuste en la bitácora, igual que AprobarConteoInventario.
+mutation RegistrarConteoFisicoIa($id: UUID!, $insumoId: UUID!, $cantidad: Float!, $revisionStock: Int!) @auth(level: USER) @transaction {
+  query @redact @check(expr: "vars.cantidad >= 0 && vars.cantidad <= 9999999999.99", message: "Cantidad contada inválida") {
+    usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
+      activo @check(expr: "this == true", message: "La cuenta está inactiva")
+      rol { nombre @check(expr: "this == 'admin'", message: "Solo administradores pueden registrar conteos aprobados") }
+    }
+    insumo(id: $insumoId) @check(expr: "this != null", message: "Insumo no encontrado") {
+      activo @check(expr: "this == true", message: "El insumo está inactivo")
+      stockActual
+      revisionStock @check(expr: "this == vars.revisionStock", message: "El stock cambió. Actualiza el insumo y vuelve a contar.")
+    }
+  }
+  conteoInventario_insert(data: {
+    id: $id, insumoId: $insumoId, cantidadContada: $cantidad,
+    stockSistema_expr: "response.query.insumo.stockActual", revisionStock: $revisionStock,
+    registradoPorId_expr: "auth.uid", estado: APROBADO,
+    resueltoPorId_expr: "auth.uid", resueltoEn_expr: "request.time",
+    motivoResolucion: "Conteo físico registrado por administración", origen: REAL
+  })
+  insumo_update(first: { where: { id: { eq: $insumoId }, activo: { eq: true }, revisionStock: { eq: $revisionStock } } }, data: {
+    stockActual: $cantidad, revisionStock_update: { inc: 1 }
+  }) @check(expr: "this != null", message: "El stock cambió. Actualiza el insumo y vuelve a contar.")
+  movimientoInventario_insert(data: {
+    insumoId: $insumoId, usuarioId_expr: "auth.uid",
+    tipoMovimiento_expr: "vars.cantidad >= response.query.insumo.stockActual ? 'ENTRADA' : 'SALIDA'",
+    cantidad_expr: "vars.cantidad >= response.query.insumo.stockActual ? vars.cantidad - response.query.insumo.stockActual : response.query.insumo.stockActual - vars.cantidad",
+    motivo: "Conteo físico registrado por administración", clase: AJUSTE_CONTEO
+  })
+}

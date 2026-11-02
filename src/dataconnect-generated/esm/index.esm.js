@@ -319,6 +319,93 @@ export function vincularMiFichaVerificada(dc) {
   return executeMutation(vincularMiFichaVerificadaRef(dcInstance, inputVars));
 }
 
+export const autorizarModuloIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'AutorizarModuloIa');
+}
+autorizarModuloIaRef.operationName = 'AutorizarModuloIa';
+
+export function autorizarModuloIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(autorizarModuloIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getPanelIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetPanelIa');
+}
+getPanelIaRef.operationName = 'GetPanelIa';
+
+export function getPanelIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getPanelIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getHistorialAjustesIaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetHistorialAjustesIa', inputVars);
+}
+getHistorialAjustesIaRef.operationName = 'GetHistorialAjustesIa';
+
+export function getHistorialAjustesIa(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
+  return executeQuery(getHistorialAjustesIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const guardarTasaConsumoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'GuardarTasaConsumo', inputVars);
+}
+guardarTasaConsumoRef.operationName = 'GuardarTasaConsumo';
+
+export function guardarTasaConsumo(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(guardarTasaConsumoRef(dcInstance, inputVars));
+}
+
+export const eliminarTasaConsumoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EliminarTasaConsumo', inputVars);
+}
+eliminarTasaConsumoRef.operationName = 'EliminarTasaConsumo';
+
+export function eliminarTasaConsumo(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(eliminarTasaConsumoRef(dcInstance, inputVars));
+}
+
+export const guardarConfiguracionIaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'GuardarConfiguracionIa', inputVars);
+}
+guardarConfiguracionIaRef.operationName = 'GuardarConfiguracionIa';
+
+export function guardarConfiguracionIa(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(guardarConfiguracionIaRef(dcInstance, inputVars));
+}
+
+export const registrarConteoFisicoIaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegistrarConteoFisicoIa', inputVars);
+}
+registrarConteoFisicoIaRef.operationName = 'RegistrarConteoFisicoIa';
+
+export function registrarConteoFisicoIa(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registrarConteoFisicoIaRef(dcInstance, inputVars));
+}
+
 export const registrarConteoInventarioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

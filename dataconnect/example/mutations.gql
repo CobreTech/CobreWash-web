@@ -789,6 +789,7 @@ mutation CrearInsumo(
     tipoMovimiento: ENTRADA
     cantidad: $stockInicial
     motivo: "Stock inicial"
+    clase: STOCK_INICIAL
   })
 }
 
@@ -841,6 +842,7 @@ mutation RegistrarEntradaInventario(
     tipoMovimiento: ENTRADA
     cantidad: $cantidad
     motivo: $motivo
+    clase: COMPRA
   })
 }
 
@@ -872,5 +874,6 @@ mutation RegistrarSalidaInventario(
     tipoMovimiento: SALIDA
     cantidad: $cantidad
     motivo: $motivo
+    clase: CONSUMO
   })
 }

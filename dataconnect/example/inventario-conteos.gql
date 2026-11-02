@@ -22,7 +22,7 @@ query GetMiConteoInventario($id: UUID!) @auth(level: USER) {
     activo @check(expr: "this == true")
     rol { nombre @check(expr: "this in ['admin', 'operario']") }
   }
-  conteoInventario(first: { where: { id: { eq: $id }, registradoPorId: { eq_expr: "auth.uid" } } }) {
+  conteoInventario(first: { where: { id: { eq: $id }, registradoPorId: { eq_expr: "auth.uid" }, origen: { eq: REAL } } }) {
     id insumoId cantidadContada stockSistema revisionStock estado creadoEn
   }
 }
@@ -32,7 +32,7 @@ query GetMisConteosInventario($limit: Int = 50, $offset: Int = 0) @auth(level: U
     activo @check(expr: "this == true")
     rol { nombre @check(expr: "this in ['admin', 'operario']") }
   }
-  conteoInventarios(where: { registradoPorId: { eq_expr: "auth.uid" } }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+  conteoInventarios(where: { registradoPorId: { eq_expr: "auth.uid" }, origen: { eq: REAL } }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
     id insumoId cantidadContada stockSistema estado creadoEn motivoResolucion
   }
 }
@@ -42,13 +42,13 @@ query GetConteosInventario($estado: EstadoConteoInventario, $limit: Int = 20, $o
     activo @check(expr: "this == true")
     rol { nombre @check(expr: "this == 'admin'") }
   }
-  conteoInventarios(where: { estado: { eq: $estado } }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
+  conteoInventarios(where: { estado: { eq: $estado }, origen: { eq: REAL } }, orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: $limit, offset: $offset) {
     id cantidadContada stockSistema revisionStock estado creadoEn resueltoEn motivoResolucion
     insumo { id nombre unidadMedida stockActual revisionStock activo }
     registradoPor { id nombre apellido }
     resueltoPor { id nombre apellido }
   }
-  total: conteoInventarios(where: { estado: { eq: $estado } }) { _count }
+  total: conteoInventarios(where: { estado: { eq: $estado }, origen: { eq: REAL } }) { _count }
 }
 
 mutation AprobarConteoInventario($id: UUID!, $motivo: String!) @auth(level: USER) @transaction {
@@ -75,7 +75,7 @@ mutation AprobarConteoInventario($id: UUID!, $motivo: String!) @auth(level: USER
     insumoId_expr: "response.query.conteoInventario.insumoId", usuarioId_expr: "auth.uid",
     tipoMovimiento_expr: "response.query.conteoInventario.cantidadContada >= response.query.conteoInventario.stockSistema ? 'ENTRADA' : 'SALIDA'",
     cantidad_expr: "response.query.conteoInventario.cantidadContada >= response.query.conteoInventario.stockSistema ? response.query.conteoInventario.cantidadContada - response.query.conteoInventario.stockSistema : response.query.conteoInventario.stockSistema - response.query.conteoInventario.cantidadContada",
-    motivo_expr: "'Conteo físico aprobado: ' + vars.motivo"
+    motivo_expr: "'Conteo físico aprobado: ' + vars.motivo", clase: AJUSTE_CONTEO
   })
 }
 

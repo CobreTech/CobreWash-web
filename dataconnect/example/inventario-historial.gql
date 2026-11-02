@@ -22,7 +22,7 @@ query GetHistorialInventario(
     rol { nombre @check(expr: "this == 'admin'") }
   }
   movimientoInventarios(
-    where: { insumoId: { eq: $insumoId }, tipoMovimiento: { eq: $tipo }, fecha: { ge: $fechaDesde, lt: $fechaHastaExclusiva } }
+    where: { insumoId: { eq: $insumoId }, tipoMovimiento: { eq: $tipo }, fecha: { ge: $fechaDesde, lt: $fechaHastaExclusiva }, origen: { eq: REAL } }
     orderBy: [{ fecha: DESC }, { id: DESC }]
     limit: $limit
     offset: $offset
@@ -32,6 +32,6 @@ query GetHistorialInventario(
     usuario { id nombre apellido }
   }
   total: movimientoInventarios(
-    where: { insumoId: { eq: $insumoId }, tipoMovimiento: { eq: $tipo }, fecha: { ge: $fechaDesde, lt: $fechaHastaExclusiva } }
+    where: { insumoId: { eq: $insumoId }, tipoMovimiento: { eq: $tipo }, fecha: { ge: $fechaDesde, lt: $fechaHastaExclusiva }, origen: { eq: REAL } }
   ) { _count }
 }

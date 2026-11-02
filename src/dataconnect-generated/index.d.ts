@@ -238,6 +238,16 @@ export interface AutoAsignarComandaOperarioVariables {
 export interface AutorizarGestionPrivacidadData {
 }
 
+export interface AutorizarModuloIaData {
+  yo?: {
+    id: string;
+    activo: boolean;
+    rol: {
+      nombre: string;
+    };
+  } & Usuario_Key;
+}
+
 export interface Aviso_Key {
   id: UUIDString;
   __typename?: 'Aviso_Key';
@@ -293,6 +303,11 @@ export interface CompletarEtapaComandaVariables {
   etapaId: UUIDString;
   orden: number;
   estadoComanda: ComandaEstado;
+}
+
+export interface ConfiguracionIa_Key {
+  id: string;
+  __typename?: 'ConfiguracionIa_Key';
 }
 
 export interface ConfigurarEtapaProduccionData {
@@ -537,6 +552,15 @@ export interface EliminarDetallesComandaData {
 
 export interface EliminarDetallesComandaVariables {
   comandaId: UUIDString;
+}
+
+export interface EliminarTasaConsumoData {
+  tasaConsumo_delete?: TasaConsumo_Key | null;
+}
+
+export interface EliminarTasaConsumoVariables {
+  tipoServicioId: UUIDString;
+  insumoId: UUIDString;
 }
 
 export interface EntregarComandaData {
@@ -1274,6 +1298,35 @@ export interface GetFlotaVehiculosVariables {
   offset?: number | null;
 }
 
+export interface GetHistorialAjustesIaData {
+  modeloIas: ({
+    id: UUIDString;
+    version: string;
+    fechaEntrenamiento: TimestampString;
+    activo: boolean;
+    mae?: number | null;
+    mape?: number | null;
+    desviacionRelativa?: number | null;
+    observaciones: number;
+    lambda?: number | null;
+    margenSeguridad?: number | null;
+    incluyeSimulado: boolean;
+    tasasJson?: string | null;
+    ejecutadoPor?: {
+      nombre: string;
+      apellido?: string | null;
+    };
+  } & ModeloIa_Key)[];
+  total: ({
+    _count: number;
+  })[];
+}
+
+export interface GetHistorialAjustesIaVariables {
+  limit?: number | null;
+  offset?: number | null;
+}
+
 export interface GetHistorialInventarioData {
   movimientoInventarios: ({
     id: UUIDString;
@@ -1708,6 +1761,70 @@ export interface GetMovimientoFlotaPorInspeccionVariables {
   id: UUIDString;
 }
 
+export interface GetPanelIaData {
+  configuracionIa?: {
+    margenSeguridad: number;
+    lambda: number;
+    incluirSimulado: boolean;
+    actualizadoEn: TimestampString;
+  };
+  tasaConsumos: ({
+    tipoServicioId: UUIDString;
+    insumoId: UUIDString;
+    tasaInicial: number;
+    tasaActual: number;
+    unidad: string;
+    fuente?: string | null;
+    actualizadoEn: TimestampString;
+    tipoServicio: {
+      id: UUIDString;
+      nombre: string;
+    } & TipoServicio_Key;
+    insumo: {
+      id: UUIDString;
+      nombre: string;
+      unidadMedida: string;
+    } & Insumo_Key;
+  } & TasaConsumo_Key)[];
+  modeloVigente: ({
+    id: UUIDString;
+    version: string;
+    fechaEntrenamiento: TimestampString;
+    mae?: number | null;
+    mape?: number | null;
+    desviacionRelativa?: number | null;
+    observaciones: number;
+    lambda?: number | null;
+    margenSeguridad?: number | null;
+    incluyeSimulado: boolean;
+    tasasJson?: string | null;
+  } & ModeloIa_Key)[];
+  insumos: ({
+    id: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+    stockMinimo: number;
+    revisionStock: number;
+  } & Insumo_Key)[];
+  tipoServicios: ({
+    id: UUIDString;
+    nombre: string;
+    unidadCobro: UnidadCobro;
+  } & TipoServicio_Key)[];
+  conteosReales: ({
+    _count: number;
+  })[];
+  conteosSimulados: ({
+    _count: number;
+  })[];
+  simulaciones: ({
+    id: UUIDString;
+    semanas: number;
+    creadoEn: TimestampString;
+  } & SimulacionIa_Key)[];
+}
+
 export interface GetPanelProduccionData {
   comandas: ({
     id: UUIDString;
@@ -2088,6 +2205,29 @@ export interface GetVehiculosData {
   } & Vehiculo_Key)[];
 }
 
+export interface GuardarConfiguracionIaData {
+  configuracionIa_upsert: ConfiguracionIa_Key;
+}
+
+export interface GuardarConfiguracionIaVariables {
+  margenSeguridad: number;
+  lambda: number;
+  incluirSimulado: boolean;
+}
+
+export interface GuardarTasaConsumoData {
+  tasaConsumo_upsert: TasaConsumo_Key;
+}
+
+export interface GuardarTasaConsumoVariables {
+  tipoServicioId: UUIDString;
+  insumoId: UUIDString;
+  tasaInicial: number;
+  tasaActual: number;
+  unidad: string;
+  fuente?: string | null;
+}
+
 export interface IncidenciaComanda_Key {
   id: UUIDString;
   __typename?: 'IncidenciaComanda_Key';
@@ -2162,13 +2302,6 @@ export interface MovimientoInventario_Key {
   __typename?: 'MovimientoInventario_Key';
 }
 
-export interface PatronConsumo_Key {
-  tipoServicioId: UUIDString;
-  tipoPrendaId: UUIDString;
-  insumoId: UUIDString;
-  __typename?: 'PatronConsumo_Key';
-}
-
 export interface PrediccionInsumo_Key {
   id: UUIDString;
   __typename?: 'PrediccionInsumo_Key';
@@ -2180,6 +2313,11 @@ export interface PrepararLimiteContactoData {
 
 export interface PrepararLimiteContactoVariables {
   id: string;
+}
+
+export interface ProduccionSimulada_Key {
+  id: UUIDString;
+  __typename?: 'ProduccionSimulada_Key';
 }
 
 export interface PurgarLimitesContactoData {
@@ -2232,6 +2370,19 @@ export interface RecibirSolicitudDerechoVariables {
   versionAviso: string;
   objetivoAtencion: TimestampString;
   limiteId: string;
+}
+
+export interface RegistrarConteoFisicoIaData {
+  conteoInventario_insert: ConteoInventario_Key;
+  insumo_update?: Insumo_Key | null;
+  movimientoInventario_insert: MovimientoInventario_Key;
+}
+
+export interface RegistrarConteoFisicoIaVariables {
+  id: UUIDString;
+  insumoId: UUIDString;
+  cantidad: number;
+  revisionStock: number;
 }
 
 export interface RegistrarConteoInventarioData {
@@ -2423,6 +2574,11 @@ export interface SalidaVehiculo_Key {
   __typename?: 'SalidaVehiculo_Key';
 }
 
+export interface SimulacionIa_Key {
+  id: UUIDString;
+  __typename?: 'SimulacionIa_Key';
+}
+
 export interface SolicitudContacto_Key {
   id: UUIDString;
   __typename?: 'SolicitudContacto_Key';
@@ -2431,6 +2587,12 @@ export interface SolicitudContacto_Key {
 export interface SolicitudDerecho_Key {
   id: UUIDString;
   __typename?: 'SolicitudDerecho_Key';
+}
+
+export interface TasaConsumo_Key {
+  tipoServicioId: UUIDString;
+  insumoId: UUIDString;
+  __typename?: 'TasaConsumo_Key';
 }
 
 export interface TipoPrenda_Key {
@@ -2692,6 +2854,90 @@ export const vincularMiFichaVerificadaRef: VincularMiFichaVerificadaRef;
 
 export function vincularMiFichaVerificada(): MutationPromise<VincularMiFichaVerificadaData, undefined>;
 export function vincularMiFichaVerificada(dc: DataConnect): MutationPromise<VincularMiFichaVerificadaData, undefined>;
+
+interface AutorizarModuloIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AutorizarModuloIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<AutorizarModuloIaData, undefined>;
+  operationName: string;
+}
+export const autorizarModuloIaRef: AutorizarModuloIaRef;
+
+export function autorizarModuloIa(options?: ExecuteQueryOptions): QueryPromise<AutorizarModuloIaData, undefined>;
+export function autorizarModuloIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AutorizarModuloIaData, undefined>;
+
+interface GetPanelIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetPanelIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetPanelIaData, undefined>;
+  operationName: string;
+}
+export const getPanelIaRef: GetPanelIaRef;
+
+export function getPanelIa(options?: ExecuteQueryOptions): QueryPromise<GetPanelIaData, undefined>;
+export function getPanelIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetPanelIaData, undefined>;
+
+interface GetHistorialAjustesIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars?: GetHistorialAjustesIaVariables): QueryRef<GetHistorialAjustesIaData, GetHistorialAjustesIaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars?: GetHistorialAjustesIaVariables): QueryRef<GetHistorialAjustesIaData, GetHistorialAjustesIaVariables>;
+  operationName: string;
+}
+export const getHistorialAjustesIaRef: GetHistorialAjustesIaRef;
+
+export function getHistorialAjustesIa(vars?: GetHistorialAjustesIaVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialAjustesIaData, GetHistorialAjustesIaVariables>;
+export function getHistorialAjustesIa(dc: DataConnect, vars?: GetHistorialAjustesIaVariables, options?: ExecuteQueryOptions): QueryPromise<GetHistorialAjustesIaData, GetHistorialAjustesIaVariables>;
+
+interface GuardarTasaConsumoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GuardarTasaConsumoVariables): MutationRef<GuardarTasaConsumoData, GuardarTasaConsumoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GuardarTasaConsumoVariables): MutationRef<GuardarTasaConsumoData, GuardarTasaConsumoVariables>;
+  operationName: string;
+}
+export const guardarTasaConsumoRef: GuardarTasaConsumoRef;
+
+export function guardarTasaConsumo(vars: GuardarTasaConsumoVariables): MutationPromise<GuardarTasaConsumoData, GuardarTasaConsumoVariables>;
+export function guardarTasaConsumo(dc: DataConnect, vars: GuardarTasaConsumoVariables): MutationPromise<GuardarTasaConsumoData, GuardarTasaConsumoVariables>;
+
+interface EliminarTasaConsumoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EliminarTasaConsumoVariables): MutationRef<EliminarTasaConsumoData, EliminarTasaConsumoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EliminarTasaConsumoVariables): MutationRef<EliminarTasaConsumoData, EliminarTasaConsumoVariables>;
+  operationName: string;
+}
+export const eliminarTasaConsumoRef: EliminarTasaConsumoRef;
+
+export function eliminarTasaConsumo(vars: EliminarTasaConsumoVariables): MutationPromise<EliminarTasaConsumoData, EliminarTasaConsumoVariables>;
+export function eliminarTasaConsumo(dc: DataConnect, vars: EliminarTasaConsumoVariables): MutationPromise<EliminarTasaConsumoData, EliminarTasaConsumoVariables>;
+
+interface GuardarConfiguracionIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GuardarConfiguracionIaVariables): MutationRef<GuardarConfiguracionIaData, GuardarConfiguracionIaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GuardarConfiguracionIaVariables): MutationRef<GuardarConfiguracionIaData, GuardarConfiguracionIaVariables>;
+  operationName: string;
+}
+export const guardarConfiguracionIaRef: GuardarConfiguracionIaRef;
+
+export function guardarConfiguracionIa(vars: GuardarConfiguracionIaVariables): MutationPromise<GuardarConfiguracionIaData, GuardarConfiguracionIaVariables>;
+export function guardarConfiguracionIa(dc: DataConnect, vars: GuardarConfiguracionIaVariables): MutationPromise<GuardarConfiguracionIaData, GuardarConfiguracionIaVariables>;
+
+interface RegistrarConteoFisicoIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegistrarConteoFisicoIaVariables): MutationRef<RegistrarConteoFisicoIaData, RegistrarConteoFisicoIaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegistrarConteoFisicoIaVariables): MutationRef<RegistrarConteoFisicoIaData, RegistrarConteoFisicoIaVariables>;
+  operationName: string;
+}
+export const registrarConteoFisicoIaRef: RegistrarConteoFisicoIaRef;
+
+export function registrarConteoFisicoIa(vars: RegistrarConteoFisicoIaVariables): MutationPromise<RegistrarConteoFisicoIaData, RegistrarConteoFisicoIaVariables>;
+export function registrarConteoFisicoIa(dc: DataConnect, vars: RegistrarConteoFisicoIaVariables): MutationPromise<RegistrarConteoFisicoIaData, RegistrarConteoFisicoIaVariables>;
 
 interface RegistrarConteoInventarioRef {
   /* Allow users to create refs without passing in DataConnect */

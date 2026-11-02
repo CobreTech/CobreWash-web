@@ -286,7 +286,17 @@ type ConteoInventario @table(name: "conteo_inventario") {
   resueltoPor: Usuario
   resueltoEn: Timestamp
   motivoResolucion: String @col(dataType: "varchar(200)")
+  # Módulo IA: los conteos APROBADO son las observaciones del modelo.
+  # fechaConteo permite importar conteos pasados; si es nula vale creadoEn.
+  # Los conteos SIMULADO nunca modifican el stock del insumo.
+  origen: OrigenDato! @default(value: REAL)
+  fechaConteo: Timestamp
+  simulacion: SimulacionIa
 }
+
+# Clasifica el motivo del movimiento para que el modelo IA distinga compras
+# de ajustes. Nulo en filas anteriores al módulo IA.
+enum ClaseMovimiento { COMPRA AJUSTE_CONTEO STOCK_INICIAL CONSUMO OTRO }
 
 type MovimientoInventario @table(name: "movimiento_inventario") {
   id: UUID! @default(expr: "uuidV4()")
@@ -297,6 +307,10 @@ type MovimientoInventario @table(name: "movimiento_inventario") {
   cantidad: Float! @col(dataType: "numeric(12,2)")
   motivo: String @col(dataType: "varchar(200)")
   fecha: Timestamp! @default(expr: "request.time")
+  clase: ClaseMovimiento
+  # Los movimientos SIMULADO nunca modifican el stock del insumo.
+  origen: OrigenDato! @default(value: REAL)
+  simulacion: SimulacionIa
 }
 
 # Alerta generada cuando el stock baja del mínimo (RF29).
@@ -325,7 +339,11 @@ type Aviso @table(name: "aviso") {
 
 # ============== MÓDULO 7: IA - PREDICCIÓN DE INSUMOS ==========================
 
-# Versiones del modelo predictivo; su precisión mejora con más datos (RF-IA04).
+# Distingue datos reales de los generados por la pestaña Simulación.
+enum OrigenDato { REAL SIMULADO }
+
+# Historial de ajustes del modelo (RF-IA04). Cada recálculo inserta una fila y
+# deja activa solo la última. El error se mide con los conteos del período.
 type ModeloIa @table(name: "modelo_ia") {
   id: UUID! @default(expr: "uuidV4()")
   nombre: String! @col(dataType: "varchar(80)")
@@ -334,17 +352,65 @@ type ModeloIa @table(name: "modelo_ia") {
   parametros: String @col(dataType: "varchar(1000)")
   fechaEntrenamiento: Timestamp! @default(expr: "request.time")
   activo: Boolean! @default(value: true)
+  # Error absoluto medio (en la unidad de cada insumo, promediado) y error
+  # porcentual medio de los períodos entre conteos.
+  mae: Float @col(dataType: "numeric(14,4)")
+  mape: Float @col(dataType: "numeric(8,4)")
+  # Desviación relativa de los residuos; define el rango de cada estimación.
+  desviacionRelativa: Float @col(dataType: "numeric(8,4)")
+  observaciones: Int! @default(value: 0)
+  lambda: Float @col(dataType: "numeric(12,4)")
+  margenSeguridad: Float @col(dataType: "numeric(5,4)")
+  incluyeSimulado: Boolean! @default(value: false)
+  # Tasas resultantes y métricas por insumo, serializadas para el historial.
+  tasasJson: String
+  ejecutadoPor: Usuario
 }
 
-# Patrón aprendido de consumo de un insumo por combinación servicio/prenda
-# (RF-IA01). PK compuesta para garantizar un patrón único por combinación.
-type PatronConsumo @table(name: "patron_consumo", key: ["tipoServicio", "tipoPrenda", "insumo"]) {
+# Tasa de consumo de un insumo por kg de ropa de un servicio (RF-IA01).
+# tasaInicial la define el admin; tasaActual la recalcula el modelo.
+# unidad es la cantidad de insumo por kg: 'ml', 'L', 'g' o 'kg'.
+type TasaConsumo @table(name: "tasa_consumo", key: ["tipoServicio", "insumo"]) {
   tipoServicio: TipoServicio!
-  tipoPrenda: TipoPrenda!
   insumo: Insumo!
-  consumoPromedio: Float! @col(dataType: "numeric(12,4)") @default(value: 0)
-  modelo: ModeloIa
+  tasaInicial: Float! @col(dataType: "numeric(12,4)")
+  tasaActual: Float! @col(dataType: "numeric(12,4)")
+  unidad: String! @col(dataType: "varchar(10)")
+  # Texto libre; GuardarTasaConsumo limita a 300 caracteres con mensaje claro.
+  fuente: String
+  actualizadoPor: Usuario
   actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Parámetros del modelo editables por el admin. Fila única con id "global".
+type ConfiguracionIa @table(name: "configuracion_ia") {
+  id: String!
+  margenSeguridad: Float! @col(dataType: "numeric(5,4)") @default(value: 0.15)
+  lambda: Float! @col(dataType: "numeric(12,4)") @default(value: 1)
+  incluirSimulado: Boolean! @default(value: false)
+  actualizadoPor: Usuario
+  actualizadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Lote de datos simulados. Guarda las tasas "verdaderas" ocultas para comparar
+# lo aprendido; borrar el lote elimina todos sus datos.
+type SimulacionIa @table(name: "simulacion_ia") {
+  id: UUID! @default(expr: "uuidV4()")
+  semanas: Int!
+  parametrosJson: String!
+  tasasVerdaderasJson: String!
+  creadoPor: Usuario!
+  creadoEn: Timestamp! @default(expr: "request.time")
+}
+
+# Kg procesados por servicio en un día simulado. Reemplaza a las comandas
+# simuladas para no mezclar datos ficticios con la operación real.
+type ProduccionSimulada @table(name: "produccion_simulada") {
+  id: UUID! @default(expr: "uuidV4()")
+  simulacion: SimulacionIa!
+  tipoServicio: TipoServicio!
+  fecha: Timestamp!
+  kg: Float! @col(dataType: "numeric(12,2)")
 }
 
 # Predicción de consumo al crear una comanda; alimenta la alerta de stock
