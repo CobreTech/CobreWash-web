@@ -151,3 +151,23 @@ query GetRegistrosExistentesIa($desde: Timestamp!, $hasta: Timestamp!) @auth(lev
   conteoInventarios(where: { origen: { eq: REAL }, fechaConteo: { ge: $desde, le: $hasta } }, limit: 10000) { insumoId fechaConteo }
   movimientoInventarios(where: { origen: { eq: REAL }, clase: { eq: COMPRA }, fecha: { ge: $desde, le: $hasta } }, limit: 10000) { insumoId fecha cantidad }
 }
+
+# Todo lo que necesita un recálculo. Los conteos aprobados son las
+# observaciones; las entradas se clasifican en el servidor (las filas antiguas
+# no tienen clase). La producción real son las líneas de comanda con kg.
+query GetDatosEntrenamientoIa @auth(level: NO_ACCESS) {
+  configuracionIa(id: "global") { margenSeguridad lambda incluirSimulado }
+  tasaConsumos(limit: 5000) {
+    tipoServicioId insumoId tasaInicial tasaActual unidad fuente
+    tipoServicio { nombre }
+  }
+  insumos(where: { activo: { eq: true } }, limit: 1000) { id nombre unidadMedida }
+  conteoInventarios(where: { estado: { eq: APROBADO } }, limit: 50000) { insumoId cantidadContada creadoEn fechaConteo origen }
+  movimientoInventarios(where: { tipoMovimiento: { eq: ENTRADA } }, limit: 50000) { insumoId fecha cantidad origen tipoMovimiento clase motivo }
+  comandaDetalles(where: { pesoKg: { gt: 0 }, comanda: { estado: { ne: ANULADA } } }, limit: 100000) {
+    tipoServicioId pesoKg
+    comanda { fechaRecepcion }
+  }
+  produccionSimuladas(limit: 100000) { tipoServicioId fecha kg }
+  modelos: modeloIas { _count }
+}

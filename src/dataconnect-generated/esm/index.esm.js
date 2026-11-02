@@ -1,5 +1,13 @@
 import { queryRef, executeQuery, validateArgsWithOptions, mutationRef, executeMutation, validateArgs } from 'firebase/data-connect';
 
+export const ClaseMovimiento = {
+  COMPRA: "COMPRA",
+  AJUSTE_CONTEO: "AJUSTE_CONTEO",
+  STOCK_INICIAL: "STOCK_INICIAL",
+  CONSUMO: "CONSUMO",
+  OTRO: "OTRO",
+}
+
 export const ComandaEstado = {
   PENDIENTE: "PENDIENTE",
   EN_PROCESO: "EN_PROCESO",
@@ -46,6 +54,11 @@ export const IncidenciaEstado = {
 export const MomentoInspeccion = {
   ANTES: "ANTES",
   DESPUES: "DESPUES",
+}
+
+export const OrigenDato = {
+  REAL: "REAL",
+  SIMULADO: "SIMULADO",
 }
 
 export const SalidaVehiculoEstado = {
@@ -430,6 +443,19 @@ export function getRegistrosExistentesIa(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getRegistrosExistentesIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getDatosEntrenamientoIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetDatosEntrenamientoIa');
+}
+getDatosEntrenamientoIaRef.operationName = 'GetDatosEntrenamientoIa';
+
+export function getDatosEntrenamientoIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getDatosEntrenamientoIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const registrarConteoInventarioRef = (dcOrVars, vars) => {

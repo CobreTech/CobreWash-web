@@ -122,7 +122,7 @@ await prueba('el historial de ajustes pagina los modelos registrados', async () 
 });
 
 await prueba('la importación histórica solo la ejecuta el servidor y no toca el stock', async () => {
-  const importacion = await readFile('dataconnect/produccion/ia-importacion.gql', 'utf8');
+  const importacion = await readFile('dataconnect/produccion/ia-servidor.gql', 'utf8');
   const conteo = { id: randomUUID(), insumoId: detergente, cantidadContada: 120, stockSistema: 120, revisionStock: 0, registradoPorId: 'test-admin', estado: 'APROBADO', origen: 'REAL', fechaConteo: '2025-12-01T02:59:59Z' };
   const compra = { id: randomUUID(), insumoId: detergente, tipoMovimiento: 'ENTRADA', cantidad: 40, clase: 'COMPRA', origen: 'REAL', fecha: '2025-12-15T15:00:00Z' };
   for (const uid of [null, 'test-admin']) {
@@ -140,6 +140,34 @@ await prueba('la importación histórica solo la ejecuta el servidor y no toca e
   const existentes = await ejecutar(ia, 'GetRegistrosExistentesIa', { desde: '2025-12-01T00:00:00Z', hasta: '2025-12-31T00:00:00Z' });
   assert.equal(existentes.conteoInventarios.length, 1); assert.equal(existentes.movimientoInventarios.length, 1);
   assert((await ejecutar(ia, 'GetInsumosImportacionIa')).insumos.some(i => i.nombre === 'Detergente IA'));
+});
+
+await prueba('el recálculo lee solo kg de comandas vigentes y guarda un único ajuste vigente', async () => {
+  const servidor = await readFile('dataconnect/produccion/ia-servidor.gql', 'utf8');
+  const clienteId = '00000000-0000-4000-8000-000000000010', prenda = '00000000-0000-4000-8000-000000000011';
+  const vigente = randomUUID(), anulada = randomUUID();
+  await ejecutar('mutation Comandas($a:UUID!,$b:UUID!,$c:UUID!,$p:UUID!,$s:UUID!){comanda_insertMany(data:[{id:$a,numeroComanda:"IA-VIG",clienteId:$c,estado:ENTREGADA},{id:$b,numeroComanda:"IA-ANU",clienteId:$c,estado:ANULADA}]) comandaDetalle_insertMany(data:[{comandaId:$a,tipoPrendaId:$p,tipoServicioId:$s,pesoKg:120},{comandaId:$a,tipoPrendaId:$p,tipoServicioId:$s,pesoKg:null},{comandaId:$b,tipoPrendaId:$p,tipoServicioId:$s,pesoKg:999}])}', 'Comandas', { a: vigente, b: anulada, c: clienteId, p: prenda, s: servicioId });
+  for (const uid of [null, 'test-admin']) {
+    await assert.rejects(ejecutar(ia, 'GetDatosEntrenamientoIa', {}, uid));
+    await assert.rejects(ejecutar(servidor, 'GuardarAjusteIa', { modelo: { nombre: 'x', version: 'x' }, tasas: [] }, uid));
+  }
+  const datos = await ejecutar(ia, 'GetDatosEntrenamientoIa');
+  assert.deepEqual(datos.comandaDetalles.map(d => d.pesoKg), [120]);
+  assert(datos.conteoInventarios.every(c => c.origen === 'REAL' || c.origen === 'SIMULADO'));
+  assert(datos.movimientoInventarios.every(m => m.tipoMovimiento === 'ENTRADA'));
+  const tasa = datos.tasaConsumos.find(t => uuid(t.insumoId) === uuid(detergente));
+  const modelos = datos.modelos[0]._count;
+  await ejecutar(servidor, 'GuardarAjusteIa', {
+    modelo: { id: randomUUID(), nombre: 'Regresión regularizada no negativa', version: `v${modelos + 1}`, activo: true, observaciones: 4, mape: 6.5, mae: 0.8, tasasJson: '{"insumos":[],"descartados":[],"totalDescartados":0}', ejecutadoPorId: 'test-admin' },
+    tasas: [{ tipoServicioId: tasa.tipoServicioId, insumoId: tasa.insumoId, tasaInicial: tasa.tasaInicial, tasaActual: 9.75, unidad: tasa.unidad, fuente: tasa.fuente, actualizadoPorId: 'test-admin' }],
+  });
+  const panel = await ejecutar(ia, 'GetPanelIa', {}, 'test-admin');
+  assert.equal(panel.modeloVigente[0].version, `v${modelos + 1}`);
+  const historial = await ejecutar(ia, 'GetHistorialAjustesIa', { limit: 100 }, 'test-admin');
+  assert.equal(historial.modeloIas.filter(m => m.activo).length, 1);
+  const guardada = panel.tasaConsumos.find(t => uuid(t.insumoId) === uuid(detergente));
+  assert.equal(guardada.tasaActual, 9.75); assert.equal(guardada.tasaInicial, 12); assert.equal(guardada.fuente, 'Dosificador de la lavadora');
+  assert.equal(panel.insumos.find(i => i.nombre === 'Detergente IA').stockActual, 82.5);
 });
 
 console.log(`${comprobaciones} escenarios del módulo IA aprobados.`);

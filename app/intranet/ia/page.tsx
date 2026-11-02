@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrainCircuit, Database, Loader2, Table2 } from "lucide-react";
+import { BrainCircuit, Database, Gauge, Loader2, Table2 } from "lucide-react";
 import { QueryFetchPolicy } from "firebase/data-connect";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import DatosIa from "@/components/intranet/ia/DatosIa";
+import ResumenIa from "@/components/intranet/ia/ResumenIa";
 import TasasIa from "@/components/intranet/ia/TasasIa";
 import { AvisoFlotante, type Aviso } from "@/components/intranet/ia/ui";
 import { dataConnect } from "@/lib/firebase/client";
@@ -12,6 +13,7 @@ import { registrarError } from "@/lib/registro-seguro";
 import { getPanelIa, type GetPanelIaData } from "@/src/dataconnect-generated";
 
 const PESTANAS = [
+  { id: "resumen", etiqueta: "Resumen", icono: Gauge },
   { id: "tasas", etiqueta: "Tasas", icono: Table2 },
   { id: "datos", etiqueta: "Datos", icono: Database },
 ] as const;
@@ -19,7 +21,7 @@ type Pestana = (typeof PESTANAS)[number]["id"];
 
 export default function ModuloIaPage() {
   const permitido = useRoleGuard(["admin"]);
-  const [pestana, setPestana] = useState<Pestana>("tasas");
+  const [pestana, setPestana] = useState<Pestana>("resumen");
   const [panel, setPanel] = useState<GetPanelIaData | null>(null);
   const [error, setError] = useState(false);
   const [aviso, setAviso] = useState<Aviso | null>(null);
@@ -89,6 +91,7 @@ export default function ModuloIaPage() {
         </div>
       ) : (
         <div role="tabpanel" id={`panel-ia-${pestana}`} aria-labelledby={`pestana-ia-${pestana}`}>
+          {pestana === "resumen" && <ResumenIa panel={panel} recargar={recargar} avisar={avisar} />}
           {pestana === "tasas" && <TasasIa panel={panel} recargar={recargar} avisar={avisar} />}
           {pestana === "datos" && <DatosIa panel={panel} recargar={recargar} avisar={avisar} />}
         </div>

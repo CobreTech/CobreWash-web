@@ -8,6 +8,14 @@ export type Int64String = string;
 export type DateString = string;
 
 
+export enum ClaseMovimiento {
+  COMPRA = "COMPRA",
+  AJUSTE_CONTEO = "AJUSTE_CONTEO",
+  STOCK_INICIAL = "STOCK_INICIAL",
+  CONSUMO = "CONSUMO",
+  OTRO = "OTRO",
+};
+
 export enum ComandaEstado {
   PENDIENTE = "PENDIENTE",
   EN_PROCESO = "EN_PROCESO",
@@ -54,6 +62,11 @@ export enum IncidenciaEstado {
 export enum MomentoInspeccion {
   ANTES = "ANTES",
   DESPUES = "DESPUES",
+};
+
+export enum OrigenDato {
+  REAL = "REAL",
+  SIMULADO = "SIMULADO",
 };
 
 export enum SalidaVehiculoEstado {
@@ -1110,6 +1123,61 @@ export interface GetConteosInventarioVariables {
   estado?: EstadoConteoInventario | null;
   limit?: number | null;
   offset?: number | null;
+}
+
+export interface GetDatosEntrenamientoIaData {
+  configuracionIa?: {
+    margenSeguridad: number;
+    lambda: number;
+    incluirSimulado: boolean;
+  };
+  tasaConsumos: ({
+    tipoServicioId: UUIDString;
+    insumoId: UUIDString;
+    tasaInicial: number;
+    tasaActual: number;
+    unidad: string;
+    fuente?: string | null;
+    tipoServicio: {
+      nombre: string;
+    };
+  } & TasaConsumo_Key)[];
+  insumos: ({
+    id: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+  } & Insumo_Key)[];
+  conteoInventarios: ({
+    insumoId: UUIDString;
+    cantidadContada: number;
+    creadoEn: TimestampString;
+    fechaConteo?: TimestampString | null;
+    origen: OrigenDato;
+  })[];
+  movimientoInventarios: ({
+    insumoId: UUIDString;
+    fecha: TimestampString;
+    cantidad: number;
+    origen: OrigenDato;
+    tipoMovimiento: TipoMovimiento;
+    clase?: ClaseMovimiento | null;
+    motivo?: string | null;
+  })[];
+  comandaDetalles: ({
+    tipoServicioId: UUIDString;
+    pesoKg?: number | null;
+    comanda: {
+      fechaRecepcion: TimestampString;
+    };
+  })[];
+  produccionSimuladas: ({
+    tipoServicioId: UUIDString;
+    fecha: TimestampString;
+    kg: number;
+  })[];
+  modelos: ({
+    _count: number;
+  })[];
 }
 
 export interface GetDetalleReporteCuentasData {
@@ -2987,6 +3055,18 @@ export const getRegistrosExistentesIaRef: GetRegistrosExistentesIaRef;
 
 export function getRegistrosExistentesIa(vars: GetRegistrosExistentesIaVariables, options?: ExecuteQueryOptions): QueryPromise<GetRegistrosExistentesIaData, GetRegistrosExistentesIaVariables>;
 export function getRegistrosExistentesIa(dc: DataConnect, vars: GetRegistrosExistentesIaVariables, options?: ExecuteQueryOptions): QueryPromise<GetRegistrosExistentesIaData, GetRegistrosExistentesIaVariables>;
+
+interface GetDatosEntrenamientoIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetDatosEntrenamientoIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetDatosEntrenamientoIaData, undefined>;
+  operationName: string;
+}
+export const getDatosEntrenamientoIaRef: GetDatosEntrenamientoIaRef;
+
+export function getDatosEntrenamientoIa(options?: ExecuteQueryOptions): QueryPromise<GetDatosEntrenamientoIaData, undefined>;
+export function getDatosEntrenamientoIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetDatosEntrenamientoIaData, undefined>;
 
 interface RegistrarConteoInventarioRef {
   /* Allow users to create refs without passing in DataConnect */

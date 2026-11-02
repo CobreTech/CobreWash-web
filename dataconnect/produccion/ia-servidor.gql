@@ -1,0 +1,20 @@
+# Operaciones de servidor del módulo IA. Viven en este conector porque el
+# generador del SDK web aún no admite entradas _Data; /api/ia/* las ejecuta con
+# el SDK Admin después de verificar que quien llama es administrador.
+
+# Conteos y compras históricos: quedan en el registro pero no cambian el stock actual.
+mutation ImportarConteosIa($conteos: [ConteoInventario_Data!]!) @auth(level: NO_ACCESS) @transaction {
+  conteoInventario_insertMany(data: $conteos)
+}
+
+mutation ImportarComprasIa($compras: [MovimientoInventario_Data!]!) @auth(level: NO_ACCESS) @transaction {
+  movimientoInventario_insertMany(data: $compras)
+}
+
+# Guarda un recálculo: el nuevo ajuste queda como único vigente y las tasas
+# actuales se reemplazan en la misma transacción. Nunca toca el stock.
+mutation GuardarAjusteIa($modelo: ModeloIa_Data!, $tasas: [TasaConsumo_Data!]!) @auth(level: NO_ACCESS) @transaction {
+  modeloIa_updateMany(where: { activo: { eq: true } }, data: { activo: false })
+  modeloIa_insert(data: $modelo)
+  tasaConsumo_upsertMany(data: $tasas)
+}

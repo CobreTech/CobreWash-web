@@ -1,5 +1,14 @@
 const { queryRef, executeQuery, validateArgsWithOptions, mutationRef, executeMutation, validateArgs } = require('firebase/data-connect');
 
+const ClaseMovimiento = {
+  COMPRA: "COMPRA",
+  AJUSTE_CONTEO: "AJUSTE_CONTEO",
+  STOCK_INICIAL: "STOCK_INICIAL",
+  CONSUMO: "CONSUMO",
+  OTRO: "OTRO",
+}
+exports.ClaseMovimiento = ClaseMovimiento;
+
 const ComandaEstado = {
   PENDIENTE: "PENDIENTE",
   EN_PROCESO: "EN_PROCESO",
@@ -54,6 +63,12 @@ const MomentoInspeccion = {
   DESPUES: "DESPUES",
 }
 exports.MomentoInspeccion = MomentoInspeccion;
+
+const OrigenDato = {
+  REAL: "REAL",
+  SIMULADO: "SIMULADO",
+}
+exports.OrigenDato = OrigenDato;
 
 const SalidaVehiculoEstado = {
   PROGRAMADA: "PROGRAMADA",
@@ -499,6 +514,21 @@ exports.getRegistrosExistentesIa = function getRegistrosExistentesIa(dcOrVars, v
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getRegistrosExistentesIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getDatosEntrenamientoIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetDatosEntrenamientoIa');
+}
+getDatosEntrenamientoIaRef.operationName = 'GetDatosEntrenamientoIa';
+exports.getDatosEntrenamientoIaRef = getDatosEntrenamientoIaRef;
+
+exports.getDatosEntrenamientoIa = function getDatosEntrenamientoIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getDatosEntrenamientoIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
