@@ -251,6 +251,7 @@ query GetComandas(
     comandaDetalles_on_comanda {
       cantidad
       detalle
+      pesoKg
       precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }
@@ -327,6 +328,7 @@ query GetComandasPaginadas(
     comandaDetalles_on_comanda {
       cantidad
       detalle
+      pesoKg
       precioUnitario
       tipoPrenda { nombre }
       tipoServicio { nombre }

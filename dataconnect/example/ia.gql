@@ -198,3 +198,17 @@ mutation BorrarSimulacionesIa @auth(level: NO_ACCESS) @transaction {
   movimientoInventario_deleteMany(where: { origen: { eq: SIMULADO } })
   simulacionIa_deleteMany(all: true)
 }
+
+# ---------- Estimación en el formulario de comandas ----------
+# Lo mínimo para estimar el consumo de una comanda nueva. La recepción solo ve
+# si el stock alcanza; la pantalla no muestra cantidades a ese rol.
+query GetModeloComandaIa @auth(level: USER) {
+  yo: usuario(id_expr: "auth.uid") @redact @check(expr: "this != null", message: "Perfil no encontrado") {
+    activo @check(expr: "this == true", message: "La cuenta está inactiva")
+    rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado") }
+  }
+  configuracionIa(id: "global") { margenSeguridad }
+  tasaConsumos(limit: 5000) { tipoServicioId insumoId tasaInicial tasaActual unidad }
+  insumos(where: { activo: { eq: true } }, orderBy: [{ nombre: ASC }], limit: 1000) { id nombre unidadMedida stockActual }
+  modeloVigente: modeloIas(where: { activo: { eq: true } }, orderBy: [{ fechaEntrenamiento: DESC }, { id: DESC }], limit: 1) { desviacionRelativa tasasJson }
+}

@@ -21,7 +21,10 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
+import { useUsuarioActualContext } from "@/components/intranet/AuthGuard";
 import ComandaDetalle from "@/components/intranet/ComandaDetalle";
+import ConsumoEstimado from "@/components/intranet/ia/ConsumoEstimado";
+import { leerPesoKg, repartirPeso, type ModeloComanda } from "@/lib/ia/comanda";
 import GlassSelect from "@/components/ui/GlassSelect";
 import {
   estadoConfig,
@@ -40,6 +43,7 @@ import {
   ComandaEstado,
   getCatalogosComanda,
   getComandaDetalle,
+  getModeloComandaIa,
   anularComanda,
   entregarComanda,
   crearTipoPrenda,
@@ -149,7 +153,7 @@ function presentarComanda(c: GetComandasPaginadasData["comandas"][number]): Coma
       tipoPrenda: [...PRENDAS_FORMULARIO, ...PRENDAS_HOTEL].find(
         (nombre) => normalizarCatalogo(nombre) === normalizarCatalogo(d.tipoPrenda.nombre),
       ) || d.tipoPrenda.nombre,
-      servicio: d.tipoServicio.nombre, cantidad: d.cantidad, precioUnitario: d.precioUnitario, detalle: d.detalle || "",
+      servicio: d.tipoServicio.nombre, cantidad: d.cantidad, precioUnitario: d.precioUnitario, detalle: d.detalle || "", pesoKg: d.pesoKg,
     })),
     valorTotal: c.valorTotal,
     fechaRecepcion: new Date(c.fechaRecepcion).toLocaleDateString("es-CL", { timeZone: "America/Santiago" }),
@@ -173,6 +177,8 @@ type FormState = {
   email: string;
   direccion: string;
   servicio: string;
+  /** Peso total de la comanda en kg, tal como se escribe ("12,5"). */
+  pesoKg: string;
   detalle: FormLinea[];
   observaciones: string;
 };
@@ -188,12 +194,26 @@ const emptyForm: FormState = {
   email: "",
   direccion: "",
   servicio: "",
+  pesoKg: "",
   detalle: [{ tipoPrenda: "", servicio: "Lavado", cantidad: 1, precioUnitario: 1000, detalle: "", recibido: 0 }],
   observaciones: "",
 };
 
 export default function ComandasPage() {
   const permitido = useRoleGuard(["admin", "recepcionista"]);
+  const esAdmin = useUsuarioActualContext()?.rol.nombre === "admin";
+  // Tasas y stock para estimar el consumo de la comanda que se registra.
+  const [modeloIa, setModeloIa] = useState<ModeloComanda | null>(null);
+  const [errorModeloIa, setErrorModeloIa] = useState(false);
+  const cargarModeloIa = useCallback(async () => {
+    setErrorModeloIa(false);
+    try {
+      setModeloIa((await getModeloComandaIa(dataConnect, { fetchPolicy: "SERVER_ONLY" })).data);
+    } catch (error) {
+      registrarError("No se pudo cargar la estimación de insumos", error);
+      setErrorModeloIa(true);
+    }
+  }, []);
 
   const [estadosSeleccionados, setEstadosSeleccionados] = useState<EstadoComanda[]>([]);
   const [search, setSearch] = useState("");
@@ -333,6 +353,7 @@ export default function ComandasPage() {
       }],
     });
     setNuevoCliente((catData?.clientes.length ?? 0) === 0);
+    void cargarModeloIa();
     creacion.current = { id: crypto.randomUUID(), numero: generarNumeroComanda() };
     envioPendiente.current = null;
     setForm({ mode: "crear" });
@@ -352,12 +373,17 @@ export default function ComandasPage() {
       direccion: c.direccion ?? "",
       clienteId: fichaCliente?.id || "",
       servicio: c.servicio,
+      pesoKg: (() => {
+        const total = Math.round(c.detalle.reduce((s, d) => s + (d.pesoKg ?? 0), 0) * 100) / 100;
+        return total > 0 ? String(total).replace(".", ",") : "";
+      })(),
       detalle: c.detalle.map((d) => {
         const hotel = leerDetalleHotel(d.detalle);
         return { ...d, detalle: c.tipoCliente === TipoCliente.HOTEL ? hotel.observacion : d.detalle || "", recibido: hotel.recibido };
       }),
       observaciones: c.observaciones || "",
     });
+    void cargarModeloIa();
     setForm({ mode: "editar", id: c.dbId, version: c.actualizadoEn });
   };
 
@@ -368,6 +394,13 @@ export default function ComandasPage() {
       setFormError("Selecciona un cliente y agrega al menos una prenda.");
       return;
     }
+    const pesoTotal = leerPesoKg(formData.pesoKg);
+    if (pesoTotal === null) {
+      setFormError("Ingresa el peso total de la comanda en kg (mayor que 0 y hasta 10.000).");
+      return;
+    }
+    // El peso se mide por comanda; se reparte entre las líneas según la cantidad.
+    const pesos = repartirPeso(pesoTotal, detalleLimpio.map((d) => d.cantidad));
     if (nuevoCliente && !isValidRut(formData.rut)) {
       setFormError("Ingresa un RUT chileno válido para el cliente.");
       return;
@@ -443,7 +476,8 @@ export default function ComandasPage() {
         detalleLimpio.map(async (linea) => ({
           linea,
           tipoPrendaId: await resolverTipoPrendaId(linea.tipoPrenda),
-          tipoServicioId: await resolverTipoServicioId(linea.servicio),
+          // Todas las líneas llevan el servicio elegido para la comanda.
+          tipoServicioId: await resolverTipoServicioId(formData.servicio || linea.servicio),
         })),
       );
 
@@ -480,11 +514,12 @@ export default function ComandasPage() {
           empresa: formData.empresa.trim() || undefined,
           proyecto: formData.proyecto.trim() || undefined,
           observaciones: formData.observaciones.trim() || undefined,
-          detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }) => ({
+          detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }, indice) => ({
             tipoPrendaId, tipoServicioId, cantidad: d.cantidad,
             detalle: formData.tipoCliente === TipoCliente.HOTEL
               ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
               : d.detalle.trim() || undefined,
+            pesoKg: pesos[indice],
             precioUnitario: d.precioUnitario, subtotal: d.cantidad * d.precioUnitario,
           })),
         };
@@ -499,12 +534,13 @@ export default function ComandasPage() {
             empresa: formData.empresa.trim() || undefined,
             proyecto: formData.proyecto.trim() || undefined,
             observaciones: formData.observaciones.trim() || undefined,
-            detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }) => ({
+            detalles: lineasResueltas.map(({ linea: d, tipoPrendaId, tipoServicioId }, indice) => ({
               comandaId: form.id,
               tipoPrendaId, tipoServicioId, cantidad: d.cantidad,
               detalle: formData.tipoCliente === TipoCliente.HOTEL
                 ? `Entregado: ${d.cantidad} · Recibido: ${d.recibido} · Pendiente: ${Math.max(0, d.cantidad - d.recibido)}${d.detalle.trim() ? ` · ${d.detalle.trim()}` : ""}`
                 : d.detalle.trim() || undefined,
+              pesoKg: pesos[indice],
               precioUnitario: d.precioUnitario, subtotal: d.cantidad * d.precioUnitario,
             })),
           });
@@ -932,13 +968,47 @@ export default function ComandasPage() {
                   <FieldInput label="Correo" value={formData.email} onChange={(v) => setFormData({ ...formData, email: v })} placeholder="correo@ejemplo.com" />
                 </div>
                 <FieldInput label="Dirección" value={formData.direccion} onChange={(v) => setFormData({ ...formData, direccion: v })} placeholder="Dirección de retiro / entrega" />
+                {/* Servicio y peso de la comanda: base de la estimación de insumos */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Servicio</label>
+                    <GlassSelect
+                      value={formData.servicio}
+                      onChange={(v) => {
+                        const anterior = catData?.tipoServicios.find((s) => s.nombre === formData.servicio);
+                        const nuevo = catData?.tipoServicios.find((s) => s.nombre === v);
+                        setFormData({
+                          ...formData,
+                          servicio: v,
+                          // Solo cambia los precios que seguían el valor base del servicio anterior.
+                          detalle: formData.detalle.map((linea) => ({
+                            ...linea,
+                            servicio: v,
+                            precioUnitario: anterior && nuevo && linea.precioUnitario === anterior.precioBase ? nuevo.precioBase : linea.precioUnitario,
+                          })),
+                        });
+                      }}
+                      ariaLabel="Servicio de la comanda"
+                      placeholder="Selecciona un servicio"
+                      options={(catData?.tipoServicios || []).map((s) => ({ value: s.nombre, label: s.nombre }))}
+                    />
+                  </div>
+                  <FieldInput
+                    label="Peso total (kg)"
+                    value={formData.pesoKg}
+                    onChange={(v) => setFormData({ ...formData, pesoKg: v })}
+                    placeholder="Ej: 12,5"
+                    hint={formData.pesoKg && leerPesoKg(formData.pesoKg) === null ? "Ingresa un peso mayor que 0 y hasta 10.000 kg" : "Obligatorio. Peso de toda la ropa recibida."}
+                    valid={formData.pesoKg ? leerPesoKg(formData.pesoKg) !== null : undefined}
+                  />
+                </div>
                 {/* Detalle lines */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Prendas</label>
                     <button
                       onClick={() => {
-                        const servicio = catData?.tipoServicios[0];
+                        const servicio = catData?.tipoServicios.find((s) => s.nombre === formData.servicio) ?? catData?.tipoServicios[0];
                         const prendas = formData.tipoCliente === TipoCliente.HOTEL ? PRENDAS_HOTEL : PRENDAS_FORMULARIO;
                         setFormData({ ...formData, detalle: [...formData.detalle, { tipoPrenda: prendas[0], servicio: servicio?.nombre || "", cantidad: 1, precioUnitario: servicio?.precioBase || 0, detalle: "", recibido: 0 }] });
                       }}
@@ -975,6 +1045,15 @@ export default function ComandasPage() {
                     Total: <span className="text-brand-600 dark:text-brand-400">{clp(formTotal)}</span>
                   </p>
                 </div>
+
+                <ConsumoEstimado
+                  modelo={modeloIa}
+                  error={errorModeloIa}
+                  servicioId={catData?.tipoServicios.find((s) => s.nombre === formData.servicio)?.id ?? null}
+                  servicioNombre={formData.servicio}
+                  pesoTexto={formData.pesoKg}
+                  verStock={esAdmin}
+                />
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">Observaciones</label>

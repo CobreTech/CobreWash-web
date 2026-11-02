@@ -7,9 +7,9 @@ mutation CrearComandaConFlujo(
   $empresa: String
   $proyecto: String
   $observaciones: String
-  $detalles: [ComandaDetalle_Data!]! @allow(fields: "tipoPrendaId tipoServicioId cantidad detalle precioUnitario subtotal", maxCount: 100)
+  $detalles: [ComandaDetalle_Data!]! @allow(fields: "tipoPrendaId tipoServicioId cantidad detalle pesoKg precioUnitario subtotal", maxCount: 100)
 ) @auth(level: USER) @transaction {
-  query @redact @check(expr: "vars.numeroComanda.matches('^[A-Za-z0-9-]{1,20}$') && (!vars.numeroComanda.upperAscii().startsWith('ELCOBRE-') || (vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]{4}$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[A-Z][A-Z0-9]*$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[0-9][A-Z0-9]*$'))) && vars.detalles.size() > 0 && vars.detalles.all(d, has(d.tipoPrendaId) && d.tipoPrendaId != null && has(d.tipoServicioId) && d.tipoServicioId != null && has(d.cantidad) && d.cantidad != null && d.cantidad > 0 && has(d.precioUnitario) && d.precioUnitario != null && d.precioUnitario >= 0 && has(d.subtotal) && d.subtotal != null && d.subtotal >= 0 && d.subtotal == double(d.cantidad) * d.precioUnitario)", message: "Las prendas, cantidades y montos son inválidos") {
+  query @redact @check(expr: "vars.numeroComanda.matches('^[A-Za-z0-9-]{1,20}$') && (!vars.numeroComanda.upperAscii().startsWith('ELCOBRE-') || (vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]{4}$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[A-Z][A-Z0-9]*$') && vars.numeroComanda.upperAscii().matches('^ELCOBRE-[A-Z0-9]*[0-9][A-Z0-9]*$'))) && vars.detalles.size() > 0 && vars.detalles.all(d, has(d.tipoPrendaId) && d.tipoPrendaId != null && has(d.tipoServicioId) && d.tipoServicioId != null && has(d.cantidad) && d.cantidad != null && d.cantidad > 0 && has(d.precioUnitario) && d.precioUnitario != null && d.precioUnitario >= 0 && has(d.subtotal) && d.subtotal != null && d.subtotal >= 0 && d.subtotal == double(d.cantidad) * d.precioUnitario && (!has(d.pesoKg) || d.pesoKg == null || (d.pesoKg > 0.0 && d.pesoKg <= 10000.0)))", message: "Las prendas, cantidades, montos o pesos son inválidos") {
     usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para gestionar comandas") }
@@ -100,9 +100,9 @@ mutation EditarComandaConDetalles(
   $empresa: String
   $proyecto: String
   $observaciones: String
-  $detalles: [ComandaDetalle_Data!]! @allow(fields: "comandaId tipoPrendaId tipoServicioId cantidad detalle precioUnitario subtotal", maxCount: 100)
+  $detalles: [ComandaDetalle_Data!]! @allow(fields: "comandaId tipoPrendaId tipoServicioId cantidad detalle pesoKg precioUnitario subtotal", maxCount: 100)
 ) @auth(level: USER) @transaction {
-  query @redact @check(expr: "vars.detalles.size() > 0 && vars.detalles.all(d, has(d.comandaId) && d.comandaId == vars.id && has(d.tipoPrendaId) && d.tipoPrendaId != null && has(d.tipoServicioId) && d.tipoServicioId != null && has(d.cantidad) && d.cantidad != null && d.cantidad > 0 && has(d.precioUnitario) && d.precioUnitario != null && d.precioUnitario >= 0 && has(d.subtotal) && d.subtotal != null && d.subtotal >= 0 && d.subtotal == double(d.cantidad) * d.precioUnitario)", message: "Las prendas, cantidades y montos son inválidos") {
+  query @redact @check(expr: "vars.detalles.size() > 0 && vars.detalles.all(d, has(d.comandaId) && d.comandaId == vars.id && has(d.tipoPrendaId) && d.tipoPrendaId != null && has(d.tipoServicioId) && d.tipoServicioId != null && has(d.cantidad) && d.cantidad != null && d.cantidad > 0 && has(d.precioUnitario) && d.precioUnitario != null && d.precioUnitario >= 0 && has(d.subtotal) && d.subtotal != null && d.subtotal >= 0 && d.subtotal == double(d.cantidad) * d.precioUnitario && (!has(d.pesoKg) || d.pesoKg == null || (d.pesoKg > 0.0 && d.pesoKg <= 10000.0)))", message: "Las prendas, cantidades, montos o pesos son inválidos") {
     usuario(id_expr: "auth.uid") @check(expr: "this != null", message: "Perfil no encontrado") {
       activo @check(expr: "this == true", message: "La cuenta está inactiva")
       rol { nombre @check(expr: "this in ['admin', 'recepcionista']", message: "No autorizado para editar comandas") }

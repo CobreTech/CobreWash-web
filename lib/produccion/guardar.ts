@@ -14,6 +14,8 @@ export interface CrearComandaConFlujoVariables {
     tipoServicioId: string;
     cantidad: number;
     detalle?: string;
+    /** Parte del peso total de la comanda que corresponde a la línea (kg). */
+    pesoKg?: number;
     precioUnitario: number;
     subtotal: number;
   }[];

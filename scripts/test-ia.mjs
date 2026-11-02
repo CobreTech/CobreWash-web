@@ -207,4 +207,23 @@ await prueba('los lotes simulados se guardan completos y se borran sin tocar dat
   assert.equal((await ejecutar(ia, 'GetPanelIa', {}, 'test-admin')).insumos.find(i => i.nombre === 'Detergente IA').stockActual, 82.5);
 });
 
+await prueba('la comanda guarda los kg por línea y la recepción puede leer el modelo para estimar', async () => {
+  const produccion = await readFile('dataconnect/produccion/mutations.gql', 'utf8');
+  for (const uid of ['test-admin', 'test-recepcion']) {
+    const d = await ejecutar(ia, 'GetModeloComandaIa', {}, uid);
+    assert(d.tasaConsumos.length > 0); assert(d.insumos.some(i => i.nombre === 'Detergente IA'));
+  }
+  for (const uid of [null, 'sin-perfil', 'test-inactivo', 'test-operario', 'test-cliente']) await assert.rejects(ejecutar(ia, 'GetModeloComandaIa', {}, uid));
+  const linea = (pesoKg) => ({ tipoPrendaId: '00000000-0000-4000-8000-000000000011', tipoServicioId: servicioId, cantidad: 2, precioUnitario: 1000, subtotal: 2000, pesoKg });
+  const crear = (detalles) => ejecutar(produccion, 'CrearComandaConFlujo', { id: randomUUID(), numeroComanda: 'KG-' + randomUUID().slice(0, 8), clienteId: '00000000-0000-4000-8000-000000000010', detalles }, 'test-recepcion');
+  const creada = await crear([linea(8.33), linea(4.17)]);
+  const id = creada.comanda_insert.id;
+  const pesos = await ejecutar('query P($id:UUID!){comandaDetalles(where:{comandaId:{eq:$id}}){pesoKg}}', 'P', { id });
+  assert.deepEqual(pesos.comandaDetalles.map(d => d.pesoKg).sort(), [4.17, 8.33]);
+  for (const malo of [0, -1, 10000.5]) await assert.rejects(crear([linea(malo)]), /pesos son inválidos/);
+  // Las operaciones anteriores sin peso siguen funcionando.
+  const { tipoPrendaId, tipoServicioId, cantidad, precioUnitario, subtotal } = linea(1);
+  await crear([{ tipoPrendaId, tipoServicioId, cantidad, precioUnitario, subtotal }]);
+});
+
 console.log(`${comprobaciones} escenarios del módulo IA aprobados.`);

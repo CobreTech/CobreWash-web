@@ -20,6 +20,8 @@ export interface PrendaLinea {
   cantidad: number;
   precioUnitario: number;
   detalle?: string;
+  /** Parte del peso total de la comanda asignada a la línea (kg). */
+  pesoKg?: number | null;
 }
 
 export interface Comanda {

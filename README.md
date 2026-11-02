@@ -27,6 +27,7 @@ Panel administrativo con tema oscuro y su propia navegación:
 - **Clientes** — administración de clientes (hoteles y particulares).
 - **Usuarios y roles** — control de acceso interno.
 - **Reportes y comunicación** — indicadores y mensajería.
+- **Módulo IA** — predicción de consumo de insumos (solo administración).
 
 ---
 
@@ -96,6 +97,8 @@ La intranet está disponible en [http://localhost:3000/intranet](http://localhos
 | `pnpm start` | Sirve la build de producción |
 | `pnpm lint` | Ejecuta ESLint |
 | `pnpm test` | Ejecuta las pruebas unitarias |
+| `pnpm test:coverage` | Cobertura de los módulos críticos (`lib/ia`, mínimo 80%) |
+| `pnpm test:ia` | Integración del módulo IA y sus permisos |
 | `pnpm dataconnect:compile:web` | Compila conectores y regenera el SDK web |
 | `pnpm test:production` | Integración de producción con emulador demo |
 | `pnpm test:portal` | Integración del portal y sus permisos |
@@ -149,6 +152,33 @@ El servidor normaliza las nuevas altas ELCOBRE y rechaza códigos sin mezcla o
 duplicados, incluida una coincidencia con históricos que solo difiera por letras
 mayúsculas/minúsculas. Se conservan los formatos anteriores ajenos al prefijo
 ELCOBRE para compatibilidad. Publicar web y conectores coordinadamente.
+
+## Módulo IA: predicción de insumos
+
+Solo administración, en `/intranet/ia`. Estima el consumo de insumos (detergente,
+suavizante, cloro…) por comanda y aprende de los conteos físicos. **Nunca modifica
+el stock**: solo el conteo físico lo reemplaza.
+
+- **Modelo.** Consumo = kg × tasa(servicio, insumo). Entre dos conteos aprobados,
+  consumo real = stock anterior + compras − stock actual. Las tasas se ajustan
+  por insumo con mínimos cuadrados no negativos regularizados hacia las tasas
+  iniciales (`min ||Xθ − y||² + λ||θ − θ0||²`, θ ≥ 0). λ = 1 pesa como un período
+  de datos. El rango de cada estimación sale de la desviación de los residuos y
+  el margen de seguridad (15% por defecto) decide si el stock alcanza.
+- **Código.** Cálculo en funciones puras en `lib/ia/` (cobertura mínima 80% con
+  `pnpm test:coverage`); rutas protegidas en `app/api/ia/` (verifican sesión y rol
+  admin en el servidor); pantalla en `components/intranet/ia/`.
+- **Pestañas.** Resumen (estado, error, días de stock y botón «Recalcular ahora»),
+  Tasas (matriz editable y parámetros), Datos (conteo, compra y CSV con vista
+  previa), Simulación (lotes con tasas ocultas y curva de aprendizaje) e Historial.
+- **Comandas.** El formulario pide servicio y peso total (kg); el peso se reparte
+  entre las líneas según la cantidad. Muestra el consumo estimado y avisa si el
+  stock no alcanza. La recepción no ve las cantidades de stock.
+- **Datos simulados.** Quedan con `origen = SIMULADO`, ligados a su lote, fuera de
+  Inventario y del stock real. Solo entrenan el modelo si se activa en Tasas.
+- **Recálculo.** Manual, con el botón. No hay ejecución programada.
+- Las operaciones del servidor con listas de entrada viven en el conector
+  `produccion` (`ia-servidor.gql`) porque el SDK web aún no admite entradas `_Data`.
 
 ## Adecuación de privacidad
 

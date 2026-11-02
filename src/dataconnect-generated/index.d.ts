@@ -1018,6 +1018,7 @@ export interface GetComandasPaginadasData {
     comandaDetalles_on_comanda: ({
       cantidad: number;
       detalle?: string | null;
+      pesoKg?: number | null;
       precioUnitario: number;
       tipoPrenda: {
         nombre: string;
@@ -1840,6 +1841,29 @@ export interface GetMisSalidasVehiculoData {
       } & FotoInspeccionVehiculo_Key)[];
     } & InspeccionVehiculo_Key)[];
   } & SalidaVehiculo_Key)[];
+}
+
+export interface GetModeloComandaIaData {
+  configuracionIa?: {
+    margenSeguridad: number;
+  };
+  tasaConsumos: ({
+    tipoServicioId: UUIDString;
+    insumoId: UUIDString;
+    tasaInicial: number;
+    tasaActual: number;
+    unidad: string;
+  } & TasaConsumo_Key)[];
+  insumos: ({
+    id: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+    stockActual: number;
+  } & Insumo_Key)[];
+  modeloVigente: ({
+    desviacionRelativa?: number | null;
+    tasasJson?: string | null;
+  })[];
 }
 
 export interface GetMovimientoFlotaPorInspeccionData {
@@ -3147,6 +3171,18 @@ export const borrarSimulacionesIaRef: BorrarSimulacionesIaRef;
 
 export function borrarSimulacionesIa(): MutationPromise<BorrarSimulacionesIaData, undefined>;
 export function borrarSimulacionesIa(dc: DataConnect): MutationPromise<BorrarSimulacionesIaData, undefined>;
+
+interface GetModeloComandaIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetModeloComandaIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetModeloComandaIaData, undefined>;
+  operationName: string;
+}
+export const getModeloComandaIaRef: GetModeloComandaIaRef;
+
+export function getModeloComandaIa(options?: ExecuteQueryOptions): QueryPromise<GetModeloComandaIaData, undefined>;
+export function getModeloComandaIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetModeloComandaIaData, undefined>;
 
 interface RegistrarConteoInventarioRef {
   /* Allow users to create refs without passing in DataConnect */

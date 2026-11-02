@@ -495,6 +495,19 @@ export function borrarSimulacionesIa(dc) {
   return executeMutation(borrarSimulacionesIaRef(dcInstance, inputVars));
 }
 
+export const getModeloComandaIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetModeloComandaIa');
+}
+getModeloComandaIaRef.operationName = 'GetModeloComandaIa';
+
+export function getModeloComandaIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getModeloComandaIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
 export const registrarConteoInventarioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
