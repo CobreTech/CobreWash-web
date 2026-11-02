@@ -472,6 +472,36 @@ exports.registrarConteoFisicoIa = function registrarConteoFisicoIa(dcOrVars, var
 }
 ;
 
+const getInsumosImportacionIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetInsumosImportacionIa');
+}
+getInsumosImportacionIaRef.operationName = 'GetInsumosImportacionIa';
+exports.getInsumosImportacionIaRef = getInsumosImportacionIaRef;
+
+exports.getInsumosImportacionIa = function getInsumosImportacionIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getInsumosImportacionIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getRegistrosExistentesIaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetRegistrosExistentesIa', inputVars);
+}
+getRegistrosExistentesIaRef.operationName = 'GetRegistrosExistentesIa';
+exports.getRegistrosExistentesIaRef = getRegistrosExistentesIaRef;
+
+exports.getRegistrosExistentesIa = function getRegistrosExistentesIa(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getRegistrosExistentesIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const registrarConteoInventarioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

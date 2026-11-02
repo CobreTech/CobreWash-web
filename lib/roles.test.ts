@@ -9,6 +9,12 @@ describe("autorización por rol", () => {
     }
     expect(rutaPermitida("cliente", "/intranet/comunicacion")).toBe(false);
   });
+  it("reserva el módulo IA al administrador", () => {
+    expect(rutaPermitida("admin", "/intranet/ia")).toBe(true);
+    for (const rol of ["recepcionista", "operario", "cliente"] as const) expect(rutaPermitida(rol, "/intranet/ia")).toBe(false);
+    expect(NAV_POR_ROL.admin.some(item => item.href === "/intranet/ia" && item.label === "Módulo IA")).toBe(true);
+    expect(NAV_POR_ROL.recepcionista.some(item => item.href === "/intranet/ia")).toBe(false);
+  });
   it("distingue clientes de roles internos", () => {
     expect(esRolInterno("admin")).toBe(true);
     expect(esRolInterno("recepcionista")).toBe(true);

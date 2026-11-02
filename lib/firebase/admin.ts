@@ -16,6 +16,8 @@ export function serviciosAdmin() {
   return {
     auth: getAuth(app),
     db: getDataConnect({ location: "southamerica-west1", serviceId: "lavanderia-el-cobre", connector: "example" }, app),
+    // Operaciones con listas de entrada que el SDK web no puede generar.
+    dbProduccion: getDataConnect({ location: "southamerica-west1", serviceId: "lavanderia-el-cobre", connector: "produccion" }, app),
     bucket: getStorage(app).bucket(),
   };
 }

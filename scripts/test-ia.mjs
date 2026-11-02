@@ -121,4 +121,25 @@ await prueba('el historial de ajustes pagina los modelos registrados', async () 
   assert.equal((await ejecutar(ia, 'GetPanelIa', {}, 'test-admin')).modeloVigente[0].version, 'v2');
 });
 
+await prueba('la importación histórica solo la ejecuta el servidor y no toca el stock', async () => {
+  const importacion = await readFile('dataconnect/produccion/ia-importacion.gql', 'utf8');
+  const conteo = { id: randomUUID(), insumoId: detergente, cantidadContada: 120, stockSistema: 120, revisionStock: 0, registradoPorId: 'test-admin', estado: 'APROBADO', origen: 'REAL', fechaConteo: '2025-12-01T02:59:59Z' };
+  const compra = { id: randomUUID(), insumoId: detergente, tipoMovimiento: 'ENTRADA', cantidad: 40, clase: 'COMPRA', origen: 'REAL', fecha: '2025-12-15T15:00:00Z' };
+  for (const uid of [null, 'test-admin']) {
+    await assert.rejects(ejecutar(ia, 'GetInsumosImportacionIa', {}, uid));
+    await assert.rejects(ejecutar(ia, 'GetRegistrosExistentesIa', { desde: '2025-01-01T00:00:00Z', hasta: '2026-01-01T00:00:00Z' }, uid));
+    await assert.rejects(ejecutar(importacion, 'ImportarConteosIa', { conteos: [conteo] }, uid));
+    await assert.rejects(ejecutar(importacion, 'ImportarComprasIa', { compras: [compra] }, uid));
+  }
+  const antes = await ejecutar(ia, 'GetPanelIa', {}, 'test-admin');
+  await ejecutar(importacion, 'ImportarConteosIa', { conteos: [conteo] });
+  await ejecutar(importacion, 'ImportarComprasIa', { compras: [compra] });
+  const despues = await ejecutar(ia, 'GetPanelIa', {}, 'test-admin');
+  assert.equal(despues.conteosReales[0]._count, antes.conteosReales[0]._count + 1);
+  assert.equal(despues.insumos.find(i => i.nombre === 'Detergente IA').stockActual, 82.5);
+  const existentes = await ejecutar(ia, 'GetRegistrosExistentesIa', { desde: '2025-12-01T00:00:00Z', hasta: '2025-12-31T00:00:00Z' });
+  assert.equal(existentes.conteoInventarios.length, 1); assert.equal(existentes.movimientoInventarios.length, 1);
+  assert((await ejecutar(ia, 'GetInsumosImportacionIa')).insumos.some(i => i.nombre === 'Detergente IA'));
+});
+
 console.log(`${comprobaciones} escenarios del módulo IA aprobados.`);

@@ -1468,6 +1468,14 @@ export interface GetInsumoPorQrVariables {
   codigoQr: UUIDString;
 }
 
+export interface GetInsumosImportacionIaData {
+  insumos: ({
+    id: UUIDString;
+    nombre: string;
+    unidadMedida: string;
+  } & Insumo_Key)[];
+}
+
 export interface GetInsumosOperarioData {
   insumos: ({
     id: UUIDString;
@@ -1884,6 +1892,23 @@ export interface GetPanelProduccionData {
 export interface GetPanelProduccionVariables {
   limit?: number | null;
   offset?: number | null;
+}
+
+export interface GetRegistrosExistentesIaData {
+  conteoInventarios: ({
+    insumoId: UUIDString;
+    fechaConteo?: TimestampString | null;
+  })[];
+  movimientoInventarios: ({
+    insumoId: UUIDString;
+    fecha: TimestampString;
+    cantidad: number;
+  })[];
+}
+
+export interface GetRegistrosExistentesIaVariables {
+  desde: TimestampString;
+  hasta: TimestampString;
 }
 
 export interface GetReporteCuentasData {
@@ -2938,6 +2963,30 @@ export const registrarConteoFisicoIaRef: RegistrarConteoFisicoIaRef;
 
 export function registrarConteoFisicoIa(vars: RegistrarConteoFisicoIaVariables): MutationPromise<RegistrarConteoFisicoIaData, RegistrarConteoFisicoIaVariables>;
 export function registrarConteoFisicoIa(dc: DataConnect, vars: RegistrarConteoFisicoIaVariables): MutationPromise<RegistrarConteoFisicoIaData, RegistrarConteoFisicoIaVariables>;
+
+interface GetInsumosImportacionIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetInsumosImportacionIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetInsumosImportacionIaData, undefined>;
+  operationName: string;
+}
+export const getInsumosImportacionIaRef: GetInsumosImportacionIaRef;
+
+export function getInsumosImportacionIa(options?: ExecuteQueryOptions): QueryPromise<GetInsumosImportacionIaData, undefined>;
+export function getInsumosImportacionIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetInsumosImportacionIaData, undefined>;
+
+interface GetRegistrosExistentesIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetRegistrosExistentesIaVariables): QueryRef<GetRegistrosExistentesIaData, GetRegistrosExistentesIaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetRegistrosExistentesIaVariables): QueryRef<GetRegistrosExistentesIaData, GetRegistrosExistentesIaVariables>;
+  operationName: string;
+}
+export const getRegistrosExistentesIaRef: GetRegistrosExistentesIaRef;
+
+export function getRegistrosExistentesIa(vars: GetRegistrosExistentesIaVariables, options?: ExecuteQueryOptions): QueryPromise<GetRegistrosExistentesIaData, GetRegistrosExistentesIaVariables>;
+export function getRegistrosExistentesIa(dc: DataConnect, vars: GetRegistrosExistentesIaVariables, options?: ExecuteQueryOptions): QueryPromise<GetRegistrosExistentesIaData, GetRegistrosExistentesIaVariables>;
 
 interface RegistrarConteoInventarioRef {
   /* Allow users to create refs without passing in DataConnect */

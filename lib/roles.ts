@@ -10,6 +10,7 @@ import {
   Megaphone,
   Contact,
   ShieldAlert,
+  BrainCircuit,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,6 +43,7 @@ export const NAV_POR_ROL: Record<Exclude<Rol, "cliente">, NavItem[]> = {
     { href: "/intranet/inventario", label: "Inventario", icon: Archive },
     { href: "/intranet/vehiculos", label: "Vehículos", icon: Truck },
     { href: "/intranet/reportes", label: "Reportes", icon: BarChart3 },
+    { href: "/intranet/ia", label: "Módulo IA", icon: BrainCircuit },
     { href: "/intranet/comunicacion", label: "Comunicación", icon: Megaphone },
     { href: "/intranet/usuarios", label: "Usuarios", icon: Users },
     { href: "/intranet/solicitudes", label: "Cotizaciones", icon: Contact },
@@ -79,6 +81,7 @@ export const ACCESO_POR_RUTA: Record<string, Rol[]> = {
   "/intranet/inventario": ["admin"],
   "/intranet/vehiculos": ["admin"],
   "/intranet/reportes": ["admin"],
+  "/intranet/ia": ["admin"],
   "/intranet/comunicacion": ["admin", "operario", "recepcionista"],
   "/intranet/usuarios": ["admin"],
   "/intranet/configuracion": ["admin", "recepcionista", "operario"],

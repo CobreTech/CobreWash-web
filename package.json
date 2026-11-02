@@ -11,7 +11,7 @@
     "verify:privacy": "node scripts/verificar-privacidad.mjs",
     "privacy:incident": "node scripts/evaluar-incidente.mjs",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage lib/ia",
+    "test:coverage": "vitest run --coverage lib/ia app/api/ia",
     "test:portal": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-portal.mjs\"",
     "test:vehiculos": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-vehiculos.mjs\"",
     "test:inventario": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-inventario-aprobaciones.mjs\"",

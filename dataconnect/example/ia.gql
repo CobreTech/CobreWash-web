@@ -137,3 +137,17 @@ mutation RegistrarConteoFisicoIa($id: UUID!, $insumoId: UUID!, $cantidad: Float!
     motivo: "Conteo físico registrado por administración", clase: AJUSTE_CONTEO
   })
 }
+
+# ---------- Operaciones de servidor ----------
+# Solo las ejecuta /api/ia/* con el SDK Admin, después de verificar en el
+# servidor que quien llama es un administrador activo (AutorizarModuloIa).
+
+query GetInsumosImportacionIa @auth(level: NO_ACCESS) {
+  insumos(where: { activo: { eq: true } }, limit: 1000) { id nombre unidadMedida }
+}
+
+# Registros reales ya guardados en el rango del archivo, para no importar dos veces.
+query GetRegistrosExistentesIa($desde: Timestamp!, $hasta: Timestamp!) @auth(level: NO_ACCESS) {
+  conteoInventarios(where: { origen: { eq: REAL }, fechaConteo: { ge: $desde, le: $hasta } }, limit: 10000) { insumoId fechaConteo }
+  movimientoInventarios(where: { origen: { eq: REAL }, clase: { eq: COMPRA }, fecha: { ge: $desde, le: $hasta } }, limit: 10000) { insumoId fecha cantidad }
+}
