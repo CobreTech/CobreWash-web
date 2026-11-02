@@ -59,6 +59,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Check coverage of critical modules
+        run: pnpm test:coverage
+
       - name: Run ESLint
         run: pnpm lint
 
