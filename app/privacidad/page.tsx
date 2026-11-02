@@ -73,20 +73,20 @@ export default function PrivacidadPage() {
       {/* 3. Finalidades y Bases de Licitud */}
       <SeccionLegal titulo="3. Finalidades Específicas y Bases de Licitud" icon={FileCheck2}>
         <p>
-          Todo tratamiento de datos personales realizado por Lavandería El Cobre se encuentra legitimado por una base legal específica conforme al Artículo 13 de la Ley N° 21.719:
+          Las siguientes bases de licitud corresponden a los artículos 12 y 13 de la Ley N° 19.628, en su texto reformado por la Ley N° 21.719, cuyas modificaciones entran en vigor el 1 de diciembre de 2026:
         </p>
         <ul className="list-disc space-y-2 pl-5 text-sm text-stone-600">
           <li>
-            <strong>Ejecución del contrato de servicio (Art. 13 letra b):</strong> Procesamiento de las órdenes de lavado industrial y doméstico, seguimiento en línea del avance de prendas, coordinación de entrega y gestión de la cuenta del usuario.
+            <strong>Ejecución del contrato de servicio (Art. 13 letra c):</strong> Procesamiento de las órdenes de lavado industrial y doméstico, seguimiento en línea del avance de prendas, coordinación de entrega y gestión de la cuenta del usuario.
           </li>
           <li>
-            <strong>Cumplimiento de obligaciones legales y tributarias (Art. 13 letra c):</strong> Emisión de boletas y facturas electrónicas exigidas por el Servicio de Impuestos Internos (SII) y conservación contable según el Código de Comercio y Código Tributario.
+            <strong>Cumplimiento de obligaciones legales y tributarias (Art. 13 letra b):</strong> Emisión de boletas y facturas electrónicas exigidas por el Servicio de Impuestos Internos (SII) y conservación contable según el Código de Comercio y Código Tributario.
           </li>
           <li>
             <strong>Consentimiento del titular (Art. 12):</strong> Elaboración y respuesta a solicitudes de cotización o consultas comerciales iniciadas voluntariamente por el usuario. El titular puede revocar este consentimiento en cualquier momento sin efectos retroactivos.
           </li>
           <li>
-            <strong>Interés legítimo en seguridad técnica (Art. 13 letra e):</strong> Prevención de fraude, protección contra ataques de fuerza bruta cibernética y rate-limiting de nuestros servidores mediante el uso de contadores seudonimizados y códigos hash temporales.
+            <strong>Interés legítimo en seguridad técnica (Art. 13 letra d):</strong> Prevención de fraude, protección contra ataques de fuerza bruta cibernética y rate-limiting de nuestros servidores mediante el uso de contadores seudonimizados y códigos hash temporales.
           </li>
         </ul>
         <p>
