@@ -14,14 +14,14 @@ export default function Reception() {
         <div className="space-y-1 text-stone-750">
           <p className="text-sm font-semibold flex justify-between">
             <span>Lunes a Viernes:</span>
-            <span className="text-brand-650">8:00 - 20:00</span>
+            <span className="text-brand-650 font-bold">11:30 - 20:00</span>
           </p>
           <p className="text-sm font-semibold flex justify-between">
             <span>Sábados:</span>
-            <span className="text-brand-650">9:00 - 14:00</span>
+            <span className="text-brand-650 font-bold">10:00 - 14:00</span>
           </p>
           <p className="text-xs text-stone-500 italic pt-1">
-            *Domingos y festivos cerrado.
+            *Domingos y festivos: Cerrado.
           </p>
         </div>
       ),
@@ -32,7 +32,7 @@ export default function Reception() {
       icon: MapPin,
       content: (
         <div className="space-y-2 text-stone-750">
-          <p className="text-sm font-semibold">Avenida Balmaceda N°1276</p>
+          <p className="text-sm font-semibold">Avenida Balmaceda N°1276 - 1364</p>
           <p className="text-xs text-stone-550">Calama, Región de Antofagasta</p>
           <a
             href="https://maps.google.com/?q=Avenida+Balmaceda+1276,+Calama"
@@ -156,7 +156,7 @@ export default function Reception() {
               {/* Floating Address Badge */}
               <div className="absolute -top-4 -right-4 bg-brand-600 text-white px-5 py-3 rounded-xl shadow-lg border border-brand-500 max-w-[200px]">
                 <p className="text-[10px] text-brand-100 font-bold uppercase tracking-wider">¿Dónde estamos?</p>
-                <p className="text-xs font-bold mt-0.5 leading-snug">Av. Balmaceda 1276, Calama</p>
+                <p className="text-xs font-bold mt-0.5 leading-snug">Av. Balmaceda 1276 - 1364, Calama</p>
               </div>
             </div>
           </motion.div>

@@ -18,7 +18,7 @@ const validClient: ClientRegistrationInput = {
   email: " ana@example.com ",
   direccion: "",
   tipoCliente: "PARTICULAR" as ClientRegistrationInput["tipoCliente"],
-  password: "clave1",
+  password: "clave123",
 };
 
 describe("validación de acceso y recuperación", () => {
@@ -36,7 +36,7 @@ describe("validación de acceso y recuperación", () => {
 describe("validación del registro público de clientes", () => {
   const validRegistration: PublicClientRegistrationInput = {
     ...validClient,
-    confirmPassword: "clave1",
+    confirmPassword: "clave123",
     autorizaDatos: true, versionPrivacidad: "2026-11-01",
   };
 
@@ -54,10 +54,10 @@ describe("validación del registro público de clientes", () => {
       validatePublicClientRegistration({ ...validRegistration, rut: "12.345.678-9" }),
     ).toBe("El RUT ingresado no es válido.");
     expect(
-      validatePublicClientRegistration({ ...validRegistration, password: "abcdef", confirmPassword: "abcdef" }),
+      validatePublicClientRegistration({ ...validRegistration, password: "abcdefgh", confirmPassword: "abcdefgh" }),
     ).toBe("Debe incluir al menos un número");
     expect(
-      validatePublicClientRegistration({ ...validRegistration, confirmPassword: "otra1" }),
+      validatePublicClientRegistration({ ...validRegistration, confirmPassword: "otra1234" }),
     ).toBe("Las contraseñas no coinciden.");
   });
 

@@ -12,6 +12,10 @@ ignoredBuiltDependencies:
 packages:
   - '.'
 
+patchedDependencies:
+  # jose 6 is ESM-only; import it asynchronously from jwks-rsa's CommonJS code.
+  jwks-rsa@4.1.0: patches/jwks-rsa@4.1.0.patch
+
 overrides:
   # Patched transitive dependencies used by Firebase CLI and the test toolchain.
   basic-ftp: "^6.2.1"

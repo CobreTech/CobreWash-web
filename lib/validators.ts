@@ -107,7 +107,7 @@ export interface PasswordCheck {
 }
 
 export function validatePassword(password: string): PasswordCheck {
-  if (password.length < 6) return { valid: false, message: "Mínimo 6 caracteres" };
+  if (password.length < 8) return { valid: false, message: "Mínimo 8 caracteres" };
   if (!/[a-zA-Z]/.test(password)) return { valid: false, message: "Debe incluir al menos una letra" };
   if (!/[0-9]/.test(password)) return { valid: false, message: "Debe incluir al menos un número" };
   return { valid: true, message: "Contraseña válida" };

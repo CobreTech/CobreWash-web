@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
-import { Phone, Mail, MapPin, ExternalLink, ShieldCheck } from "lucide-react";
+import { Phone, Mail, MapPin, ExternalLink, ShieldCheck, Clock } from "lucide-react";
 import { configuracionLegal } from "@/lib/privacidad/configuracion";
 import { formatRut } from "@/lib/validators";
 
@@ -104,8 +104,19 @@ export default async function Footer() {
                 <div>
                   <p className="font-semibold text-stone-850">Dirección Sucursal:</p>
                   <p className="text-xs text-stone-550 mt-0.5">
-                    Avenida Balmaceda N°1276,<br />
+                    Avenida Balmaceda N°1276 - 1364,<br />
                     Calama, Región de Antofagasta
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3 text-stone-600 text-sm">
+                <Clock className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-stone-850">Horario de Atención:</p>
+                  <p className="text-xs text-stone-550 mt-0.5">
+                    Lunes a Viernes: 11:30 - 20:00 hrs.<br />
+                    Sábados: 10:00 - 14:00 hrs.<br />
+                    Domingos: Cerrado
                   </p>
                 </div>
               </li>

@@ -15,6 +15,7 @@
     "test:vehiculos": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-vehiculos.mjs\"",
     "test:inventario": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-inventario-aprobaciones.mjs\"",
     "verify:deployment": "node scripts/verificar-publicacion.mjs",
+    "verify:firebase-runtime": "node --no-experimental-require-module scripts/verificar-firebase-runtime.cjs",
     "test:reportes": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-reportes.mjs\"",
     "test:avisos": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-avisos.mjs\"",
     "test:privacidad": "node scripts/prepare-production-test.mjs && firebase emulators:exec --only dataconnect --project demo-production --config scratch/production-test/firebase.json \"node scripts/test-privacidad.mjs\"",
