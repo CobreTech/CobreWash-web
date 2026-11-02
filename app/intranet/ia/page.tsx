@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrainCircuit, Database, Gauge, Loader2, Table2 } from "lucide-react";
+import { BrainCircuit, Database, FlaskConical, Gauge, History, Loader2, Table2 } from "lucide-react";
 import { QueryFetchPolicy } from "firebase/data-connect";
 import { useRoleGuard } from "@/components/intranet/useRoleGuard";
 import DatosIa from "@/components/intranet/ia/DatosIa";
+import HistorialIa from "@/components/intranet/ia/HistorialIa";
 import ResumenIa from "@/components/intranet/ia/ResumenIa";
+import SimulacionIa from "@/components/intranet/ia/SimulacionIa";
 import TasasIa from "@/components/intranet/ia/TasasIa";
 import { AvisoFlotante, type Aviso } from "@/components/intranet/ia/ui";
 import { dataConnect } from "@/lib/firebase/client";
@@ -16,6 +18,8 @@ const PESTANAS = [
   { id: "resumen", etiqueta: "Resumen", icono: Gauge },
   { id: "tasas", etiqueta: "Tasas", icono: Table2 },
   { id: "datos", etiqueta: "Datos", icono: Database },
+  { id: "simulacion", etiqueta: "Simulación", icono: FlaskConical },
+  { id: "historial", etiqueta: "Historial", icono: History },
 ] as const;
 type Pestana = (typeof PESTANAS)[number]["id"];
 
@@ -94,6 +98,8 @@ export default function ModuloIaPage() {
           {pestana === "resumen" && <ResumenIa panel={panel} recargar={recargar} avisar={avisar} />}
           {pestana === "tasas" && <TasasIa panel={panel} recargar={recargar} avisar={avisar} />}
           {pestana === "datos" && <DatosIa panel={panel} recargar={recargar} avisar={avisar} />}
+          {pestana === "simulacion" && <SimulacionIa panel={panel} recargar={recargar} avisar={avisar} />}
+          {pestana === "historial" && <HistorialIa revision={panel.modeloVigente[0]?.id ?? ""} />}
         </div>
       )}
     </div>

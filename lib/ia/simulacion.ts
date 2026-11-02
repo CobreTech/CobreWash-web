@@ -104,10 +104,14 @@ export function generarSimulacion(entrada: { parametros: ParametrosSimulacion; t
     const kgSemana = p.kgSemanalMin + (p.kgSemanalMax - p.kgSemanalMin) * azar.u();
     const reparto = Array.from({ length: 7 }, () => 0.6 + 0.8 * azar.u());
     const sumaReparto = reparto.reduce((s, v) => s + v, 0);
+    // La mezcla de servicios cambia cada semana (más hoteles, más desmanchado…).
+    // Sin esa variación el modelo solo podría aprender el consumo total.
+    const pesosSemana = pesos.map((v) => v * (0.4 + 1.2 * azar.u()));
+    const sumaSemana = pesosSemana.reduce((s, v) => s + v, 0);
     for (let d = 0; d < 7; d++) {
       const diaSim = semana * 7 + d;
       const kgDia = kgSemana * reparto[d] / sumaReparto;
-      const kgServicio = servicios.map((_, k) => kgDia * (pesos[k] / sumaPesos) * (0.8 + 0.4 * azar.u()));
+      const kgServicio = servicios.map((_, k) => kgDia * (pesosSemana[k] / sumaSemana) * (0.8 + 0.4 * azar.u()));
       servicios.forEach((servicioId, k) => resultado.produccion.push({ servicioId, fecha: fecha(diaSim + 0.5), kg: redondear(kgServicio[k]) }));
       for (const id of insumos) {
         const esperado = servicios.reduce((s, sv, k) => s + redondear(kgServicio[k]) * (tasasVerdaderas[id][sv] ?? 0), 0);

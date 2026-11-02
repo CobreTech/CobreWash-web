@@ -458,6 +458,43 @@ export function getDatosEntrenamientoIa(dcOrOptions, options) {
   return executeQuery(getDatosEntrenamientoIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
+export const getTasasSimulacionIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetTasasSimulacionIa');
+}
+getTasasSimulacionIaRef.operationName = 'GetTasasSimulacionIa';
+
+export function getTasasSimulacionIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getTasasSimulacionIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const borrarSimulacionIaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'BorrarSimulacionIa', inputVars);
+}
+borrarSimulacionIaRef.operationName = 'BorrarSimulacionIa';
+
+export function borrarSimulacionIa(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(borrarSimulacionIaRef(dcInstance, inputVars));
+}
+
+export const borrarSimulacionesIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'BorrarSimulacionesIa');
+}
+borrarSimulacionesIaRef.operationName = 'BorrarSimulacionesIa';
+
+export function borrarSimulacionesIa(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(borrarSimulacionesIaRef(dcInstance, inputVars));
+}
+
 export const registrarConteoInventarioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

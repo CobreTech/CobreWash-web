@@ -266,6 +266,24 @@ export interface Aviso_Key {
   __typename?: 'Aviso_Key';
 }
 
+export interface BorrarSimulacionIaData {
+  produccionSimulada_deleteMany: number;
+  conteoInventario_deleteMany: number;
+  movimientoInventario_deleteMany: number;
+  simulacionIa_delete?: SimulacionIa_Key | null;
+}
+
+export interface BorrarSimulacionIaVariables {
+  id: UUIDString;
+}
+
+export interface BorrarSimulacionesIaData {
+  produccionSimulada_deleteMany: number;
+  conteoInventario_deleteMany: number;
+  movimientoInventario_deleteMany: number;
+  simulacionIa_deleteMany: number;
+}
+
 export interface Cliente_Key {
   id: UUIDString;
   __typename?: 'Cliente_Key';
@@ -1898,6 +1916,8 @@ export interface GetPanelIaData {
     id: UUIDString;
     semanas: number;
     creadoEn: TimestampString;
+    parametrosJson: string;
+    tasasVerdaderasJson: string;
   } & SimulacionIa_Key)[];
 }
 
@@ -2265,6 +2285,30 @@ export interface GetStockInventarioData {
     activo: boolean;
     creadoEn: TimestampString;
     revisionStock: number;
+  } & Insumo_Key)[];
+}
+
+export interface GetTasasSimulacionIaData {
+  configuracionIa?: {
+    lambda: number;
+  };
+  tasaConsumos: ({
+    tipoServicioId: UUIDString;
+    insumoId: UUIDString;
+    tasaInicial: number;
+    tasaActual: number;
+    unidad: string;
+    tipoServicio: {
+      nombre: string;
+    };
+    insumo: {
+      nombre: string;
+    };
+  } & TasaConsumo_Key)[];
+  insumos: ({
+    id: UUIDString;
+    nombre: string;
+    unidadMedida: string;
   } & Insumo_Key)[];
 }
 
@@ -3067,6 +3111,42 @@ export const getDatosEntrenamientoIaRef: GetDatosEntrenamientoIaRef;
 
 export function getDatosEntrenamientoIa(options?: ExecuteQueryOptions): QueryPromise<GetDatosEntrenamientoIaData, undefined>;
 export function getDatosEntrenamientoIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetDatosEntrenamientoIaData, undefined>;
+
+interface GetTasasSimulacionIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetTasasSimulacionIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetTasasSimulacionIaData, undefined>;
+  operationName: string;
+}
+export const getTasasSimulacionIaRef: GetTasasSimulacionIaRef;
+
+export function getTasasSimulacionIa(options?: ExecuteQueryOptions): QueryPromise<GetTasasSimulacionIaData, undefined>;
+export function getTasasSimulacionIa(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetTasasSimulacionIaData, undefined>;
+
+interface BorrarSimulacionIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: BorrarSimulacionIaVariables): MutationRef<BorrarSimulacionIaData, BorrarSimulacionIaVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: BorrarSimulacionIaVariables): MutationRef<BorrarSimulacionIaData, BorrarSimulacionIaVariables>;
+  operationName: string;
+}
+export const borrarSimulacionIaRef: BorrarSimulacionIaRef;
+
+export function borrarSimulacionIa(vars: BorrarSimulacionIaVariables): MutationPromise<BorrarSimulacionIaData, BorrarSimulacionIaVariables>;
+export function borrarSimulacionIa(dc: DataConnect, vars: BorrarSimulacionIaVariables): MutationPromise<BorrarSimulacionIaData, BorrarSimulacionIaVariables>;
+
+interface BorrarSimulacionesIaRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<BorrarSimulacionesIaData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): MutationRef<BorrarSimulacionesIaData, undefined>;
+  operationName: string;
+}
+export const borrarSimulacionesIaRef: BorrarSimulacionesIaRef;
+
+export function borrarSimulacionesIa(): MutationPromise<BorrarSimulacionesIaData, undefined>;
+export function borrarSimulacionesIa(dc: DataConnect): MutationPromise<BorrarSimulacionesIaData, undefined>;
 
 interface RegistrarConteoInventarioRef {
   /* Allow users to create refs without passing in DataConnect */

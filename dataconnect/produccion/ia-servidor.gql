@@ -18,3 +18,17 @@ mutation GuardarAjusteIa($modelo: ModeloIa_Data!, $tasas: [TasaConsumo_Data!]!) 
   modeloIa_insert(data: $modelo)
   tasaConsumo_upsertMany(data: $tasas)
 }
+
+# Guarda un lote simulado completo o nada. Todo queda con origen SIMULADO y
+# ligado al lote, sin tocar el stock real.
+mutation GuardarSimulacionIa(
+  $simulacion: SimulacionIa_Data!
+  $produccion: [ProduccionSimulada_Data!]!
+  $conteos: [ConteoInventario_Data!]!
+  $compras: [MovimientoInventario_Data!]!
+) @auth(level: NO_ACCESS) @transaction {
+  simulacionIa_insert(data: $simulacion)
+  produccionSimulada_insertMany(data: $produccion)
+  conteoInventario_insertMany(data: $conteos)
+  movimientoInventario_insertMany(data: $compras)
+}

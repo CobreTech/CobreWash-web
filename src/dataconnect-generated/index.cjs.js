@@ -532,6 +532,49 @@ exports.getDatosEntrenamientoIa = function getDatosEntrenamientoIa(dcOrOptions, 
 }
 ;
 
+const getTasasSimulacionIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetTasasSimulacionIa');
+}
+getTasasSimulacionIaRef.operationName = 'GetTasasSimulacionIa';
+exports.getTasasSimulacionIaRef = getTasasSimulacionIaRef;
+
+exports.getTasasSimulacionIa = function getTasasSimulacionIa(dcOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getTasasSimulacionIaRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const borrarSimulacionIaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'BorrarSimulacionIa', inputVars);
+}
+borrarSimulacionIaRef.operationName = 'BorrarSimulacionIa';
+exports.borrarSimulacionIaRef = borrarSimulacionIaRef;
+
+exports.borrarSimulacionIa = function borrarSimulacionIa(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(borrarSimulacionIaRef(dcInstance, inputVars));
+}
+;
+
+const borrarSimulacionesIaRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'BorrarSimulacionesIa');
+}
+borrarSimulacionesIaRef.operationName = 'BorrarSimulacionesIa';
+exports.borrarSimulacionesIaRef = borrarSimulacionesIaRef;
+
+exports.borrarSimulacionesIa = function borrarSimulacionesIa(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(borrarSimulacionesIaRef(dcInstance, inputVars));
+}
+;
+
 const registrarConteoInventarioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

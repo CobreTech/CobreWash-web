@@ -31,7 +31,7 @@ query GetPanelIa @auth(level: USER) {
   tipoServicios(where: { activo: { eq: true } }, orderBy: [{ nombre: ASC }, { id: ASC }]) { id nombre unidadCobro }
   conteosReales: conteoInventarios(where: { estado: { eq: APROBADO }, origen: { eq: REAL } }) { _count }
   conteosSimulados: conteoInventarios(where: { estado: { eq: APROBADO }, origen: { eq: SIMULADO } }) { _count }
-  simulaciones: simulacionIas(orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: 20) { id semanas creadoEn }
+  simulaciones: simulacionIas(orderBy: [{ creadoEn: DESC }, { id: DESC }], limit: 20) { id semanas creadoEn parametrosJson tasasVerdaderasJson }
 }
 
 query GetHistorialAjustesIa($limit: Int = 20, $offset: Int = 0) @auth(level: USER) {
@@ -170,4 +170,31 @@ query GetDatosEntrenamientoIa @auth(level: NO_ACCESS) {
   }
   produccionSimuladas(limit: 100000) { tipoServicioId fecha kg }
   modelos: modeloIas { _count }
+}
+
+# Tasas vigentes para generar un lote simulado alrededor de ellas.
+query GetTasasSimulacionIa @auth(level: NO_ACCESS) {
+  configuracionIa(id: "global") { lambda }
+  tasaConsumos(limit: 5000) {
+    tipoServicioId insumoId tasaInicial tasaActual unidad
+    tipoServicio { nombre }
+    insumo { nombre }
+  }
+  insumos(where: { activo: { eq: true } }, limit: 1000) { id nombre unidadMedida }
+}
+
+# Borra un lote simulado con todos sus datos. Los filtros por origen impiden
+# tocar datos reales aunque se pase un id equivocado.
+mutation BorrarSimulacionIa($id: UUID!) @auth(level: NO_ACCESS) @transaction {
+  produccionSimulada_deleteMany(where: { simulacionId: { eq: $id } })
+  conteoInventario_deleteMany(where: { simulacionId: { eq: $id }, origen: { eq: SIMULADO } })
+  movimientoInventario_deleteMany(where: { simulacionId: { eq: $id }, origen: { eq: SIMULADO } })
+  simulacionIa_delete(id: $id) @check(expr: "this != null", message: "La simulación ya no existe")
+}
+
+mutation BorrarSimulacionesIa @auth(level: NO_ACCESS) @transaction {
+  produccionSimulada_deleteMany(all: true)
+  conteoInventario_deleteMany(where: { origen: { eq: SIMULADO } })
+  movimientoInventario_deleteMany(where: { origen: { eq: SIMULADO } })
+  simulacionIa_deleteMany(all: true)
 }

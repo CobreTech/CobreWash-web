@@ -170,4 +170,41 @@ await prueba('el recálculo lee solo kg de comandas vigentes y guarda un único 
   assert.equal(panel.insumos.find(i => i.nombre === 'Detergente IA').stockActual, 82.5);
 });
 
+await prueba('los lotes simulados se guardan completos y se borran sin tocar datos reales', async () => {
+  const servidor = await readFile('dataconnect/produccion/ia-servidor.gql', 'utf8');
+  const lote = (id, cantidad) => ({
+    simulacion: { id, semanas: 1, parametrosJson: '{}', tasasVerdaderasJson: '[]', creadoPorId: 'test-admin' },
+    produccion: [{ id: randomUUID(), simulacionId: id, tipoServicioId: servicioId, fecha: '2026-03-02T12:00:00Z', kg: 1000 }],
+    conteos: ['2026-03-01T23:00:00Z', '2026-03-08T23:00:00Z'].map((fechaConteo, i) => ({ id: randomUUID(), insumoId: detergente, cantidadContada: cantidad - i * 10, stockSistema: cantidad - i * 10, revisionStock: 0, registradoPorId: 'test-admin', estado: 'APROBADO', origen: 'SIMULADO', simulacionId: id, fechaConteo })),
+    compras: [],
+  });
+  const a = randomUUID(), b = randomUUID();
+  for (const uid of [null, 'test-admin']) {
+    await assert.rejects(ejecutar(servidor, 'GuardarSimulacionIa', lote(randomUUID(), 50), uid));
+    await assert.rejects(ejecutar(ia, 'GetTasasSimulacionIa', {}, uid));
+    await assert.rejects(ejecutar(ia, 'BorrarSimulacionIa', { id: a }, uid));
+    await assert.rejects(ejecutar(ia, 'BorrarSimulacionesIa', {}, uid));
+  }
+  assert((await ejecutar(ia, 'GetTasasSimulacionIa')).tasaConsumos.length > 0);
+  await ejecutar(servidor, 'GuardarSimulacionIa', lote(a, 300));
+  await ejecutar(servidor, 'GuardarSimulacionIa', lote(b, 400));
+  const contar = async () => {
+    const d = await ejecutar('query C{ conteos: conteoInventarios(where:{origen:{eq:SIMULADO}}){ _count } reales: conteoInventarios(where:{origen:{eq:REAL}}){ _count } produccion: produccionSimuladas{ _count } lotes: simulacionIas{ _count } compras: movimientoInventarios(where:{origen:{eq:REAL}}){ _count } }', 'C');
+    return Object.fromEntries(Object.entries(d).map(([k, v]) => [k, v[0]._count]));
+  };
+  const inicio = await contar();
+  await ejecutar(ia, 'BorrarSimulacionIa', { id: a });
+  const tras = await contar();
+  assert.deepEqual([tras.conteos, tras.produccion, tras.lotes], [inicio.conteos - 2, inicio.produccion - 1, inicio.lotes - 1]);
+  assert.equal(tras.reales, inicio.reales);
+  await assert.rejects(ejecutar(ia, 'BorrarSimulacionIa', { id: a }), /ya no existe/);
+  const panel = await ejecutar(ia, 'GetPanelIa', {}, 'test-admin');
+  assert.equal(panel.simulaciones.find(s => uuid(s.id) === uuid(b)).parametrosJson, '{}');
+  await ejecutar(ia, 'BorrarSimulacionesIa');
+  const fin = await contar();
+  assert.deepEqual([fin.conteos, fin.produccion, fin.lotes], [0, 0, 0]);
+  assert.deepEqual([fin.reales, fin.compras], [inicio.reales, inicio.compras]);
+  assert.equal((await ejecutar(ia, 'GetPanelIa', {}, 'test-admin')).insumos.find(i => i.nombre === 'Detergente IA').stockActual, 82.5);
+});
+
 console.log(`${comprobaciones} escenarios del módulo IA aprobados.`);
